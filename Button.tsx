@@ -1,0 +1,1 @@
+export function Button({ variant = "primary", className = "", ...p }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: "primary" | "ghost" }) { return <button className={`btn${variant === "ghost" ? " g" : ""} ${className}`} {...p} />; }
