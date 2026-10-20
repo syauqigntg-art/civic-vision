@@ -49,3 +49,82 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
 .ph{border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:8px 10px;display:flex;flex-direction:column;opacity:.75}.ph small{font-size:11px}.ph p{margin:6px 0 0;font-size:13px}
 .ph.on{opacity:1;background:linear-gradient(135deg,#38bdf8,#7c5cff);border-color:transparent}.ph.ok{opacity:.95;border-color:#4ade80}
 .phases.big .ph{opacity:1;padding:14px}@media(max-width:760px){.phases{grid-template-columns:repeat(2,1fr)}}
+
+/* NAVBAR KAPSUL — LIQUID GLASS */
+.cv-navbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  width: min(100%, 690px);
+  padding: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.07);
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
+  box-shadow:
+    0 12px 35px rgba(0, 0, 0, 0.25),
+    inset 0 1px 1px rgba(255, 255, 255, 0.18);
+}
+
+.cv-navbar .cv-nav-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition:
+    background 0.25s ease,
+    color 0.25s ease,
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+
+.cv-navbar .cv-nav-link:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.cv-navbar .cv-nav-link.active {
+  color: #07152f;
+  background: linear-gradient(135deg, #35e7ff, #16bce9);
+  box-shadow:
+    0 0 12px rgba(34, 211, 238, 0.65),
+    0 0 26px rgba(34, 211, 238, 0.3);
+}
+
+.cv-navbar .cv-nav-link:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 3px;
+}
+
+/* TAMPILAN HP */
+@media (max-width: 640px) {
+  .top {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 16px;
+  }
+
+  .cv-navbar {
+    width: 100%;
+    gap: 3px;
+    padding: 5px;
+  }
+
+  .cv-navbar .cv-nav-link {
+    min-width: 0;
+    padding: 9px 4px;
+    font-size: 11px;
+  }
+}
