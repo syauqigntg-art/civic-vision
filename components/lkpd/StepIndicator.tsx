@@ -1,0 +1,2 @@
+export function StepIndicator({ cats, step, done, onSelect }: { cats: string[]; step: number; done: (c: string) => boolean; onSelect: (i: number) => void }) {
+  return (<nav aria-label="Tahap LKPD"><ol className="steps">{cats.map((c, i) => <li key={c} style={{ display: "contents" }}><button type="button" className={"st" + (i === step ? " on" : done(c) ? " ok" : "")} aria-current={i === step ? "step" : undefined} onClick={() => onSelect(i)}>{String(i + 1).padStart(2, "0")} {c}{done(c) && i !== step ? " ✓" : ""}</button></li>)}</ol></nav>); }
