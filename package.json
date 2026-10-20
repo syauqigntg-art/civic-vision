@@ -6,7 +6,7 @@
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "build": "next build",
     "start": "next start",
-    "prebuild": "node check-env.mjs"
+    "prebuild": "node scripts/check-env.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
