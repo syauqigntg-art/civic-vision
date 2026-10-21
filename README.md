@@ -44,8 +44,8 @@ Jalankan setelah deployment terbaru berstatus **Ready** dan migrasi `p0-lock-pub
 
 ```sh
 # Tabel siswa dan konten tidak boleh terbaca anon:
-curl -i "$URL/rest/v1/answers?select=* " -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
-curl -i "$URL/rest/v1/groups?select=* " -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$URL/rest/v1/answers?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$URL/rest/v1/groups?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 curl -i "$URL/rest/v1/videos?select=id,title" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 curl -i "$URL/rest/v1/questions?select=id,question_text" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 curl -i "$URL/rest/v1/question_options?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
