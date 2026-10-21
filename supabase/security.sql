@@ -37,5 +37,5 @@ alter table question_options drop constraint if exists o_len; alter table questi
 -- Rotasi seluruh kode aktif dilakukan terpisah melalui p0-rotate-group-codes.sql
 -- karena perubahan tersebut membutuhkan pembagian kode baru kepada kelompok.
 update public.groups
-set access_code='K'||coalesce(group_number::text,'0')||'-'||upper(encode(gen_random_bytes(8),'hex'))
+set access_code='CV-'||upper(encode(gen_random_bytes(10),'hex'))
 where char_length(access_code)<11;
