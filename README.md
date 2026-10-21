@@ -40,23 +40,24 @@ Login → **Project** (buat/ubah judul dan deskripsi) → **Video Kasus** (uploa
 Buka situs → **MULAI LKPD** → masukkan kode kelompok → isi identitas → pilih dan tonton video → jawab tahap demi tahap (autosave) → kirim → ringkasan hasil.
 
 ## 7. Uji keamanan P0 setelah deploy
-Jalankan setelah deployment terbaru berstatus **Ready** dan migrasi `p0-lock-public-reads.sql` berhasil. Isi `$URL` dan `$ANON` hanya di terminal lokal; jangan kirim key atau token ke chat.
+Jalankan setelah deployment terbaru berstatus **Ready** dan migrasi `p0-lock-public-reads.sql` berhasil. Gunakan `$SUPABASE_URL` untuk alamat proyek Supabase, `$SITE_URL` untuk alamat website Vercel, dan `$ANON` untuk publishable/anon key. Simpan nilainya hanya di terminal lokal; jangan kirim key atau token ke chat.
 
 ```sh
 # Tabel siswa dan konten tidak boleh terbaca anon:
-curl -i "$URL/rest/v1/answers?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
-curl -i "$URL/rest/v1/groups?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
-curl -i "$URL/rest/v1/videos?select=id,title" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
-curl -i "$URL/rest/v1/questions?select=id,question_text" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
-curl -i "$URL/rest/v1/question_options?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$SUPABASE_URL/rest/v1/answers?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$SUPABASE_URL/rest/v1/groups?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$SUPABASE_URL/rest/v1/videos?select=id,title" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$SUPABASE_URL/rest/v1/questions?select=id,question_text" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$SUPABASE_URL/rest/v1/question_options?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
 
-# RPC siswa tidak boleh dipanggil langsung dari database REST:
-curl -i -X POST "$URL/rest/v1/rpc/get_answers" -H "apikey: $ANON" -H "Content-Type: application/json" -d '{"code":"KODE_TIDAK_VALID"}'
+# RPC siswa tidak boleh dipanggil langsung melalui REST:
+curl -i -X POST "$SUPABASE_URL/rest/v1/rpc/get_answers" -H "apikey: $ANON" -H "Content-Type: application/json" -d '{"code":"KODE-TIDAK-VALID"}'
 
-# API konten harus menolak kode tidak valid; jangan pakai kode kelompok sungguhan:
-curl -i -X POST "$URL/api/student-content" -H "Content-Type: application/json" -d '{"op":"list_videos","args":{"code":"KODE-TIDAK-VALID"}}'
+# API website harus menolak kode tidak valid; jangan gunakan kode kelompok sungguhan:
+curl -i -X POST "$SITE_URL/api/student-content" -H "Content-Type: application/json" -d '{"op":"list_videos","args":{"code":"KODE-TIDAK-VALID"}}'
 
 # /admin tanpa login harus mengarah ke /admin/login
+curl -i "$SITE_URL/admin"
 ```
 
 Hasil uji yang tepat untuk endpoint konten adalah tidak ada data video/pertanyaan yang dikembalikan untuk kode tidak valid. Pada REST, respons `401/403` atau daftar kosong boleh sesuai konfigurasi; yang tidak boleh terjadi adalah data sensitif keluar. Ulangi pengujian konten siswa dengan dua kelompok percobaan berbeda dan pastikan keduanya hanya melihat penugasan masing-masing.
