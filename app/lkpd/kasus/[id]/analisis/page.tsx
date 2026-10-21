@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { sb, getCode, filled } from "@/lib/supabase";
+import { getCode, filled } from "@/lib/supabase";
 import { rpcS } from "@/lib/api/student";
+import { studentContent } from "@/lib/api/student-content";
 import type { Q } from "@/types";
 import { useAutosave } from "@/hooks/useAutosave";
 import { QuestionField } from "@/components/lkpd/QuestionField";
@@ -14,9 +15,6 @@ import { GlassCard } from "@/components/glass/GlassCard";
 import { ProgressBar } from "@/components/glass/ProgressBar";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
-
-const COLS =
-  "id,category,phase,question_text,description,question_type,placeholder,is_required,min_items,display_order,question_options(option_text,display_order)";
 
 const PHASES = ["think", "connect", "act"] as const;
 type WorkPhase = (typeof PHASES)[number];
@@ -68,7 +66,7 @@ export default function Analisis() {
     const pending = save.load();
 
     Promise.all([
-      sb.from("questions").select(COLS).eq("is_active", true).order("display_order"),
+      studentContent("questions_for_video", { code: c, vid: id }),
       rpcS("get_answers", { code: c }),
       rpcS("get_group", { code: c }),
     ])
