@@ -3,7 +3,7 @@
 import { Uploader } from "@/components/admin/Uploader";
 import { MediaPlayer as Media } from "@/components/video/MediaPlayer";
 import { videoForm } from "@/lib/validation/schemas";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { useAdmin, upd, pathOf } from "@/lib/admin";
 
@@ -27,7 +27,7 @@ const blank = {
 const two = (n: number | string) => String(n ?? "").padStart(2, "0");
 
 export default function Videos() {
-  const { P, vs, gs, gv, load, loading, error } = useAdmin(["P", "vs", "gs", "gv"]);
+  const { P, vs, gv, load, loading, error } = useAdmin(["P", "vs", "gv"]);
   const [f, setF] = useState<any>(blank);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -354,8 +354,8 @@ export default function Videos() {
                   const assigned = gv.filter((row: any) => row.video_id === v.id).length;
                   const editing = editForm?.id === v.id;
                   return (
-                    <>
-                      <tr key={v.id}>
+                    <Fragment key={v.id}>
+                      <tr>
                         <td>{two(v.number)}</td>
                         <td>
                           <div className="admin-video-title">{v.title || "Tanpa judul"}</div>
@@ -419,7 +419,7 @@ export default function Videos() {
                           </td>
                         </tr>
                       )}
-                    </>
+                    </Fragment>
                   );
                 })}
               </tbody>
