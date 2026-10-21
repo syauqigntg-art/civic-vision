@@ -1,64 +1,24 @@
-
 "use client";
 
 import { PhaseCards } from "@/components/lkpd/PhaseBar";
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { sb } from "@/lib/supabase";
 
 export default function Home() {
-  const [s, setS] = useState({
-    videos: 0,
-    questions: 0,
-    groups: 0,
-  });
-
-  const [t, setT] = useState({
-    title: "CIVIC VISION",
-    tagline: "",
-    description: "",
-  });
-
-  useEffect(() => {
-    sb.rpc("stats").then((r) => {
-      if (r.error) {
-        console.error("Gagal mengambil stats:", r.error);
-        return;
-      }
-
-      if (r.data) setS(r.data);
-    });
-
-    sb.from("projects")
-      .select("title, tagline, description")
-      .limit(1)
-      .then((r) => {
-        if (r.error) {
-          console.error("Gagal mengambil project:", r.error);
-          return;
-        }
-
-        if (r.data?.[0]) setT(r.data[0]);
-      });
-  }, []);
-
   return (
     <>
       <section
         className="glass center"
         style={{ padding: "48px 24px" }}
       >
-        <h1>{t.title}</h1>
-        <h2>{t.tagline || "Menganalisis Pancasila dalam Kehidupan Sehari-hari"}</h2>
-
+        <h1>CIVIC VISION</h1>
+        <h2>Menganalisis Pancasila dalam Kehidupan Sehari-hari</h2>
         <p style={{ maxWidth: 520, margin: "12px auto" }}>
-          {t.description}
+          Ruang belajar digital untuk mengamati kasus, menganalisis masalah,
+          menghubungkannya dengan nilai Pancasila, dan merancang tindakan nyata.
         </p>
-
-        <p style={{ color: "#fff", fontWeight: 600 }}>
+        <p style={{ fontWeight: 600 }}>
           Amati. Analisis. Refleksikan. Terapkan.
         </p>
-
         <Link className="btn" href="/lkpd/identitas">
           MULAI LKPD →
         </Link>
@@ -66,18 +26,16 @@ export default function Home() {
 
       <div className="grid">
         <div className="glass">
-          <h2>{s.videos} Video Kasus</h2>
-          <p>Berbagai permasalahan yang dekat dengan kehidupan siswa.</p>
+          <h2>Video Kasus</h2>
+          <p>Siswa melihat materi yang telah ditugaskan guru untuk kelompoknya.</p>
         </div>
-
         <div className="glass">
-          <h2>{s.groups} Kelompok</h2>
-          <p>Belajar bersama dan berpikir kritis.</p>
+          <h2>Analisis Kelompok</h2>
+          <p>Jawaban disimpan per kelompok dan tidak dibagikan kepada kelompok lain.</p>
         </div>
-
         <div className="glass">
-          <h2>{s.questions} Pertanyaan Analisis</h2>
-          <p>Dari identifikasi masalah hingga aksi nyata.</p>
+          <h2>Aksi Nyata</h2>
+          <p>Hasil pembelajaran mengarah pada solusi yang sesuai dengan nilai Pancasila.</p>
         </div>
       </div>
 
