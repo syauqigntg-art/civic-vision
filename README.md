@@ -6,10 +6,12 @@ Node.js 20.6+ · akun Supabase (gratis cukup) · akun Vercel (untuk deploy).
 
 ## 2. Siapkan Supabase
 1. Buat project baru di supabase.com. Di **Settings → API** salin: Project URL, `anon` key, dan `service_role` key.
-2. **SQL migration** — buka SQL Editor, jalankan berurutan:
-   1. `supabase/schema.sql` (tabel, RLS, fungsi, bucket `videos`, indeks)
-   2. `supabase/security.sql` (mengunci fungsi siswa, bucket jadi privat, batas ukuran/tipe file, batas panjang input)
-   - Database yang sudah dibuat dari versi lama: jalankan juga `supabase/upgrade.sql`.
+2. **SQL migration** — buka SQL Editor, jalankan untuk instalasi baru:
+   1. `supabase/schema.sql` (tabel, fungsi, RLS dasar, bucket, indeks).
+   2. `supabase/security.sql` (mengunci RPC siswa, menutup baca publik tabel konten, memprivatkan bucket, dan membatasi input).
+   - Database lama: jangan menjalankan ulang `schema.sql` pada produksi. Terapkan migrasi yang sesuai setelah membaca instruksinya.
+   - Untuk deployment yang sudah berjalan, deploy aplikasi terbaru hingga Vercel berstatus **Ready**, lalu jalankan `supabase/p0-lock-public-reads.sql` di SQL Editor. Ini menutup baca langsung tabel konten oleh anon; siswa kemudian mendapat konten lewat API yang memeriksa kode kelompok dan penugasan.
+   - Sebelum kode kelompok dibagikan ke kelas, pertimbangkan menjalankan `supabase/p0-rotate-group-codes.sql`. Skrip ini mengganti semua kode yang ada, sehingga kode baru wajib dibagikan ulang kepada semua kelompok.
 3. **Bucket video** — dibuat otomatis oleh `schema.sql`. Cek di **Storage → videos**: *Public* harus **off**, batas 50 MB, tipe mp4/webm/mov/jpg/png/webp. Video diputar lewat URL bertanda tangan (1 jam) yang hanya diberikan kepada guru atau kelompok dengan kode valid. Untuk file lebih dari 50 MB, naikkan batas di Storage Settings (sesuai paketmu) dan ubah `MAX_VIDEO` di `lib/storage/upload.ts`.
 4. **Akun admin (guru)**
    1. **Authentication → Providers → Email**: aktif. **Matikan "Allow new users to sign up"** (supaya tidak ada yang mendaftar sendiri).
@@ -37,15 +39,27 @@ Login → **Project** (buat/ubah judul dan deskripsi) → **Video Kasus** (uploa
 ## 6. Alur siswa
 Buka situs → **MULAI LKPD** → masukkan kode kelompok → isi identitas → pilih dan tonton video → jawab tahap demi tahap (autosave) → kirim → ringkasan hasil.
 
-## 7. Uji keamanan setelah deploy
-```
-# harus mengembalikan [] atau 401/403, bukan data siswa:
-curl "$URL/rest/v1/answers?select=*"     -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
-curl "$URL/rest/v1/groups?select=*"      -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
-# fungsi siswa tidak boleh bisa dipanggil langsung (harus ditolak):
-curl -X POST "$URL/rest/v1/rpc/get_answers" -H "apikey: $ANON" -H "Content-Type: application/json" -d '{"code":"X"}'
+## 7. Uji keamanan P0 setelah deploy
+Jalankan setelah deployment terbaru berstatus **Ready** dan migrasi `p0-lock-public-reads.sql` berhasil. Isi `$URL` dan `$ANON` hanya di terminal lokal; jangan kirim key atau token ke chat.
+
+```sh
+# Tabel siswa dan konten tidak boleh terbaca anon:
+curl -i "$URL/rest/v1/answers?select=* " -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$URL/rest/v1/groups?select=* " -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$URL/rest/v1/videos?select=id,title" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$URL/rest/v1/questions?select=id,question_text" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+curl -i "$URL/rest/v1/question_options?select=*" -H "apikey: $ANON" -H "Authorization: Bearer $ANON"
+
+# RPC siswa tidak boleh dipanggil langsung dari database REST:
+curl -i -X POST "$URL/rest/v1/rpc/get_answers" -H "apikey: $ANON" -H "Content-Type: application/json" -d '{"code":"KODE_TIDAK_VALID"}'
+
+# API konten harus menolak kode tidak valid; jangan pakai kode kelompok sungguhan:
+curl -i -X POST "$URL/api/student-content" -H "Content-Type: application/json" -d '{"op":"list_videos","args":{"code":"KODE-TIDAK-VALID"}}'
+
 # /admin tanpa login harus mengarah ke /admin/login
 ```
+
+Hasil uji yang tepat untuk endpoint konten adalah tidak ada data video/pertanyaan yang dikembalikan untuk kode tidak valid. Pada REST, respons `401/403` atau daftar kosong boleh sesuai konfigurasi; yang tidak boleh terjadi adalah data sensitif keluar. Ulangi pengujian konten siswa dengan dua kelompok percobaan berbeda dan pastikan keduanya hanya melihat penugasan masing-masing.
 
 ## 8. Struktur
 `app/` rute (`lkpd/*` siswa, `admin/*` guru, `api/*` server) · `components/{ui,glass,video,lkpd,admin}` · `hooks/` · `lib/{supabase,auth,validation,db,api,storage,utils}` · `types/` · `proxy.ts` penjaga rute admin · `scripts/seed.mjs` · `supabase/*.sql`
