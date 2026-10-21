@@ -29,8 +29,16 @@ report AS (
     concat(
       'RLS=', relrowsecurity,
       '; FORCE_RLS=', relforcerowsecurity,
-      '; anon SELECT=', has_table_privilege('anon', oid, 'SELECT'),
-      '; authenticated SELECT=', has_table_privilege('authenticated', oid, 'SELECT'),
+      '; anon SELECT/INSERT/UPDATE/DELETE=',
+        has_table_privilege('anon', oid, 'SELECT'), '/',
+        has_table_privilege('anon', oid, 'INSERT'), '/',
+        has_table_privilege('anon', oid, 'UPDATE'), '/',
+        has_table_privilege('anon', oid, 'DELETE'),
+      '; authenticated SELECT/INSERT/UPDATE/DELETE=',
+        has_table_privilege('authenticated', oid, 'SELECT'), '/',
+        has_table_privilege('authenticated', oid, 'INSERT'), '/',
+        has_table_privilege('authenticated', oid, 'UPDATE'), '/',
+        has_table_privilege('authenticated', oid, 'DELETE'),
       '; service_role SELECT=', has_table_privilege('service_role', oid, 'SELECT')
     ) AS detail
   FROM relevant_tables
