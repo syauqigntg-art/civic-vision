@@ -17,9 +17,6 @@ import { GlassCard } from "@/components/glass/GlassCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 
-const QUESTION_COLS =
-  "id,category,phase,question_text,description,question_type,placeholder,is_required,min_items,display_order,question_options(option_text,display_order)";
-
 export default function Video() {
   const { id } = useParams<{ id: string }>();
   const r = useRouter();
