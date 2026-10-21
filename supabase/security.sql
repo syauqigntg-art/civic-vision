@@ -18,8 +18,7 @@ revoke all on table
   public.questions,
   public.question_options,
   public.submissions,
-  public.answers,
-  public.api_rate_limits
+  public.answers
 from public, anon;
 
 -- RPC statistik menghitung jumlah kelompok/konten dan tidak dipakai oleh beranda lagi.
