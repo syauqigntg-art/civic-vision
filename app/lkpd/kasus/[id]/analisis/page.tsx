@@ -221,8 +221,7 @@ export default function Analisis() {
     <GlassCard>
       <PhaseBar
         current={activePhase}
-        includeSee={false}
-        completed={donePhases}
+        completed={["see", ...donePhases]}
       />
 
       <div
