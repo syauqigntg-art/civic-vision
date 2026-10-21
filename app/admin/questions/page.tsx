@@ -103,9 +103,17 @@ export default function Questions() {
         ? { ...previous, [k]: v, placeholder: "" }
         : { ...previous, [k]: v }
     );
-  const activeCategory = f.category === "__new" ? f.newCat : f.category;
-  const placeholderChoices = getPlaceholderOptions(activeCategory || "", f.phase || "");
-  const placeholderOptions = f.placeholder && !placeholderChoices.includes(f.placeholder)
+  // Form is closed on the list view (f === null). Only build placeholder
+  // options while a question form is open to avoid reading properties of null.
+  const activeCategory = f
+    ? f.category === "__new"
+      ? f.newCat
+      : f.category
+    : "";
+  const placeholderChoices = f
+    ? getPlaceholderOptions(activeCategory || "", f.phase || "")
+    : [];
+  const placeholderOptions = f?.placeholder && !placeholderChoices.includes(f.placeholder)
     ? [f.placeholder, ...placeholderChoices]
     : placeholderChoices;
   const save = async () => { const cat = f.category === "__new" ? f.newCat.trim() : f.category; const sel = f.question_type.endsWith("select"); const o = f.options.map((s: string) => s.trim()).filter(Boolean);
