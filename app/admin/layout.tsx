@@ -70,7 +70,7 @@ export default function AdminLayout({
     };
   }, [path, r]);
 
-  if (path === "/admin/login") return <>{children}</>;
+  if (path === "/admin/login") return <div className="admin-login-frame">{children}</div>;
 
   if (!ok) {
     return (
