@@ -1,25 +1,45 @@
-
+import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
 import { isAdminRequest } from "@/lib/auth/server";
 import { mediaReq } from "@/lib/validation/schemas";
-import { hit } from "@/lib/utils/ratelimit";
+
+export const runtime = "nodejs";
 
 const fail = (status: number) =>
   NextResponse.json(
     { error: "Tidak dapat memuat berkas." },
-    { status }
+    { status, headers: { "Cache-Control": "no-store" } }
   );
 
-export async function POST(req: Request) {
-  const ip = (req.headers.get("x-forwarded-for") || "local")
-    .split(",")[0]
-    .trim();
+function clientKey(req: Request) {
+  const ip =
+    req.headers.get("x-real-ip")?.trim() ||
+    req.headers.get("x-vercel-forwarded-for")?.split(",")[0].trim() ||
+    "unknown";
+  return createHash("sha256").update(ip).digest("hex");
+}
 
-  if (hit("m:" + ip, 600)) return fail(429);
+export async function POST(req: Request) {
+  const keyHash = clientKey(req);
+  const rate = await admin.rpc("student_rate_limit", {
+    p_bucket: "student",
+    p_key_hash: keyHash,
+    p_max: 600,
+    p_window_seconds: 60,
+    p_increment: true,
+  });
+
+  if (rate.error) {
+    console.error("Media rate limit failed:", rate.error.message);
+    return fail(503);
+  }
+  if (rate.data !== true) return fail(429);
+
+  const contentLength = Number(req.headers.get("content-length") || 0);
+  if (contentLength > 10000) return fail(413);
 
   let body: unknown;
-
   try {
     body = await req.json();
   } catch {
@@ -31,38 +51,35 @@ export async function POST(req: Request) {
 
   const { path, code } = parsed.data;
 
-  // Guru yang sudah terverifikasi boleh mengakses media.
+  // Guru terverifikasi dapat membaca materi untuk pengelolaan.
   let allowed = await isAdminRequest();
 
-  // Siswa harus memiliki kode kelompok yang valid
-  // dan media harus berasal dari video yang ditugaskan.
+  // Permintaan siswa harus dibuktikan dengan kode valid dan penugasan aktual.
   if (!allowed && code) {
-    const { data: group, error: groupError } =
-      await admin.rpc("get_group", { code });
+    const { data: group, error: groupError } = await admin
+      .from("groups")
+      .select("id,project_id")
+      .eq("access_code", code.trim().toUpperCase())
+      .maybeSingle();
 
-    if (!groupError && group?.id) {
-      const { data: videos, error: videoError } =
-        await admin
-          .from("videos")
-          .select("id")
-          .eq("is_active", true)
-          .or(
-            `video_url.eq.${path},thumbnail_url.eq.${path}`
-          );
+    if (!groupError && group) {
+      const { data: videos, error: videoError } = await admin
+        .from("videos")
+        .select("id")
+        .eq("project_id", group.project_id)
+        .eq("is_active", true)
+        .or(`video_url.eq.${path},thumbnail_url.eq.${path}`);
 
       if (!videoError && videos?.length) {
-        const videoIds = videos.map((video) => video.id);
+        const ids = videos.map((video) => video.id);
+        const { data: assignments, error: assignmentError } = await admin
+          .from("group_videos")
+          .select("id")
+          .eq("group_id", group.id)
+          .in("video_id", ids)
+          .limit(1);
 
-        const { data: assignments, error: assignmentError } =
-          await admin
-            .from("group_videos")
-            .select("id")
-            .eq("group_id", group.id)
-            .in("video_id", videoIds)
-            .limit(1);
-
-        allowed =
-          !assignmentError && !!assignments?.length;
+        allowed = !assignmentError && !!assignments?.length;
       }
     }
   }
