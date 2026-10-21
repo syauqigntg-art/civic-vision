@@ -103,7 +103,7 @@ export default function Identitas() {
     return (
       <section className="glass">
         <h2>Masuk dengan kode kelompok</h2>
-        <p>Guru membagikan kode, misalnya K3-7QX2.</p>
+        <p>Guru membagikan kode akses kelompok. Masukkan kode persis seperti yang diberikan guru.</p>
 
         {err && <div className="warn" role="alert">{err}</div>}
 
