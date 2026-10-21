@@ -172,12 +172,10 @@ export default function Identitas() {
         placeholder="mis. X-3"
       />
 
-      <label htmlFor="f-lead">Nama ketua</label>
-      <input
-        id="f-lead"
-        value={f.leader}
-        onChange={(e) => set("leader", e.target.value)}
-      />
+    <label>Nomor kelompok</label>
+<p className="hint">
+  {f.number || "Belum ditetapkan"} — ditetapkan oleh guru
+</p>
 
       {f.members.map((m: string, i: number) => (
         <div key={i}>
