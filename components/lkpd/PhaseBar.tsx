@@ -21,7 +21,7 @@ export function PhaseBar({
 
   return (
     <ol
-      className="phases"
+      className={"phases" + (includeSee ? "" : " three")}
       aria-label={includeSee ? "Empat tahap belajar" : "Tiga tahap analisis"}
     >
       {phases.map((phase) => {
