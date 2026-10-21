@@ -335,7 +335,7 @@ export default function Groups() {
         crypto
           .randomUUID()
           .replace(/-/g, "")
-          .slice(0, 8)
+          .slice(0, 16)
           .toUpperCase(),
     });
 
