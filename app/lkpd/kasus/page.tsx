@@ -1,10 +1,10 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { sb, getCode } from "@/lib/supabase";
+import { getCode } from "@/lib/supabase";
 import { rpcS } from "@/lib/api/student";
+import { studentContent } from "@/lib/api/student-content";
 
 type VideoItem = {
   id: string;
@@ -15,15 +15,12 @@ type VideoItem = {
 
 export default function Kasus() {
   const [videos, setVideos] = useState<VideoItem[] | null>(null);
-  const [mine, setMine] = useState<string[]>([]);
   const [groupLoaded, setGroupLoaded] = useState(false);
   const [groupError, setGroupError] = useState(false);
   const [err, setErr] = useState(false);
 
   useEffect(() => {
     const code = getCode();
-
-    // Jangan tampilkan video jika kode kelompok belum tersedia.
     if (!code) {
       setVideos([]);
       setGroupError(true);
@@ -32,33 +29,28 @@ export default function Kasus() {
     }
 
     Promise.all([
-      sb
-        .from("videos")
-        .select("id,number,title,category")
-        .eq("is_active", true)
-        .order("number"),
+      studentContent("list_videos", { code }),
       rpcS("get_group", { code }),
     ])
       .then(([videoResult, groupResult]) => {
         if (videoResult.error) {
           setErr(true);
+          setVideos([]);
         } else {
-          setVideos((videoResult.data || []) as VideoItem[]);
-        }
-
-        // Jika kode tidak valid atau pemeriksaan gagal,
-        // jangan tampilkan video apa pun.
-        if (groupResult.error || !groupResult.data?.id) {
-          setGroupError(true);
-          setMine([]);
-        } else {
-          setMine(
-            Array.isArray(groupResult.data.video_ids)
-              ? groupResult.data.video_ids
-              : []
+          const assignedIds = Array.isArray(groupResult.data?.video_ids)
+            ? groupResult.data.video_ids
+            : [];
+          setVideos(
+            (videoResult.data || []).filter((video: VideoItem) =>
+              assignedIds.includes(video.id)
+            ) as VideoItem[]
           );
         }
 
+        if (groupResult.error || !groupResult.data?.id) {
+          setGroupError(true);
+          setVideos([]);
+        }
         setGroupLoaded(true);
       })
       .catch(() => {
@@ -97,19 +89,7 @@ export default function Kasus() {
     );
   }
 
-  const assigned = videos.filter((video) =>
-    mine.includes(video.id)
-  );
-
   if (!videos.length) {
-    return (
-      <section className="glass">
-        <p>Belum ada video kasus aktif.</p>
-      </section>
-    );
-  }
-
-  if (!assigned.length) {
     return (
       <section className="glass">
         <h2>Belum ada video yang ditugaskan</h2>
@@ -130,26 +110,17 @@ export default function Kasus() {
       </p>
 
       <div className="grid">
-        {assigned.map((video) => (
+        {videos.map((video) => (
           <div className="glass" key={video.id}>
             <span className="tag">{video.category || "Kasus Pancasila"}</span>
-            <span
-              className="tag"
-              style={{ marginLeft: 6 }}
-            >
+            <span className="tag" style={{ marginLeft: 6 }}>
               Ditugaskan untuk kelompok kalian
             </span>
-
             <h2 style={{ marginTop: 8 }}>
-              Kasus {String(video.number).padStart(2, "0")}:{" "}
-              {video.title}
+              Kasus {String(video.number).padStart(2, "0")}: {video.title}
             </h2>
-
             <div className="row">
-              <Link
-                className="btn"
-                href={`/lkpd/kasus/${video.id}`}
-              >
+              <Link className="btn" href={`/lkpd/kasus/${video.id}`}>
                 Tonton Video
               </Link>
             </div>
