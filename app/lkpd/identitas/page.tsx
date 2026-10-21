@@ -174,27 +174,27 @@ export default function Identitas() {
         onChange={(e) => set("name", e.target.value)}
       />
 
-      <label htmlFor="f-no">Nomor kelompok</label>
-      <input
-        id="f-no"
-        type="number"
-        min={1}
-        value={f.number}
-        onChange={(e) => set("number", e.target.value)}
-      />
-
-      <label htmlFor="f-class">Kelas</label>
-      <input
-        id="f-class"
-        value={f.class_name}
-        onChange={(e) => set("class_name", e.target.value)}
-        placeholder="mis. X-3"
-      />
-
-    <label>Nomor kelompok</label>
+      
+<label>Nomor kelompok</label>
 <p className="hint">
   {f.number || "Belum ditetapkan"} — ditetapkan oleh guru
 </p>
+
+<label htmlFor="f-class">Kelas</label>
+<input
+  id="f-class"
+  value={f.class_name}
+  onChange={(e) => set("class_name", e.target.value)}
+  placeholder="mis. XII-2"
+/>
+
+<label htmlFor="f-leader">Nama Ketua Kelompok</label>
+<input
+  id="f-leader"
+  value={f.leader}
+  onChange={(e) => set("leader", e.target.value)}
+  placeholder="Masukkan nama ketua kelompok"
+/>
 
       {f.members.map((m: string, i: number) => (
         <div key={i}>
