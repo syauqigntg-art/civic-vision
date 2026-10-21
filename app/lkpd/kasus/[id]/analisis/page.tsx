@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { sb, getCode, filled } from "@/lib/supabase";
 import { rpcS } from "@/lib/api/student";
 import type { Q } from "@/types";
@@ -39,14 +39,16 @@ const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string }> = {
   },
 };
 
-// Tahap SEE dilakukan saat menonton video. Pertanyaan lama yang masih
-// memiliki phase "see" ditampilkan pada THINK agar tidak hilang dari LKPD.
-function phaseForQuestion(q: Q): WorkPhase {
+// Pertanyaan SEE dijawab di halaman video. Di sini hanya tampilkan
+// pertanyaan THINK, CONNECT, dan ACT. Pertanyaan tanpa fase tetap masuk THINK.
+function phaseForQuestion(q: Q): WorkPhase | null {
+  if (q.phase === "see") return null;
   if (q.phase === "connect" || q.phase === "act") return q.phase;
   return "think";
 }
 
 export default function Analisis() {
+  const { id } = useParams<{ id: string }>();
   const r = useRouter();
   const [qs, setQs] = useState<Q[]>([]);
   const [a, setA] = useState<Record<string, string>>({});
@@ -109,7 +111,11 @@ export default function Analisis() {
       .filter((q) => phaseForQuestion(q) === phase && q.is_required)
       .every((q) => filled(q, a[q.id]));
 
+  const seeDone = qs
+    .filter((q) => q.phase === "see" && q.is_required)
+    .every((q) => filled(q, a[q.id]));
   const donePhases = PHASES.slice(0, step).filter((phase) => phaseDone(phase));
+  const completedPhases = [...(seeDone ? ["see"] : []), ...donePhases];
   const left = PHASES.length - step - 1;
 
   const change = (q: Q, v: unknown) => {
@@ -150,7 +156,14 @@ export default function Analisis() {
 
     const missing = req.filter((q) => !filled(q, a[q.id]));
     if (missing.length) {
-      const firstMissingPhase = phaseForQuestion(missing[0]);
+      if (missing.some((q) => q.phase === "see")) {
+        setWarn(
+          "Tahap SEE belum lengkap. Kembali ke halaman video untuk menjawab pertanyaan pengamatan."
+        );
+        return;
+      }
+
+      const firstMissingPhase = phaseForQuestion(missing[0]) ?? "think";
       setStep(PHASES.indexOf(firstMissingPhase));
       setWarn(
         `Masih ada ${missing.length} pertanyaan wajib yang belum dijawab. Lengkapi dahulu sebelum mengirim hasil.`
@@ -221,7 +234,7 @@ export default function Analisis() {
     <GlassCard>
       <PhaseBar
         current={activePhase}
-        completed={["see", ...donePhases]}
+        completed={completedPhases}
       />
 
       <div
@@ -257,7 +270,16 @@ export default function Analisis() {
           </Link>
         </Alert>
       )}
-      {warn && <Alert>{warn}</Alert>}
+      {warn && (
+        <Alert>
+          {warn}{" "}
+          {warn.startsWith("Tahap SEE") && (
+            <Link href={`/lkpd/kasus/${id}`} style={{ color: "#fff", textDecoration: "underline" }}>
+              Kembali ke video
+            </Link>
+          )}
+        </Alert>
+      )}
 
       {cur.length === 0 && (
         <p>
