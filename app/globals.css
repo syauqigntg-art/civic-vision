@@ -451,3 +451,15 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
 .admin-question-cell div { color: #33435b; font-size: 12px; }
 .admin-filter-row .btn { width: 100%; }
 .admin-create-panel .mini { align-items: start; }
+
+
+.admin-login-frame { width: min(100%, 440px); min-height: calc(100vh - 40px); margin: 0 auto; display: flex; align-items: center; justify-content: center; }
+.admin-login-frame .glass { width: 100%; margin: 0; border: 1px solid #e1e8f1; border-radius: 22px; background: #fff; color: #1b2940; box-shadow: 0 16px 42px rgba(28, 48, 78, .08); backdrop-filter: none; -webkit-backdrop-filter: none; }
+.admin-login-frame h2 { color: #17233a; font-size: 23px; }
+.admin-login-frame p { color: #69788e; }
+.admin-login-frame label { color: #586980; }
+.admin-login-frame input { background: #fbfcfe; border-color: #dfe6ef; color: #24344c; }
+.admin-login-frame .btn { background: #0878f9; color: #fff; }
+@media (max-width: 760px) {
+  .admin-login-frame { min-height: calc(100vh - 20px); }
+}
