@@ -18,6 +18,11 @@ type PendingAnswers = Record<string, string>;
 const isOnline = () =>
   typeof navigator === "undefined" || navigator.onLine !== false;
 
+const storageKeyForCurrentCode = () => {
+  const code = getCode();
+  return code ? `cv_dirty_${code}` : "";
+};
+
 // Autosave queue:
 // - persist pending answers before sending them,
 // - allow only one network flush at a time,
@@ -38,15 +43,10 @@ export function useAutosave(onLocked: () => void) {
     setSt(next);
   }, []);
 
-  const storageKey = () => {
-    const code = getCode();
-    return code ? `cv_dirty_${code}` : "";
-  };
-
   // Returns false if browser storage is unavailable. The queued values remain
   // in memory, but the UI must warn that refresh recovery cannot be guaranteed.
   const persist = useCallback((): boolean => {
-    const key = storageKey();
+    const key = storageKeyForCurrentCode();
     if (!key) return false;
 
     try {
@@ -75,7 +75,7 @@ export function useAutosave(onLocked: () => void) {
   );
 
   const load = useCallback((): PendingAnswers => {
-    const key = storageKey();
+    const key = storageKeyForCurrentCode();
     if (!key) return {};
 
     try {
