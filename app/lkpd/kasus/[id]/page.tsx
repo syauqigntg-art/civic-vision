@@ -94,6 +94,7 @@ export default function Video() {
           savedAnswers = result.data || {};
         }
 
+        if (isSubmitted) save.clearPending(true);
         const pending = isSubmitted || !phaseQuestions.length ? {} : save.load();
         setAnswers({ ...savedAnswers, ...pending });
         setSeeQs(phaseQuestions);
@@ -135,9 +136,17 @@ export default function Video() {
 
     setBusy(true);
     try {
-      await save.flush();
-      if (save.hasPending()) {
-        setMsg("Jawaban SEE belum berhasil disimpan. Periksa koneksi internet, lalu coba lagi.");
+      const saveResult = await save.flush();
+      if (saveResult === "locked") {
+        setLocked(true);
+        setMsg("Pengerjaan sudah terkunci di server. Jawaban yang belum tersimpan tidak dapat diubah.");
+        return;
+      }
+      if (
+        (saveResult !== "idle" && saveResult !== "saved") ||
+        save.hasPending()
+      ) {
+        setMsg("Jawaban SEE belum berhasil disimpan ke server. Periksa status penyimpanan dan coba lagi.");
         return;
       }
 
