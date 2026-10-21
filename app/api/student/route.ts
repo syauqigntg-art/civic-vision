@@ -1,14 +1,141 @@
-import { NextResponse } from "next/server"; import { admin } from "@/lib/supabase/admin"; import { studentOp } from "@/lib/validation/schemas"; import { hit, over } from "@/lib/utils/ratelimit";
-const fail = (m: string, s: number) => NextResponse.json({ error: m }, { status: s });
+
+import { createHash } from "node:crypto";
+import { NextResponse } from "next/server";
+import { admin } from "@/lib/supabase/admin";
+import { studentOp } from "@/lib/validation/schemas";
+
+export const runtime = "nodejs";
+
+const fail = (message: string, status: number) =>
+  NextResponse.json({ error: message }, { status });
+
+function hashClientIp(req: Request) {
+  // Gunakan alamat IP yang diberikan oleh infrastruktur Vercel.
+  const ip =
+    req.headers.get("x-real-ip")?.trim() ||
+    req.headers.get("x-vercel-forwarded-for")
+      ?.split(",")[0]
+      .trim() ||
+    "unknown";
+
+  // Simpan hash, bukan alamat IP asli.
+  return createHash("sha256").update(ip).digest("hex");
+}
+
+async function checkLimit(
+  bucket: "student" | "bad-code",
+  keyHash: string,
+  max: number,
+  increment: boolean
+) {
+  return admin.rpc("student_rate_limit", {
+    p_bucket: bucket,
+    p_key_hash: keyHash,
+    p_max: max,
+    p_window_seconds: 60,
+    p_increment: increment,
+  });
+}
+
 export async function POST(req: Request) {
-  const ip = (req.headers.get("x-forwarded-for") || "local").split(",")[0].trim();
-  if (hit("s:" + ip, 600)) return fail("Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.", 429);
-  if (+(req.headers.get("content-length") || 0) > 30000) return fail("Data terlalu besar.", 413);
-  let body: unknown; try { body = await req.json(); } catch { return fail("Data tidak valid.", 400); }
-  const p = studentOp.safeParse(body); if (!p.success) return fail("Data tidak valid. Periksa kembali isian kalian.", 400);
-  if (p.data.op === "get_group" && over("bad:" + ip, 30)) return fail("Terlalu banyak kode salah. Coba lagi beberapa menit lagi.", 429); // hanya tebakan salah yang dihitung (aman untuk sekolah satu IP)
-  const { data, error } = await admin.rpc(p.data.op, p.data.args as any);
-  if (error) { console.error("student rpc", p.data.op, error.message); return fail("Terjadi kesalahan. Silakan coba lagi.", 500); }
-  if (p.data.op === "get_group" && !data) hit("bad:" + ip, 30);
-  return NextResponse.json({ data });
+  const keyHash = hashClientIp(req);
+
+  // Batas umum: maksimal 600 permintaan per menit per IP.
+  const { data: allowed, error: limitError } = await checkLimit(
+    "student",
+    keyHash,
+    600,
+    true
+  );
+
+  if (limitError) {
+    console.error("Rate limit check failed:", limitError.message);
+    return fail("Layanan sedang bermasalah. Coba lagi nanti.", 503);
+  }
+
+  if (allowed !== true) {
+    return fail(
+      "Terlalu banyak permintaan. Tunggu sebentar lalu coba lagi.",
+      429
+    );
+  }
+
+  const contentLength = Number(req.headers.get("content-length") || 0);
+
+  if (contentLength > 30000) {
+    return fail("Data terlalu besar.", 413);
+  }
+
+  let body: unknown;
+
+  try {
+    body = await req.json();
+  } catch {
+    return fail("Data tidak valid.", 400);
+  }
+
+  const parsed = studentOp.safeParse(body);
+
+  if (!parsed.success) {
+    return fail(
+      "Data tidak valid. Periksa kembali isian kalian.",
+      400
+    );
+  }
+
+  // Periksa batas percobaan kode kelompok sebelum mencari kelompok.
+  if (parsed.data.op === "get_group") {
+    const {
+      data: badCodeAllowed,
+      error: badCodeError,
+    } = await checkLimit("bad-code", keyHash, 30, false);
+
+    if (badCodeError) {
+      console.error("Bad-code limit check failed:", badCodeError.message);
+      return fail("Layanan sedang bermasalah. Coba lagi nanti.", 503);
+    }
+
+    if (badCodeAllowed !== true) {
+      return fail(
+        "Terlalu banyak percobaan kode. Tunggu sebentar lalu coba lagi.",
+        429
+      );
+    }
+  }
+
+  const { data, error } = await admin.rpc(
+    parsed.data.op,
+    parsed.data.args as any
+  );
+
+  if (error) {
+    console.error("Student RPC failed:", parsed.data.op, error.message);
+    return fail("Terjadi kesalahan. Silakan coba lagi.", 500);
+  }
+
+  // Hanya kode kelompok yang tidak ditemukan yang dihitung
+  // sebagai percobaan kode salah.
+  if (parsed.data.op === "get_group" && !data) {
+    const {
+      data: countAllowed,
+      error: countError,
+    } = await checkLimit("bad-code", keyHash, 30, true);
+
+    if (countError) {
+      console.error("Bad-code counter failed:", countError.message);
+      return fail("Layanan sedang bermasalah. Coba lagi nanti.", 503);
+    }
+
+    if (countAllowed !== true) {
+      return fail(
+        "Terlalu banyak percobaan kode. Tunggu sebentar lalu coba lagi.",
+        429
+      );
+    }
+  }
+
+  return NextResponse.json(
+    { data },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
