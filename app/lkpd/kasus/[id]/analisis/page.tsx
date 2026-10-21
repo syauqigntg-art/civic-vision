@@ -53,6 +53,7 @@ export default function Analisis() {
   const [step, setStep] = useState(0);
   const [warn, setWarn] = useState("");
   const [locked, setLocked] = useState(false);
+  const [sending, setSending] = useState(false);
   const [view, setView] = useState<"load" | "ok" | "err">("load");
   const save = useAutosave(() => setLocked(true));
 
@@ -71,7 +72,7 @@ export default function Analisis() {
       rpcS("get_group", { code: c }),
     ])
       .then(([q, ans, g]) => {
-        if (q.error || g.error) {
+        if (q.error || ans.error || g.error) {
           setView("err");
           return;
         }
@@ -80,11 +81,21 @@ export default function Analisis() {
           return;
         }
 
+        const isSubmitted = g.data?.submission?.status === "submitted";
         setQs((q.data || []) as unknown as Q[]);
-        setA({ ...(ans.data || {}), ...pending });
-        setLocked(g.data?.submission?.status === "submitted");
+
+        if (isSubmitted) {
+          // Do not resurrect browser-queued edits after the server has locked
+          // this submission. The server's saved answers are authoritative.
+          save.clearPending(true);
+          setA(ans.data || {});
+        } else {
+          setA({ ...(ans.data || {}), ...pending });
+          if (Object.keys(pending).length > 0) void save.flush();
+        }
+
+        setLocked(isSubmitted);
         setView("ok");
-        save.flush();
       })
       .catch(() => setView("err"));
   }, []);
@@ -137,10 +148,18 @@ export default function Analisis() {
         return;
       }
 
-      await save.flush();
-      if (save.hasPending()) {
+      const saveResult = await save.flush();
+      if (saveResult === "locked") {
+        setLocked(true);
+        setWarn("Pengerjaan sudah terkunci. Perubahan belum tersimpan dan tidak dapat dilanjutkan.");
+        return;
+      }
+      if (
+        (saveResult !== "idle" && saveResult !== "saved") ||
+        save.hasPending()
+      ) {
         setWarn(
-          "Jawaban belum berhasil disimpan. Periksa koneksi internet, lalu coba lagi."
+          "Masih ada jawaban yang belum tersimpan ke server. Periksa status penyimpanan sebelum melanjutkan."
         );
         return;
       }
@@ -150,6 +169,7 @@ export default function Analisis() {
   };
 
   const send = async () => {
+    if (sending || locked) return;
     setWarn("");
 
     const missing = req.filter((q) => !filled(q, a[q.id]));
@@ -169,35 +189,62 @@ export default function Analisis() {
       return;
     }
 
-    await save.flush();
-    if (save.hasPending()) {
-      setWarn(
-        "Jawaban belum berhasil disimpan. Periksa koneksi internet, lalu coba lagi."
-      );
-      return;
-    }
+    setSending(true);
+    try {
+      // Submit is allowed only after every queued answer is confirmed saved.
+      const saveResult = await save.flush();
+      if (saveResult === "locked") {
+        setLocked(true);
+        setWarn("Pengerjaan sudah terkunci di server. Buka halaman hasil untuk melihat kiriman sebelumnya.");
+        return;
+      }
 
-    if (
-      !confirm(
-        "Apakah kalian yakin ingin mengirim hasil analisis? Setelah dikirim, jawaban tidak dapat diubah sampai guru membukanya kembali."
-      )
-    ) {
-      return;
-    }
+      if (
+        (saveResult !== "idle" && saveResult !== "saved") ||
+        save.hasPending()
+      ) {
+        setWarn(
+          "Pengiriman dibatalkan karena masih ada jawaban yang belum tersimpan. Periksa status penyimpanan dan coba lagi."
+        );
+        return;
+      }
 
-    const { data, error } = await rpcS("submit_group", { code: getCode() });
-    if (error) {
-      setWarn(
-        "Hasil belum berhasil dikirim. Periksa koneksi dan coba kembali."
-      );
-      return;
-    }
-    if (data === "ok") {
-      r.push("/lkpd/hasil");
-    } else {
-      setWarn(
-        "Pengiriman belum berhasil. Periksa kembali jawaban wajib pada setiap tahap."
-      );
+      if (
+        !confirm(
+          "Apakah kalian yakin ingin mengirim hasil analisis? Setelah dikirim, jawaban tidak dapat diubah sampai guru membukanya kembali."
+        )
+      ) {
+        return;
+      }
+
+      const { data, error } = await rpcS("submit_group", { code: getCode() });
+      if (error) {
+        setWarn(
+          "Hasil belum berhasil dikirim. Periksa koneksi dan status penyimpanan, lalu coba kembali."
+        );
+        return;
+      }
+
+      if (data === "ok" || data === "sudah terkirim") {
+        save.clearPending(true);
+        setLocked(true);
+        r.push("/lkpd/hasil");
+        return;
+      }
+
+      if (data === "belum lengkap") {
+        setWarn(
+          "Server menolak pengiriman karena masih ada jawaban wajib yang belum lengkap. Periksa setiap tahap, lalu simpan kembali."
+        );
+      } else if (data === "identitas belum lengkap") {
+        setWarn("Nama kelompok dan ketua kelompok wajib diisi sebelum mengirim.");
+      } else {
+        setWarn(
+          "Pengiriman belum berhasil. Periksa jawaban wajib, identitas kelompok, dan status pengerjaan."
+        );
+      }
+    } finally {
+      setSending(false);
     }
   };
 
@@ -322,17 +369,21 @@ export default function Analisis() {
         )}
 
         {!locked && (
-          <Button variant="ghost" onClick={save.flush}>
+          <Button variant="ghost" disabled={sending} onClick={() => { void save.flush(); }}>
             Simpan draft
           </Button>
         )}
 
         {left > 0 ? (
-          <Button onClick={next}>
+          <Button disabled={sending} onClick={next}>
             Selanjutnya →
           </Button>
         ) : (
-          !locked && <Button onClick={send}>KIRIM HASIL ANALISIS →</Button>
+          !locked && (
+            <Button disabled={sending} onClick={send}>
+              {sending ? "MENGIRIM..." : "KIRIM HASIL ANALISIS →"}
+            </Button>
+          )
         )}
       </div>
     </GlassCard>
