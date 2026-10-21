@@ -331,11 +331,11 @@ export default function Groups() {
       project_id: P.id,
       group_number: n,
       access_code:
-        `K${n}-` +
+        `CV-` +
         crypto
           .randomUUID()
           .replace(/-/g, "")
-          .slice(0, 16)
+          .slice(0, 20)
           .toUpperCase(),
     });
 
