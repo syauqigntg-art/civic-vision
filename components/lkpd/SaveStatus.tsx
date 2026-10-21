@@ -1,6 +1,6 @@
 import type { SaveState } from "@/hooks/useAutosave";
 
-const LABELS: Record<SaveState, string> = {
+const LABELS: Partial<Record<SaveState, string>> = {
   idle: "",
   saving: "Menyimpan jawaban…",
   saved: "✓ Semua jawaban tersimpan",
@@ -15,7 +15,8 @@ const LABELS: Record<SaveState, string> = {
 };
 
 export function SaveStatus({ st }: { st: SaveState }) {
-  if (!LABELS[st]) return null;
+  const label = LABELS[st];
+  if (!label) return null;
 
   const isProblem =
     st === "offline" || st === "failed" || st === "storage-error";
@@ -28,7 +29,7 @@ export function SaveStatus({ st }: { st: SaveState }) {
         fontWeight: isProblem || st === "saved" ? 600 : 400,
       }}
     >
-      {LABELS[st]}
+      {label}
     </span>
   );
 }
