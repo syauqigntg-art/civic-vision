@@ -126,7 +126,26 @@ export default function Identitas() {
 
   return (
     <section className="glass">
-      <h2>Project Pembelajaran</h2>
+      <button
+  type="button"
+  className="btn g"
+  onClick={() => {
+    localStorage.removeItem("cv_code");
+    setC("");
+    setOk(false);
+    setErr("");
+    setProject(null);
+    setF({
+      name: "",
+      number: "",
+      class_name: "",
+      leader: "",
+      members: ["", "", "", "", ""],
+    });
+  }}
+>
+  Ganti Kelompok
+</button>
 
       {project ? (
         <div className="glass" style={{ padding: 20, marginBottom: 24 }}>
