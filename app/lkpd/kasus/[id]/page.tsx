@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { sb, getCode, filled } from "@/lib/supabase";
+import { getCode, filled } from "@/lib/supabase";
 import { rpcS } from "@/lib/api/student";
+import { studentContent } from "@/lib/api/student-content";
 import type { Q } from "@/types";
 import { useAutosave } from "@/hooks/useAutosave";
 import { QuestionField } from "@/components/lkpd/QuestionField";
@@ -41,17 +42,19 @@ export default function Video() {
       }
 
       try {
-        const [videoResult, groupResult] = await Promise.all([
-          sb.from("videos").select("*").eq("id", id).eq("is_active", true).maybeSingle(),
+        const [contentResult, groupResult] = await Promise.all([
+          studentContent("video_detail", { code, vid: id }),
           rpcS("get_group", { code }),
         ]);
 
-        if (videoResult.error || groupResult.error) {
+        if (contentResult.error || groupResult.error) {
           setMsg("Data video atau kelompok tidak dapat diperiksa. Muat ulang halaman.");
           setSt("err");
           return;
         }
-        if (!videoResult.data) {
+        const video = contentResult.data?.video;
+        if (!video) {
+          setMsg("Video ini tidak ditugaskan kepada kelompok kalian atau sudah tidak aktif.");
           setSt("none");
           return;
         }
@@ -69,21 +72,7 @@ export default function Video() {
           return;
         }
 
-        const questionResult = await sb
-          .from("questions")
-          .select(QUESTION_COLS)
-          .eq("project_id", videoResult.data.project_id)
-          .eq("phase", "see")
-          .eq("is_active", true)
-          .order("display_order");
-
-        if (questionResult.error) {
-          setMsg("Pertanyaan tahap SEE tidak dapat dimuat. Muat ulang halaman.");
-          setSt("err");
-          return;
-        }
-
-        const phaseQuestions = (questionResult.data || []) as unknown as Q[];
+        const phaseQuestions = (contentResult.data.questions || []) as unknown as Q[];
         const isSubmitted = groupResult.data.submission?.status === "submitted";
 
         // Jika ada pertanyaan SEE, siapkan draft agar jawaban di halaman video
@@ -112,7 +101,7 @@ export default function Video() {
         setAnswers({ ...savedAnswers, ...pending });
         setSeeQs(phaseQuestions);
         setLocked(isSubmitted);
-        setV(videoResult.data);
+        setV(video);
         setSt("ok");
       } catch {
         setMsg("Terjadi kesalahan saat memuat video. Silakan coba lagi.");
