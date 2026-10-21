@@ -85,17 +85,17 @@ function getPlaceholderOptions(category: string, phase: string) {
 }
 
 export default function Questions() {
-  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const cats = catsOf(qs);
+  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
   const filteredQs = useMemo(() => {
     const query = search.trim().toLowerCase();
     return qs.filter((q: any) => {
-      const matchesSearch = !query || q.question_text.toLowerCase().includes(query) || q.category.toLowerCase().includes(query) || (T[q.question_type] || "").toLowerCase().includes(query);
+      const questionText = String(q?.question_text ?? ""); const categoryText = String(q?.category ?? ""); const typeText = String(T[q?.question_type] || q?.question_type || ""); const matchesSearch = !query || questionText.toLocaleLowerCase("id-ID").includes(query) || categoryText.toLocaleLowerCase("id-ID").includes(query) || typeText.toLocaleLowerCase("id-ID").includes(query);
       const matchesPhase = phaseFilter === "all" || (q.phase || "none") === phaseFilter;
       const matchesStatus = statusFilter === "all" || (statusFilter === "active" && q.is_active !== false) || (statusFilter === "inactive" && q.is_active === false);
       return matchesSearch && matchesPhase && matchesStatus;
     }).sort((a: any, b: any) => a.display_order - b.display_order);
   }, [qs, search, phaseFilter, statusFilter]);
-  const edit = (q?: Q) => { setErr(""); setF(q ? { id: q.id, question_text: q.question_text, category: q.category, newCat: "", question_type: q.question_type, is_required: q.is_required, is_active: (q as any).is_active !== false, phase: (q as any).phase || "", placeholder: q.placeholder || "", description: q.description || "", display_order: q.display_order, min_items: q.min_items, options: opts(q).length ? opts(q) : [""] }
+  const edit = (q?: Q) => { setErr(""); setF(q ? { id: q.id, question_text: String(q.question_text || ""), category: String(q.category || ""), newCat: "", question_type: q.question_type, is_required: q.is_required, is_active: (q as any).is_active !== false, phase: (q as any).phase || "", placeholder: q.placeholder || "", description: q.description || "", display_order: q.display_order, min_items: q.min_items, options: opts(q).length ? opts(q) : [""] }
     : { ...blank, category: cats[0] || "", display_order: (qs[qs.length - 1]?.display_order || 0) + 1 }); };
   const set = (k: string, v: any) =>
     setF((previous: any) =>
