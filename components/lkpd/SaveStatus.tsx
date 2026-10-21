@@ -1,6 +1,6 @@
 import type { SaveState } from "@/hooks/useAutosave";
 
-const LABELS: Record<SaveState, string> = {
+const LABELS: Record<string, string> = {
   idle: "",
   saving: "Menyimpan jawaban…",
   saved: "✓ Semua jawaban tersimpan",
