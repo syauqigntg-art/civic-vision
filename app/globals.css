@@ -128,3 +128,14 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
     font-size: 11px;
   }
 }
+
+
+/* Progress bar analisis: tiga kolom pada desktop, dua kolom pada layar kecil */
+.phases.three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 760px) {
+  .phases.three {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
