@@ -1,8 +1,17 @@
-"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useState } from "react"; import { sb, opts, catsOf, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin";
+"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, catsOf, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin";
 const T: Record<string, string> = { text: "Text", textarea: "Textarea", multiple_text: "Multiple Text", single_select: "Single Select", multi_select: "Multi Select", scale: "Scale" };
 const blank = { id: "", question_text: "", category: "", newCat: "", question_type: "textarea", is_required: true, is_active: true, phase: "", placeholder: "", description: "", display_order: 1, min_items: 2, options: [""] };
 export default function Questions() {
-  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const cats = catsOf(qs);
+  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const cats = catsOf(qs);
+  const filteredQs = useMemo(() => {
+    const query = search.trim().toLowerCase();
+    return qs.filter((q: any) => {
+      const matchesSearch = !query || q.question_text.toLowerCase().includes(query) || q.category.toLowerCase().includes(query) || (T[q.question_type] || "").toLowerCase().includes(query);
+      const matchesPhase = phaseFilter === "all" || (q.phase || "none") === phaseFilter;
+      const matchesStatus = statusFilter === "all" || (statusFilter === "active" && q.is_active !== false) || (statusFilter === "inactive" && q.is_active === false);
+      return matchesSearch && matchesPhase && matchesStatus;
+    }).sort((a: any, b: any) => a.display_order - b.display_order);
+  }, [qs, search, phaseFilter, statusFilter]);
   const edit = (q?: Q) => { setErr(""); setF(q ? { id: q.id, question_text: q.question_text, category: q.category, newCat: "", question_type: q.question_type, is_required: q.is_required, is_active: (q as any).is_active !== false, phase: (q as any).phase || "", placeholder: q.placeholder || "", description: q.description || "", display_order: q.display_order, min_items: q.min_items, options: opts(q).length ? opts(q) : [""] }
     : { ...blank, category: cats[0] || "", display_order: (qs[qs.length - 1]?.display_order || 0) + 1 }); };
   const set = (k: string, v: any) => setF({ ...f, [k]: v });
@@ -33,10 +42,104 @@ export default function Questions() {
     <label>Urutan</label><input type="number" min={1} value={f.display_order} onChange={e => set("display_order", e.target.value)} />
     {f.question_type.endsWith("select") && <><label>Pilihan Jawaban</label>{f.options.map((o: string, i: number) => <div className="row" style={{ marginTop: 6 }} key={i}><input value={o} placeholder={`Pilihan ${i + 1}`} onChange={e => { const a = [...f.options]; a[i] = e.target.value; set("options", a); }} />
       <button className="btn g" onClick={() => set("options", f.options.filter((_: any, j: number) => j !== i))}>×</button></div>)}<div className="row"><button className="btn g" onClick={() => set("options", [...f.options, ""])}>+ Tambah pilihan</button></div></>}
-    <div className="row"><button className="btn" onClick={save}>Simpan Pertanyaan</button><button className="btn g" onClick={() => setF(null)}>Batal</button></div></section>);
-  return (<section className="glass"><h2>Pertanyaan</h2>{!loading && !qs.length && <p>Belum ada pertanyaan. Tambahkan pertanyaan pertama dengan tombol di bawah.</p>}<div style={{ overflowX: "auto" }}><table><thead><tr><th /><th>No</th><th>Kategori</th><th>Pertanyaan</th><th>Tipe</th><th>Wajib</th><th>Status</th><th>Urutan</th><th /></tr></thead>
-    <tbody>{qs.map((q: any, i) => <tr key={q.id} draggable onDragStart={() => setDrag(q.id)} onDragOver={e => e.preventDefault()} onDrop={() => { reorder(drag, q.id); setDrag(""); }} style={{ opacity: drag === q.id ? .4 : 1 }}><td style={{ cursor: "grab" }} title="Seret untuk mengubah urutan">⠿</td><td>{String(i + 1).padStart(2, "0")}</td><td>{q.category}</td><td style={{ minWidth: 220 }}>{q.question_text}</td><td>{T[q.question_type]}</td><td>{q.is_required ? "Ya" : "Tidak"}</td>
-      <td><button className="btn g" style={{ padding: "4px 12px" }} onClick={async () => { await sb.from("questions").update({ is_active: !q.is_active }).eq("id", q.id); load(); }}>{q.is_active ? "Aktif" : "Nonaktif"}</button></td><td>{q.display_order}</td>
-      <td style={{ whiteSpace: "nowrap" }}><button className="btn g" style={{ padding: "4px 10px" }} onClick={() => bump(i, -1)} aria-label="Naikkan">↑</button> <button className="btn g" style={{ padding: "4px 10px" }} onClick={() => bump(i, 1)} aria-label="Turunkan">↓</button> <button className="btn g" style={{ padding: "4px 12px" }} onClick={() => edit(q)}>Edit</button> <button className="btn g" style={{ padding: "4px 12px" }} onClick={() => del(q)}>Delete</button></td></tr>)}</tbody></table></div>
-    <div className="row"><button className="btn" onClick={() => edit()}>+ Tambah Pertanyaan</button></div></section>);
+    <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save}>Simpan pertanyaan</button></div></div></section>);
+  return (
+    <section className="glass">
+      <div className="admin-section-head">
+        <div>
+          <h2>Daftar pertanyaan</h2>
+          <p>{qs.length} pertanyaan tersimpan · {qs.filter((q: any) => q.is_active !== false).length} aktif</p>
+        </div>
+        <button className="btn" type="button" onClick={() => edit()}>+ Tambah pertanyaan</button>
+      </div>
+
+      <div className="admin-filter-row">
+        <input
+          aria-label="Cari pertanyaan"
+          placeholder="Cari teks pertanyaan, kategori, atau tipe…"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+        <select aria-label="Filter fase" value={phaseFilter} onChange={(e) => setPhaseFilter(e.target.value)}>
+          <option value="all">Semua fase</option>
+          <option value="see">SEE</option>
+          <option value="think">THINK</option>
+          <option value="connect">CONNECT</option>
+          <option value="act">ACT</option>
+          <option value="none">Tanpa fase</option>
+        </select>
+        <select aria-label="Filter status" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+          <option value="all">Semua status</option>
+          <option value="active">Aktif</option>
+          <option value="inactive">Nonaktif</option>
+        </select>
+      </div>
+
+      {loading ? (
+        <div className="admin-empty">Memuat pertanyaan…</div>
+      ) : !qs.length ? (
+        <div className="admin-empty">
+          Belum ada pertanyaan. Tambahkan pertanyaan pertama melalui tombol di atas.
+        </div>
+      ) : !filteredQs.length ? (
+        <div className="admin-empty">Tidak ada pertanyaan yang cocok dengan filter.</div>
+      ) : (
+        <div className="admin-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Urutan</th>
+                <th>Fase</th>
+                <th>Kategori & pertanyaan</th>
+                <th>Tipe</th>
+                <th>Wajib</th>
+                <th>Status</th>
+                <th>Tindakan</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredQs.map((q: any) => (
+                <tr key={q.id} draggable onDragStart={() => setDrag(q.id)} onDragOver={(e) => e.preventDefault()} onDrop={() => { reorder(drag, q.id); setDrag(""); }}>
+                  <td>
+                    <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+                      <span title="Seret untuk mengubah urutan" style={{ color: "#9aa5b5", cursor: "grab" }}>⠿</span>
+                      <span>{String(q.display_order).padStart(2, "0")}</span>
+                      <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+                        <button className="admin-order-btn" type="button" onClick={() => bump(qs.findIndex((item: any) => item.id === q.id), -1)} aria-label={`Naikkan ${q.question_text}`}>↑</button>
+                        <button className="admin-order-btn" type="button" onClick={() => bump(qs.findIndex((item: any) => item.id === q.id), 1)} aria-label={`Turunkan ${q.question_text}`}>↓</button>
+                      </span>
+                    </div>
+                  </td>
+                  <td><span className="admin-phase-chip">{q.phase ? q.phase.toUpperCase() : "—"}</span></td>
+                  <td className="admin-question-cell">
+                    <strong>{q.category}</strong>
+                    <div style={{ marginTop: 4 }}>{q.question_text}</div>
+                  </td>
+                  <td>{T[q.question_type] || q.question_type}</td>
+                  <td>{q.is_required ? "Wajib" : "Opsional"}</td>
+                  <td>
+                    <button className="btn g" style={{ padding: "5px 9px", minHeight: 30 }} onClick={async () => { const { error } = await sb.from("questions").update({ is_active: !q.is_active }).eq("id", q.id); if (error) { setErr("Status pertanyaan gagal diperbarui."); return; } load(); }}>
+                      <span className={"admin-status-pill " + (q.is_active !== false ? "active" : "off")}>{q.is_active !== false ? "Aktif" : "Nonaktif"}</span>
+                    </button>
+                  </td>
+                  <td>
+                    <div className="admin-row-actions">
+                      <button className="btn g" type="button" onClick={() => edit(q)}>Edit</button>
+                      <button className="btn g danger" type="button" onClick={() => del(q)}>Hapus</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {err && <div className="warn" role="alert" style={{ marginTop: 12 }}>{err}</div>}
+      <div className="admin-table-footer">
+        <span>Menampilkan {filteredQs.length} dari {qs.length} pertanyaan.</span>
+        <button className="btn g" type="button" onClick={() => { setSearch(""); setPhaseFilter("all"); setStatusFilter("all"); }}>Reset filter</button>
+      </div>
+    </section>
+  );
 }
