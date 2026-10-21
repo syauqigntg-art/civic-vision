@@ -8,7 +8,19 @@ drop policy if exists "public read" on public.videos;
 drop policy if exists "public read" on public.questions;
 drop policy if exists "public read" on public.projects;
 drop policy if exists "public read" on public.question_options;
-revoke select on table public.projects, public.videos, public.questions, public.question_options from public, anon;
+revoke all on table
+  public.users,
+  public.projects,
+  public.groups,
+  public.group_members,
+  public.videos,
+  public.group_videos,
+  public.questions,
+  public.question_options,
+  public.submissions,
+  public.answers,
+  public.api_rate_limits
+from public, anon;
 
 -- RPC statistik menghitung jumlah kelompok/konten dan tidak dipakai oleh beranda lagi.
 revoke execute on function public.stats() from public, anon, authenticated;
