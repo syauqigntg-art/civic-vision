@@ -1,6 +1,89 @@
 "use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, catsOf, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin";
 const T: Record<string, string> = { text: "Text", textarea: "Textarea", multiple_text: "Multiple Text", single_select: "Single Select", multi_select: "Multi Select", scale: "Scale" };
 const blank = { id: "", question_text: "", category: "", newCat: "", question_type: "textarea", is_required: true, is_active: true, phase: "", placeholder: "", description: "", display_order: 1, min_items: 2, options: [""] };
+const PLACEHOLDER_BY_PHASE: Record<string, string[]> = {
+  see: [
+    "Tuliskan hal yang kalian amati dari video...",
+    "Apa masalah yang terlihat pada kasus ini?",
+    "Siapa saja yang terdampak dalam kasus tersebut?",
+    "Fakta apa yang kalian temukan dari video?",
+  ],
+  think: [
+    "Jelaskan masalah utama yang kalian temukan...",
+    "Menurut kalian, apa penyebab masalah tersebut?",
+    "Tuliskan fakta atau bukti yang mendukung analisis kalian...",
+    "Siapa saja pihak yang terlibat dan terdampak?",
+    "Apa dampak masalah tersebut bagi lingkungan sekitar?",
+  ],
+  connect: [
+    "Nilai atau sila Pancasila apa yang berkaitan dengan kasus ini?",
+    "Jelaskan hubungan kasus tersebut dengan nilai Pancasila...",
+    "Mengapa nilai tersebut relevan dengan permasalahan ini?",
+    "Prinsip etika atau kewarganegaraan apa yang perlu diperhatikan?",
+  ],
+  act: [
+    "Solusi apa yang kalian usulkan untuk mengatasi masalah ini?",
+    "Tuliskan tindakan nyata yang dapat dilakukan...",
+    "Apa langkah pertama yang akan kalian lakukan?",
+    "Siapa yang perlu dilibatkan untuk menjalankan solusi tersebut?",
+    "Bagaimana cara memastikan solusi kalian dapat diterapkan?",
+  ],
+};
+
+const PLACEHOLDER_BY_CATEGORY: Array<{ match: string[]; options: string[] }> = [
+  {
+    match: ["observasi", "pengamatan", "kasus", "identifikasi"],
+    options: [
+      "Tuliskan hasil pengamatan kalian...",
+      "Masalah apa yang paling terlihat pada kasus ini?",
+      "Siapa yang terdampak dan bagaimana kondisinya?",
+      "Fakta apa yang kalian temukan dari kasus?",
+    ],
+  },
+  {
+    match: ["analisis", "masalah", "penyebab", "dampak"],
+    options: [
+      "Jelaskan masalah utama yang kalian temukan...",
+      "Menurut kalian, apa penyebab masalah tersebut?",
+      "Apa bukti atau fakta yang mendukung pendapat kalian?",
+      "Apa dampak masalah tersebut bagi pihak yang terlibat?",
+    ],
+  },
+  {
+    match: ["pancasila", "sila", "nilai", "etika", "moral", "kewarganegaraan"],
+    options: [
+      "Sila atau nilai Pancasila apa yang relevan?",
+      "Jelaskan hubungan kasus dengan nilai Pancasila...",
+      "Mengapa nilai tersebut sesuai dengan kasus ini?",
+      "Prinsip etika atau kewarganegaraan apa yang berkaitan?",
+    ],
+  },
+  {
+    match: ["solusi", "tindakan", "aksi", "refleksi", "kesimpulan"],
+    options: [
+      "Solusi apa yang kalian usulkan?",
+      "Tuliskan tindakan nyata yang dapat dilakukan...",
+      "Apa langkah pertama untuk menerapkan solusi tersebut?",
+      "Apa pelajaran penting yang kalian peroleh?",
+    ],
+  },
+];
+
+function getPlaceholderOptions(category: string, phase: string) {
+  const normalized = category.trim().toLocaleLowerCase("id-ID");
+  const match = PLACEHOLDER_BY_CATEGORY.find((item) =>
+    item.match.some((keyword) => normalized.includes(keyword))
+  );
+  const phaseOptions = PLACEHOLDER_BY_PHASE[phase] || [];
+  const categoryOptions = match?.options || [];
+  const combined = [...categoryOptions, ...phaseOptions,
+    "Tuliskan jawaban kalian di sini...",
+    "Jelaskan alasan kalian...",
+    "Berikan contoh yang sesuai...",
+  ];
+  return [...new Set(combined)];
+}
+
 export default function Questions() {
   const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const cats = catsOf(qs);
   const filteredQs = useMemo(() => {
@@ -14,7 +97,17 @@ export default function Questions() {
   }, [qs, search, phaseFilter, statusFilter]);
   const edit = (q?: Q) => { setErr(""); setF(q ? { id: q.id, question_text: q.question_text, category: q.category, newCat: "", question_type: q.question_type, is_required: q.is_required, is_active: (q as any).is_active !== false, phase: (q as any).phase || "", placeholder: q.placeholder || "", description: q.description || "", display_order: q.display_order, min_items: q.min_items, options: opts(q).length ? opts(q) : [""] }
     : { ...blank, category: cats[0] || "", display_order: (qs[qs.length - 1]?.display_order || 0) + 1 }); };
-  const set = (k: string, v: any) => setF({ ...f, [k]: v });
+  const set = (k: string, v: any) =>
+    setF((previous: any) =>
+      k === "category" || k === "phase"
+        ? { ...previous, [k]: v, placeholder: "" }
+        : { ...previous, [k]: v }
+    );
+  const activeCategory = f.category === "__new" ? f.newCat : f.category;
+  const placeholderChoices = getPlaceholderOptions(activeCategory || "", f.phase || "");
+  const placeholderOptions = f.placeholder && !placeholderChoices.includes(f.placeholder)
+    ? [f.placeholder, ...placeholderChoices]
+    : placeholderChoices;
   const save = async () => { const cat = f.category === "__new" ? f.newCat.trim() : f.category; const sel = f.question_type.endsWith("select"); const o = f.options.map((s: string) => s.trim()).filter(Boolean);
     if (!f.question_text.trim() || !cat) return setErr("Pertanyaan dan kategori wajib diisi."); if (sel && o.length < 2) return setErr("Tambahkan minimal 2 pilihan jawaban.");
     const row = { question_text: f.question_text, category: cat, phase: f.phase || null, question_type: f.question_type, is_required: f.is_required, is_active: f.is_active, placeholder: f.placeholder || null, description: f.description || null, display_order: +f.display_order, min_items: +f.min_items || 1, updated_at: new Date().toISOString() };
@@ -38,7 +131,13 @@ export default function Questions() {
     {f.question_type === "multiple_text" && <><label>Minimal jawaban</label><input type="number" min={1} value={f.min_items} onChange={e => set("min_items", e.target.value)} /></>}
     <label><input type="checkbox" style={{ width: "auto", marginRight: 8 }} checked={f.is_required} onChange={e => set("is_required", e.target.checked)} />Required (wajib dijawab)</label>
     <label><input type="checkbox" style={{ width: "auto", marginRight: 8 }} checked={f.is_active} onChange={e => set("is_active", e.target.checked)} />Aktif (tampil untuk siswa)</label>
-    <label>Placeholder</label><input value={f.placeholder} onChange={e => set("placeholder", e.target.value)} /><label>Instruksi (opsional)</label><input value={f.description} onChange={e => set("description", e.target.value)} />
+    <label htmlFor="question-placeholder">Placeholder jawaban</label>
+    <select id="question-placeholder" value={f.placeholder} onChange={e => set("placeholder", e.target.value)}>
+      <option value="">— Tanpa placeholder —</option>
+      {placeholderOptions.map((value: string) => <option key={value} value={value}>{value}</option>)}
+    </select>
+    <small className="admin-field-hint">Pilihan otomatis menyesuaikan kategori dan fase. Ubah kategori atau fase untuk melihat rekomendasi lain.</small>
+    <label htmlFor="question-description">Instruksi tambahan (opsional)</label><input id="question-description" value={f.description} onChange={e => set("description", e.target.value)} />
     <label>Urutan</label><input type="number" min={1} value={f.display_order} onChange={e => set("display_order", e.target.value)} />
     {f.question_type.endsWith("select") && <><label>Pilihan Jawaban</label>{f.options.map((o: string, i: number) => <div className="row" style={{ marginTop: 6 }} key={i}><input value={o} placeholder={`Pilihan ${i + 1}`} onChange={e => { const a = [...f.options]; a[i] = e.target.value; set("options", a); }} />
       <button className="btn g" onClick={() => set("options", f.options.filter((_: any, j: number) => j !== i))}>×</button></div>)}<div className="row"><button className="btn g" onClick={() => set("options", [...f.options, ""])}>+ Tambah pilihan</button></div></>}
