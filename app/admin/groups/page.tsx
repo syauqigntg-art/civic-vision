@@ -158,10 +158,10 @@ export default function Groups() {
 
     try {
       const { error: deleteError } = await sb
-        .from("group_videos")
-        .delete()
-        .in("group_id", ids);
-
+      .from("group_videos")
+.delete()
+.eq("project_id", P.id)
+.in("group_id", ids);
       if (deleteError) {
         throw new Error(
           "Penugasan lama gagal diperbarui. Coba lagi."
@@ -235,9 +235,10 @@ export default function Groups() {
     }
 
     const { error: deleteError } = await sb
-      .from("group_videos")
-      .delete()
-      .eq("group_id", gid);
+     .from("group_videos")
+.delete()
+.eq("project_id", P.id)
+.eq("group_id", gid);
 
     if (deleteError) {
       alert("Gagal memperbarui penugasan video.");
