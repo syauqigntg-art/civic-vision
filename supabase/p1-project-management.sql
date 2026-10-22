@@ -42,7 +42,112 @@ BEGIN
     RAISE EXCEPTION 'Migrasi dibatalkan: ditemukan jawaban yang terhubung ke pertanyaan proyek lain. Audit data terlebih dahulu.';
   END IF;
 END;
-$preflight$;CREATE OR REPLACE FUNCTION public.guard_group_video_project()
+$preflight$;-- Database backstop: don't allow ordinary teacher writes to archived
+-- project rows, including when a client bypasses disabled UI controls.
+CREATE OR REPLACE FUNCTION public.guard_active_project_row()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $function$
+BEGIN
+  IF NEW.project_id IS NULL THEN
+    RAISE EXCEPTION 'project_id wajib ditentukan.';
+  END IF;
+
+  PERFORM 1 FROM public.projects
+  WHERE id = NEW.project_id AND is_active IS TRUE
+  FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Proyek diarsipkan atau tidak ditemukan. Aktifkan proyek sebelum membuat perubahan.';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS groups_project_active_guard ON public.groups;
+CREATE TRIGGER groups_project_active_guard
+BEFORE INSERT OR UPDATE ON public.groups
+FOR EACH ROW EXECUTE FUNCTION public.guard_active_project_row();
+
+DROP TRIGGER IF EXISTS videos_project_active_guard ON public.videos;
+CREATE TRIGGER videos_project_active_guard
+BEFORE INSERT OR UPDATE ON public.videos
+FOR EACH ROW EXECUTE FUNCTION public.guard_active_project_row();
+
+DROP TRIGGER IF EXISTS questions_project_active_guard ON public.questions;
+CREATE TRIGGER questions_project_active_guard
+BEFORE INSERT OR UPDATE ON public.questions
+FOR EACH ROW EXECUTE FUNCTION public.guard_active_project_row();
+
+DROP TRIGGER IF EXISTS submissions_project_active_guard ON public.submissions;
+CREATE TRIGGER submissions_project_active_guard
+BEFORE INSERT OR UPDATE ON public.submissions
+FOR EACH ROW EXECUTE FUNCTION public.guard_active_project_row();
+
+CREATE OR REPLACE FUNCTION public.guard_active_parent_project()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $function$
+DECLARE
+  v_project_id uuid;
+  v_question_project uuid;
+BEGIN
+  IF TG_TABLE_NAME = 'group_members' THEN
+    SELECT g.project_id INTO v_project_id
+    FROM public.groups g
+    WHERE g.id = NEW.group_id;
+  ELSIF TG_TABLE_NAME = 'question_options' THEN
+    SELECT q.project_id INTO v_project_id
+    FROM public.questions q
+    WHERE q.id = NEW.question_id;
+  ELSIF TG_TABLE_NAME = 'answers' THEN
+    SELECT s.project_id, q.project_id
+    INTO v_project_id, v_question_project
+    FROM public.submissions s
+    JOIN public.questions q ON q.id = NEW.question_id
+    WHERE s.id = NEW.submission_id;
+    IF v_project_id IS DISTINCT FROM v_question_project THEN
+      RAISE EXCEPTION 'Jawaban dan pertanyaan harus berasal dari proyek yang sama.';
+    END IF;
+  ELSE
+    RAISE EXCEPTION 'Tabel tidak didukung untuk pemeriksaan proyek.';
+  END IF;
+
+  IF v_project_id IS NULL THEN
+    RAISE EXCEPTION 'Data induk tidak ditemukan atau belum memiliki project_id.';
+  END IF;
+
+  PERFORM 1 FROM public.projects
+  WHERE id = v_project_id AND is_active IS TRUE
+  FOR SHARE;
+
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'Proyek diarsipkan. Aktifkan kembali proyek sebelum mengubah data.';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS group_members_project_active_guard ON public.group_members;
+CREATE TRIGGER group_members_project_active_guard
+BEFORE INSERT OR UPDATE ON public.group_members
+FOR EACH ROW EXECUTE FUNCTION public.guard_active_parent_project();
+
+DROP TRIGGER IF EXISTS question_options_project_active_guard ON public.question_options;
+CREATE TRIGGER question_options_project_active_guard
+BEFORE INSERT OR UPDATE ON public.question_options
+FOR EACH ROW EXECUTE FUNCTION public.guard_active_parent_project();
+
+DROP TRIGGER IF EXISTS answers_project_active_guard ON public.answers;
+CREATE TRIGGER answers_project_active_guard
+BEFORE INSERT OR UPDATE ON public.answers
+FOR EACH ROW EXECUTE FUNCTION public.guard_active_parent_project();
+
+CREATE OR REPLACE FUNCTION public.guard_group_video_project()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = public
@@ -101,6 +206,7 @@ BEGIN
 END;
 $function$;
 
+DROP TRIGGER IF EXISTS guard_group_video_project ON public.group_videos;
 DROP TRIGGER IF EXISTS guard_group_video_project_insert ON public.group_videos;
 DROP TRIGGER IF EXISTS guard_group_video_project_update ON public.group_videos;
 DROP TRIGGER IF EXISTS guard_group_video_project_delete ON public.group_videos;
@@ -109,9 +215,6 @@ BEFORE INSERT ON public.group_videos
 FOR EACH ROW EXECUTE FUNCTION public.guard_group_video_project();
 CREATE TRIGGER guard_group_video_project_update
 BEFORE UPDATE OF group_id, video_id ON public.group_videos
-FOR EACH ROW EXECUTE FUNCTION public.guard_group_video_project();
-CREATE TRIGGER guard_group_video_project_delete
-BEFORE DELETE ON public.group_videos
 FOR EACH ROW EXECUTE FUNCTION public.guard_group_video_project();
 
 -- Once created, project ownership is stable for project-scoped rows.
