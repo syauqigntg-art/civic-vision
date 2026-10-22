@@ -85,7 +85,7 @@ function getPlaceholderOptions(category: string, phase: string) {
 }
 
 export default function Questions() {
-  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const archived = P?.is_active === false; const readOnlyNotice = "Project ini sedang diarsipkan. Aktifkan project terlebih dahulu untuk mengubah data."; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
+  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
   const filteredQs = useMemo(() => {
     const query = search.trim().toLowerCase();
     return qs.filter((q: any) => {
@@ -116,7 +116,7 @@ export default function Questions() {
   const placeholderOptions = f?.placeholder && !placeholderChoices.includes(f.placeholder)
     ? [f.placeholder, ...placeholderChoices]
     : placeholderChoices;
-  const save = async () => { if (archived) { setErr(readOnlyNotice); return; } const cat = f.category === "__new" ? f.newCat.trim() : f.category; const sel = f.question_type.endsWith("select"); const o = f.options.map((s: string) => s.trim()).filter(Boolean);
+  const save = async () => { if (readOnly) return setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan."); const cat = f.category === "__new" ? f.newCat.trim() : f.category; const sel = f.question_type.endsWith("select"); const o = f.options.map((s: string) => s.trim()).filter(Boolean);
     if (!f.question_text.trim() || !cat) return setErr("Pertanyaan dan kategori wajib diisi."); if (sel && o.length < 2) return setErr("Tambahkan minimal 2 pilihan jawaban.");
     const row = { question_text: f.question_text, category: cat, phase: f.phase || null, question_type: f.question_type, is_required: f.is_required, is_active: f.is_active, placeholder: f.placeholder || null, description: f.description || null, display_order: +f.display_order, min_items: +f.min_items || 1, updated_at: new Date().toISOString() };
     const pr = questionForm.safeParse(row); if (!pr.success) return setErr(pr.error.issues[0].message);
@@ -124,13 +124,13 @@ export default function Questions() {
     let id = f.id; if (id) await sb.from("questions").update(row).eq("id", id); else { const r = await sb.from("questions").insert({ ...row, project_id: P.id }).select("id").single(); id = r.data?.id; }
     await sb.from("question_options").delete().eq("question_id", id); if (sel) await sb.from("question_options").insert(o.map((t: string, i: number) => ({ question_id: id, option_text: t, display_order: i + 1 })));
     setF(null); load(); };
-  const del = async (q: Q) => { if (archived) { setErr(readOnlyNotice); return; } const n = ans.filter(a => a.question_id === q.id).length;
+  const del = async (q: Q) => { if (readOnly) return setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan."); const n = ans.filter(a => a.question_id === q.id).length;
     if (n > 0) { if (confirm(`Pertanyaan ini sudah memiliki ${n} jawaban siswa, jadi tidak dihapus permanen. Pertanyaan akan dinonaktifkan (disembunyikan dari siswa) dan jawaban lama tetap tersimpan. Lanjutkan?`)) { await sb.from("questions").update({ is_active: false }).eq("id", q.id); load(); } return; }
     if (confirm("Hapus pertanyaan ini secara permanen?")) { await sb.from("questions").delete().eq("id", q.id); load(); } };
-  const reorder = async (from: string, to: string) => { if (archived) { setErr(readOnlyNotice); return; } if (!from || from === to) return; const a = [...qs]; const i = a.findIndex(x => x.id === from), j = a.findIndex(x => x.id === to); const [m] = a.splice(i, 1); a.splice(j, 0, m);
+  const reorder = async (from: string, to: string) => { if (readOnly || !from || from === to) return; const a = [...qs]; const i = a.findIndex(x => x.id === from), j = a.findIndex(x => x.id === to); const [m] = a.splice(i, 1); a.splice(j, 0, m);
     await Promise.all(a.map((q, k) => q.display_order === k + 1 ? null : sb.from("questions").update({ display_order: k + 1 }).eq("id", q.id))); load(); };
   const bump = (i: number, d: number) => { const t = qs[i + d]; if (t) reorder(qs[i].id, t.id); };
-  if (f) return (<section className="glass">{archived && <div role="alert" className="warn">{readOnlyNotice}</div>}<fieldset disabled={archived} style={{border:0,padding:0,margin:0,minWidth:0}}><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}
+  if (f) return (<section className="glass"><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
     <label>Pertanyaan</label><textarea value={f.question_text} onChange={e => set("question_text", e.target.value)} />
     <label>Kategori</label><select value={f.category} onChange={e => set("category", e.target.value)}><option value="">Pilih kategori</option>{cats.map(c => <option key={c}>{c}</option>)}<option value="__new">+ Kategori baru...</option></select>
     {f.category === "__new" && <input style={{ marginTop: 8 }} placeholder="Nama kategori baru" value={f.newCat} onChange={e => set("newCat", e.target.value)} />}
@@ -148,18 +148,16 @@ export default function Questions() {
     <label htmlFor="question-description">Instruksi tambahan (opsional)</label><input id="question-description" value={f.description} onChange={e => set("description", e.target.value)} />
     <label>Urutan</label><input type="number" min={1} value={f.display_order} onChange={e => set("display_order", e.target.value)} />
     {f.question_type.endsWith("select") && <><label>Pilihan Jawaban</label>{f.options.map((o: string, i: number) => <div className="row" style={{ marginTop: 6 }} key={i}><input value={o} placeholder={`Pilihan ${i + 1}`} onChange={e => { const a = [...f.options]; a[i] = e.target.value; set("options", a); }} />
-      <button className="btn g" onClick={() => set("options", f.options.filter((_: any, j: number) => j !== i))}>×</button></div>)}<div className="row"><button className="btn g" onClick={() => set("options", [...f.options, ""])}>+ Tambah pilihan</button></div></>}
-    <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save}>Simpan pertanyaan</button></div></div></fieldset></section>);
+      <button className="btn g" onClick={() => set("options", f.options.filter((_: any, j: number) => j !== i))}>×</button></div>)}<div className="row"><button className="btn g" onClick={() => set("options", [...f.options, ""])}>+ Tambah pilihan</button></div></>}</fieldset>
+    <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly}>Simpan pertanyaan</button></div></div></section>);
   return (
     <section className="glass">
-      {archived && <div role="alert" className="warn">{readOnlyNotice}</div>}
-      <fieldset disabled={archived} style={{border:0,padding:0,margin:0,minWidth:0}}>
       <div className="admin-section-head">
         <div>
           <h2>Daftar pertanyaan</h2>
           <p>{qs.length} pertanyaan tersimpan · {qs.filter((q: any) => q.is_active !== false).length} aktif</p>
         </div>
-        <button className="btn" type="button" onClick={() => edit()}>+ Tambah pertanyaan</button>
+        <button className="btn" type="button" onClick={() => edit()} disabled={readOnly}>+ Tambah pertanyaan</button>
       </div>
 
       <div className="admin-filter-row">
@@ -208,14 +206,14 @@ export default function Questions() {
             </thead>
             <tbody>
               {filteredQs.map((q: any) => (
-                <tr key={q.id} draggable onDragStart={() => setDrag(q.id)} onDragOver={(e) => e.preventDefault()} onDrop={() => { reorder(drag, q.id); setDrag(""); }}>
+                <tr key={q.id} draggable={!readOnly} onDragStart={() => { if (!readOnly) setDrag(q.id); }} onDragOver={(e) => { if (!readOnly) e.preventDefault(); }} onDrop={() => { if (!readOnly) reorder(drag, q.id); setDrag(""); }}>
                   <td>
                     <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
                       <span title="Seret untuk mengubah urutan" style={{ color: "#9aa5b5", cursor: "grab" }}>⠿</span>
                       <span>{String(q.display_order).padStart(2, "0")}</span>
                       <span style={{ display: "flex", flexDirection: "column", gap: 1 }}>
-                        <button className="admin-order-btn" type="button" onClick={() => bump(qs.findIndex((item: any) => item.id === q.id), -1)} aria-label={`Naikkan ${q.question_text}`}>↑</button>
-                        <button className="admin-order-btn" type="button" onClick={() => bump(qs.findIndex((item: any) => item.id === q.id), 1)} aria-label={`Turunkan ${q.question_text}`}>↓</button>
+                        <button className="admin-order-btn" type="button" onClick={() => bump(qs.findIndex((item: any) => item.id === q.id), -1)} disabled={readOnly} aria-label={`Naikkan ${q.question_text}`}>↑</button>
+                        <button className="admin-order-btn" type="button" onClick={() => bump(qs.findIndex((item: any) => item.id === q.id), 1)} disabled={readOnly} aria-label={`Turunkan ${q.question_text}`}>↓</button>
                       </span>
                     </div>
                   </td>
@@ -227,14 +225,14 @@ export default function Questions() {
                   <td>{T[q.question_type] || q.question_type}</td>
                   <td>{q.is_required ? "Wajib" : "Opsional"}</td>
                   <td>
-                    <button className="btn g" style={{ padding: "5px 9px", minHeight: 30 }} onClick={async () => { if (archived) { setErr(readOnlyNotice); return; } const { error } = await sb.from("questions").update({ is_active: !q.is_active }).eq("id", q.id); if (error) { setErr("Status pertanyaan gagal diperbarui."); return; } load(); }}>
+                    <button className="btn g" style={{ padding: "5px 9px", minHeight: 30 }} disabled={readOnly} onClick={async () => { if (readOnly) return; const { error } = await sb.from("questions").update({ is_active: !q.is_active }).eq("id", q.id); if (error) { setErr("Status pertanyaan gagal diperbarui."); return; } load(); }}>
                       <span className={"admin-status-pill " + (q.is_active !== false ? "active" : "off")}>{q.is_active !== false ? "Aktif" : "Nonaktif"}</span>
                     </button>
                   </td>
                   <td>
                     <div className="admin-row-actions">
-                      <button className="btn g" type="button" onClick={() => edit(q)}>Edit</button>
-                      <button className="btn g danger" type="button" onClick={() => del(q)}>Hapus</button>
+                      <button className="btn g" type="button" onClick={() => edit(q)} disabled={readOnly}>Edit</button>
+                      <button className="btn g danger" type="button" onClick={() => del(q)} disabled={readOnly}>Hapus</button>
                     </div>
                   </td>
                 </tr>
@@ -249,7 +247,6 @@ export default function Questions() {
         <span>Menampilkan {filteredQs.length} dari {qs.length} pertanyaan.</span>
         <button className="btn g" type="button" onClick={() => { setSearch(""); setPhaseFilter("all"); setStatusFilter("all"); }}>Reset filter</button>
       </div>
-      </fieldset>
     </section>
   );
 }

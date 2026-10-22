@@ -18,6 +18,7 @@ export default function Kasus() {
   const [groupLoaded, setGroupLoaded] = useState(false);
   const [groupError, setGroupError] = useState(false);
   const [err, setErr] = useState(false);
+  const [errMessage, setErrMessage] = useState("");
 
   useEffect(() => {
     const code = getCode();
@@ -35,6 +36,7 @@ export default function Kasus() {
       .then(([videoResult, groupResult]) => {
         if (videoResult.error) {
           setErr(true);
+          setErrMessage(videoResult.error.message);
           setVideos([]);
         } else {
           const assignedIds = Array.isArray(groupResult.data?.video_ids)
@@ -55,6 +57,7 @@ export default function Kasus() {
       })
       .catch(() => {
         setErr(true);
+        setErrMessage("Daftar video tidak dapat dimuat. Periksa koneksi dan coba kembali.");
         setGroupLoaded(true);
       });
   }, []);
@@ -63,7 +66,7 @@ export default function Kasus() {
     return (
       <section className="glass">
         <div className="warn" role="alert">
-          Daftar video tidak dapat dimuat. Silakan muat ulang halaman.
+          {errMessage || "Daftar video tidak dapat dimuat. Silakan muat ulang halaman."}
         </div>
       </section>
     );

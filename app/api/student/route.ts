@@ -105,6 +105,7 @@ export async function POST(req: Request) {
     }
   }
 
+
   // Periksa batas percobaan kode kelompok sebelum mencari kelompok.
   if (parsed.data.op === "get_group") {
     const {
@@ -132,6 +133,16 @@ export async function POST(req: Request) {
 
   if (error) {
     console.error("Student RPC failed:", parsed.data.op, error.message);
+    const normalized = error.message.toLocaleLowerCase("id-ID");
+    if (normalized.includes("proyek diarsipkan")) {
+      return fail("Proyek ini diarsipkan. Jawaban yang tersimpan tetap aman; minta guru mengaktifkan kembali proyek untuk melanjutkan.", 403);
+    }
+    if (normalized.includes("video ini tidak ditugaskan") || normalized.includes("tidak ditugaskan kepada kelompok")) {
+      return fail("Video ini tidak ditugaskan kepada kelompok kalian. Hubungi guru jika penugasan seharusnya tersedia.", 403);
+    }
+    if (normalized.includes("pengerjaan sudah terkirim")) {
+      return fail("Pengerjaan sudah terkirim dan terkunci. Minta guru membuka kembali jika perlu mengubah jawaban.", 409);
+    }
     return fail("Terjadi kesalahan. Silakan coba lagi.", 500);
   }
 
