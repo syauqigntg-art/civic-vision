@@ -1,8 +1,8 @@
 const P: Record<string, [string, string, string]> = {
-  see: ["SEE", "Melihat permasalahan", "Lihat masalahnya: tonton video dan temukan apa yang terjadi."],
-  think: ["THINK", "Memikirkan dan menganalisis", "Pikirkan penyebab dari berbagai sisi."],
-  connect: ["CONNECT", "Menghubungkan dengan Pancasila", "Hubungkan kasus dengan sila dan nilai Pancasila."],
-  act: ["ACT", "Melakukan tindakan nyata", "Tentukan solusi dan rencanakan aksi nyata."],
+  see: ["SEE", "Mengamati masalah", "Amati video/stimulus, catat fakta, dan rumuskan masalah awal."],
+  think: ["THINK", "Menganalisis masalah", "Telusuri penyebab, bukti, dampak, dan sudut pandang pihak terkait."],
+  connect: ["CONNECT", "Menghubungkan konsep", "Hubungkan kasus dengan nilai Pancasila, hak-kewajiban, keadilan, atau konsep IPS."],
+  act: ["ACT", "Merancang tindakan", "Susun solusi, langkah nyata, pembagian peran, dan indikator keberhasilan."],
 };
 
 const ALL_PHASES = ["see", "think", "connect", "act"];
