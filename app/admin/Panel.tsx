@@ -29,7 +29,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
 
   const saveProject = async () => {
     // Guard the mutation as well as the disabled UI: archived projects are read-only.
-    if (P.id && archived) {
+    if (P.id && P.is_active === false) {
       setErr("Project ini sedang diarsipkan. Aktifkan project terlebih dahulu untuk melakukan perubahan.");
       setMessage("");
       return;
@@ -155,12 +155,13 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
       </div>}\n      {err && <div className="warn" role="alert">{err}</div>}
       {message && <div className="admin-success-message" role="status" aria-live="polite">✓ {message}</div>}
 
-      <div className="admin-form-grid">
+      {P.is_active === false && <div role="alert" style={{padding:14,marginBottom:16,border:"1px solid #d97706",borderRadius:12,background:"#fff7ed",color:"#9a3412",fontWeight:700}}>PROJECT DIARSIPKAN — FORM PENGEDITAN DIKUNCI. Aktifkan project terlebih dahulu untuk mengubah informasi.</div>}
+      <div className="admin-form-grid" style={P.is_active === false ? {opacity:0.55,pointerEvents:"none"} : undefined}>
         <div>
           <label htmlFor="project-title">Judul project <span aria-hidden="true">*</span></label>
           <input
             id="project-title"
-            disabled={archived}
+            disabled={P.is_active === false}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Contoh: CIVIC VISION"
@@ -193,8 +194,8 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
       </div>
 
       <div className="admin-form-actions">
-        <p>{archived ? "Project diarsipkan: aktifkan project untuk mengedit informasi." : "Periksa kembali judul dan deskripsi sebelum disimpan."}</p>
-        <button className="btn" onClick={saveProject} disabled={saving || archived}>
+        <p>{P.is_active === false ? "Project diarsipkan: aktifkan project untuk mengedit informasi." : "Periksa kembali judul dan deskripsi sebelum disimpan."}</p>
+        <button className="btn" type="button" onClick={saveProject} disabled={saving || P.is_active === false} aria-disabled={P.is_active === false}>
           {saving ? "Menyimpan…" : P.id ? "Simpan perubahan" : "Buat project"}
         </button>
       </div>
