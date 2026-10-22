@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAdmin } from "@/lib/admin";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
@@ -37,6 +38,20 @@ export default function AdminLayout({
   const [email, setEmail] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const [authError, setAuthError] = useState("");
+  const { P, load: reloadProject } = useAdmin(["P"]);
+  const archived = P?.is_active === false;
+  const [activating, setActivating] = useState(false);
+  const [archiveActionError, setArchiveActionError] = useState("");
+
+  const reactivateProject = async () => {
+    if (!P?.id || activating) return;
+    setActivating(true);
+    setArchiveActionError("");
+    const { error } = await sb.from("projects").update({ is_active: true, updated_at: new Date().toISOString() }).eq("id", P.id);
+    if (error) setArchiveActionError("Proyek belum berhasil diaktifkan. Coba lagi atau periksa izin database.");
+    else await reloadProject();
+    setActivating(false);
+  };
 
   useEffect(() => {
     if (path === "/admin/login") return;
