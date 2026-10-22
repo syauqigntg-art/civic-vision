@@ -174,8 +174,8 @@ export function ProjectPageScope({ children, path }: { children: React.ReactNode
     return (
       <section className="glass">
         <h2>Pilih proyek terlebih dahulu</h2>
-        <p>Halaman video, pertanyaan, kelompok, dashboard, dan hasil siswa selalu dibatasi ke satu proyek terpilih. Tidak ada proyek yang dipilih otomatis.</p>
-        <p>Pilih proyek melalui pemilih <strong>Proyek Terpilih</strong> di bagian atas, atau buka menu Project untuk membuat proyek baru.</p>
+        <p>Halaman video, pertanyaan, kelompok, ringkasan, dan hasil siswa selalu dibatasi ke satu proyek terpilih. Tidak ada proyek yang dipilih otomatis.</p>
+        <p>Pilih proyek melalui pemilih <strong>Proyek Terpilih</strong> di bagian atas, atau buka menu Proyek untuk membuat proyek baru.</p>
       </section>
     );
   }
@@ -184,7 +184,7 @@ export function ProjectPageScope({ children, path }: { children: React.ReactNode
     return (
       <>
         <section className="warn" role="status">
-          Proyek ini diarsipkan. Data dan hasil siswa tetap dipertahankan dan masih dapat ditinjau. Perubahan konten/kelompok serta pengerjaan siswa dinonaktifkan; aktifkan kembali proyek dari menu Project untuk melanjutkan.
+          Proyek ini diarsipkan. Data dan hasil siswa tetap dipertahankan dan masih dapat ditinjau. Perubahan konten/kelompok serta pengerjaan siswa dinonaktifkan; aktifkan kembali proyek dari menu Proyek untuk melanjutkan.
         </section>
         <Fragment key={projectId}>{children}</Fragment>
       </>
