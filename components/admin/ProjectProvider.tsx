@@ -153,7 +153,7 @@ export function ProjectSwitcher() {
       </select>
       {error && <small role="alert" style={{ display: "block", color: "#fecaca", marginTop: 4 }}>{error}</small>}
       {!loading && projects.length === 0 && !error && (
-        <small style={{ display: "block", color: "#e2e8f0", marginTop: 4 }}>Belum ada proyek. Buat proyek dari menu Project.</small>
+        <small style={{ display: "block", color: "#e2e8f0", marginTop: 4 }}>Belum ada proyek. Buat proyek dari menu Proyek.</small>
       )}
       {project && (
         <small style={{ display: "block", color: project.is_active === false ? "#fde68a" : "#bbf7d0", marginTop: 4 }}>
