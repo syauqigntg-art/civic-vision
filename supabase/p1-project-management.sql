@@ -8,6 +8,21 @@ BEGIN;
 DO $preflight$
 BEGIN
   IF EXISTS (
+    SELECT 1 FROM public.groups WHERE project_id IS NULL
+  ) OR EXISTS (
+    SELECT 1 FROM public.videos WHERE project_id IS NULL
+  ) OR EXISTS (
+    SELECT 1 FROM public.questions WHERE project_id IS NULL
+  ) OR EXISTS (
+    SELECT 1
+    FROM public.submissions s
+    JOIN public.groups g ON g.id = s.group_id
+    WHERE s.project_id IS DISTINCT FROM g.project_id
+  ) THEN
+    RAISE EXCEPTION 'Migrasi dibatalkan: ada data tanpa project_id atau submission dengan project_id yang tidak cocok. Audit data terlebih dahulu; migrasi tidak mengubah data ini.';
+  END IF;
+
+  IF EXISTS (
     SELECT 1
     FROM public.group_videos gv
     JOIN public.groups g ON g.id = gv.group_id
@@ -16,10 +31,18 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'Migrasi dibatalkan: ditemukan penugasan video lintas proyek. Periksa tabel group_videos terlebih dahulu.';
   END IF;
-END;
-$preflight$;
 
-CREATE OR REPLACE FUNCTION public.guard_group_video_project()
+  IF EXISTS (
+    SELECT 1
+    FROM public.answers a
+    JOIN public.submissions s ON s.id = a.submission_id
+    JOIN public.questions q ON q.id = a.question_id
+    WHERE s.project_id IS DISTINCT FROM q.project_id
+  ) THEN
+    RAISE EXCEPTION 'Migrasi dibatalkan: ditemukan jawaban yang terhubung ke pertanyaan proyek lain. Audit data terlebih dahulu.';
+  END IF;
+END;
+$preflight$;CREATE OR REPLACE FUNCTION public.guard_group_video_project()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = public
@@ -78,11 +101,53 @@ BEGIN
 END;
 $function$;
 
-DROP TRIGGER IF EXISTS guard_group_video_project ON public.group_videos;
-CREATE TRIGGER guard_group_video_project
-BEFORE INSERT OR UPDATE OF group_id, video_id OR DELETE
-ON public.group_videos
+DROP TRIGGER IF EXISTS guard_group_video_project_insert ON public.group_videos;
+DROP TRIGGER IF EXISTS guard_group_video_project_update ON public.group_videos;
+DROP TRIGGER IF EXISTS guard_group_video_project_delete ON public.group_videos;
+CREATE TRIGGER guard_group_video_project_insert
+BEFORE INSERT ON public.group_videos
 FOR EACH ROW EXECUTE FUNCTION public.guard_group_video_project();
+CREATE TRIGGER guard_group_video_project_update
+BEFORE UPDATE OF group_id, video_id ON public.group_videos
+FOR EACH ROW EXECUTE FUNCTION public.guard_group_video_project();
+CREATE TRIGGER guard_group_video_project_delete
+BEFORE DELETE ON public.group_videos
+FOR EACH ROW EXECUTE FUNCTION public.guard_group_video_project();
+
+-- Once created, project ownership is stable for project-scoped rows.
+-- Move/copy records explicitly instead of changing their project_id in place.
+CREATE OR REPLACE FUNCTION public.prevent_project_id_reassignment()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $function$
+BEGIN
+  IF NEW.project_id IS DISTINCT FROM OLD.project_id THEN
+    RAISE EXCEPTION 'project_id tidak dapat dipindahkan. Buat data pada proyek yang benar.';
+  END IF;
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS groups_project_id_immutable ON public.groups;
+CREATE TRIGGER groups_project_id_immutable
+BEFORE UPDATE OF project_id ON public.groups
+FOR EACH ROW EXECUTE FUNCTION public.prevent_project_id_reassignment();
+
+DROP TRIGGER IF EXISTS videos_project_id_immutable ON public.videos;
+CREATE TRIGGER videos_project_id_immutable
+BEFORE UPDATE OF project_id ON public.videos
+FOR EACH ROW EXECUTE FUNCTION public.prevent_project_id_reassignment();
+
+DROP TRIGGER IF EXISTS questions_project_id_immutable ON public.questions;
+CREATE TRIGGER questions_project_id_immutable
+BEFORE UPDATE OF project_id ON public.questions
+FOR EACH ROW EXECUTE FUNCTION public.prevent_project_id_reassignment();
+
+DROP TRIGGER IF EXISTS submissions_project_id_immutable ON public.submissions;
+CREATE TRIGGER submissions_project_id_immutable
+BEFORE UPDATE OF project_id ON public.submissions
+FOR EACH ROW EXECUTE FUNCTION public.prevent_project_id_reassignment();
 
 CREATE OR REPLACE FUNCTION public.save_answer(code text, qid uuid, val text)
 RETURNS boolean
