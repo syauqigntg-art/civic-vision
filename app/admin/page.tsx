@@ -32,7 +32,7 @@ export default function Overview() {
     {
       label: "Kelompok terdaftar",
       value: gs.length,
-      note: "Kelompok dalam project",
+      note: "Kelompok dalam proyek",
       icon: "◎",
       tone: "",
     },
