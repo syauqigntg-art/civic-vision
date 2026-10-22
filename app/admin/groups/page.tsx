@@ -62,6 +62,7 @@ export default function Groups() {
     "gm",
     "subs",
   ]);
+  const readOnly = P?.is_active === false;
 
   const [bulkVideoId, setBulkVideoId] = useState("");
   const [selectedGroupIds, setSelectedGroupIds] =
@@ -107,6 +108,7 @@ export default function Groups() {
   // Setiap kelompok tetap mempunyai satu video tugas aktif
   // dalam alur penugasan ini.
   const assignMany = async () => {
+    if (readOnly) { setAssignMessage("Proyek diarsipkan. Aktifkan kembali sebelum mengubah penugasan."); return; }
     setAssignMessage("");
 
     if (!selectedVideo) {
@@ -215,6 +217,7 @@ export default function Groups() {
     gid: string,
     vid: string
   ) => {
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum mengubah penugasan."); return; }
     const group = gs.find((g: any) => g.id === gid);
     const video = vs.find((v: any) => v.id === vid);
 
@@ -260,6 +263,7 @@ export default function Groups() {
     gid: string,
     a: string[]
   ) => {
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum mengubah anggota."); return; }
     const { error: deleteError } = await sb
       .from("group_members")
       .delete()
@@ -293,6 +297,7 @@ export default function Groups() {
   };
 
   const auto = async () => {
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum mengubah penugasan."); return; }
     if (
       !confirm(
         "Tetapkan Kelompok n → Video n untuk semua kelompok? " +
@@ -316,6 +321,7 @@ export default function Groups() {
   };
 
   const add = async () => {
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum membuat kelompok."); return; }
     if (!P.id) {
       alert("Buat atau pilih proyek terlebih dahulu.");
       return;
@@ -348,6 +354,7 @@ export default function Groups() {
   };
 
   const del = async (g: any) => {
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum menghapus kelompok."); return; }
     const has = subs.some(
       (s: any) => s.group_id === g.id
     );
@@ -377,6 +384,7 @@ export default function Groups() {
   return (
     <>
       <section className="glass">
+        <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <h2>Penugasan Video ke Banyak Kelompok</h2>
         <p>
           Unggah video satu kali di menu Video Kasus, lalu
@@ -515,9 +523,11 @@ export default function Groups() {
             {assignMessage}
           </p>
         )}
+        </fieldset>
       </section>
 
       <section className="glass">
+        <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <h2>Kelompok</h2>
         <div className="row" style={{ marginTop: 0 }}>
           <button className="btn" onClick={add}>
@@ -628,6 +638,7 @@ export default function Groups() {
             </div>
           );
         })}
+        </fieldset>
       </section>
     </>
   );
