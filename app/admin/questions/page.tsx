@@ -1,5 +1,5 @@
 "use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, catsOf, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin";
-const T: Record<string, string> = { text: "Text", textarea: "Textarea", multiple_text: "Multiple Text", single_select: "Single Select", multi_select: "Multi Select", scale: "Scale" };
+const T: Record<string, string> = { text: "Jawaban singkat", textarea: "Jawaban panjang", multiple_text: "Beberapa jawaban teks", single_select: "Pilih satu jawaban", multi_select: "Pilih beberapa jawaban", scale: "Skala 1–5" };
 const blank = { id: "", question_text: "", category: "", newCat: "", question_type: "textarea", is_required: true, is_active: true, phase: "", placeholder: "", description: "", display_order: 1, min_items: 2, options: [""] };
 const PLACEHOLDER_BY_PHASE: Record<string, string[]> = {
   see: [
@@ -139,14 +139,14 @@ export default function Questions() {
     {f.question_type === "multiple_text" && <><label>Minimal jawaban</label><input type="number" min={1} value={f.min_items} onChange={e => set("min_items", e.target.value)} /></>}
     <label><input type="checkbox" style={{ width: "auto", marginRight: 8 }} checked={f.is_required} onChange={e => set("is_required", e.target.checked)} />Required (wajib dijawab)</label>
     <label><input type="checkbox" style={{ width: "auto", marginRight: 8 }} checked={f.is_active} onChange={e => set("is_active", e.target.checked)} />Aktif (tampil untuk siswa)</label>
-    <label htmlFor="question-placeholder">Placeholder jawaban</label>
+    <label htmlFor="question-placeholder">Petunjuk/contoh jawaban</label>
     <select id="question-placeholder" value={f.placeholder} onChange={e => set("placeholder", e.target.value)}>
       <option value="">— Tanpa placeholder —</option>
       {placeholderOptions.map((value: string) => <option key={value} value={value}>{value}</option>)}
     </select>
     <small className="admin-field-hint">Pilihan otomatis menyesuaikan kategori dan fase. Ubah kategori atau fase untuk melihat rekomendasi lain.</small>
     <label htmlFor="question-description">Instruksi tambahan (opsional)</label><input id="question-description" value={f.description} onChange={e => set("description", e.target.value)} />
-    <label>Urutan</label><input type="number" min={1} value={f.display_order} onChange={e => set("display_order", e.target.value)} />
+    <label>Posisi tampil</label><input type="number" min={1} value={f.display_order} onChange={e => set("display_order", e.target.value)} />
     {f.question_type.endsWith("select") && <><label>Pilihan Jawaban</label>{f.options.map((o: string, i: number) => <div className="row" style={{ marginTop: 6 }} key={i}><input value={o} placeholder={`Pilihan ${i + 1}`} onChange={e => { const a = [...f.options]; a[i] = e.target.value; set("options", a); }} />
       <button className="btn g" onClick={() => set("options", f.options.filter((_: any, j: number) => j !== i))}>×</button></div>)}<div className="row"><button className="btn g" onClick={() => set("options", [...f.options, ""])}>+ Tambah pilihan</button></div></>}</fieldset>
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly}>Simpan pertanyaan</button></div></div></section>);
@@ -195,7 +195,7 @@ export default function Questions() {
           <table>
             <thead>
               <tr>
-                <th>Urutan</th>
+                <th>Posisi tampil</th>
                 <th>Fase</th>
                 <th>Kategori & pertanyaan</th>
                 <th>Tipe</th>
