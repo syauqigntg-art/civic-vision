@@ -183,6 +183,13 @@ export default function AdminLayout({
         </header>
 
         {authError && <div className="admin-inline-error" role="alert">{authError}</div>}
+        {archived && path !== "/admin/project" && path !== "/admin/settings" && (
+          <section className="warn" role="status" style={{ margin: "12px 24px 0" }}>
+            Proyek terpilih diarsipkan. Halaman ini berada dalam mode baca-saja.{" "}
+            <Link href="/admin/project">Buka pengaturan proyek</Link> untuk mengaktifkannya kembali.
+          </section>
+        )}
+        {archiveActionError && <div className="warn" role="alert">{archiveActionError}</div>}
         <main id="konten" tabIndex={-1} className="admin-page-content">
           <ProjectPageScope path={path}>{children}</ProjectPageScope>
         </main>
