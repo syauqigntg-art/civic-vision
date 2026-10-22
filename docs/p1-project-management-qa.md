@@ -1,29 +1,18 @@
-# CIVIC VISION — P1 project management QA
+# CIVIC VISION — PR2 QA after PR3
 
-## PR #3 compatibility note
+## Important migration note
+PR #3 has already been merged and its database migration, `supabase/p1-project-isolation.sql`, is the current project-isolation baseline. **Do not run `supabase/p1-project-management.sql` from the original PR #2 branch against this database.** That file defines overlapping archive/cross-project triggers and replaces student RPC functions. Any missing behavior must be compared to the live database and implemented as a new, narrowly scoped migration after review.
 
-PR #3 is already merged. Its `supabase/p1-project-isolation.sql` migration is the current database baseline. **Do not execute `supabase/p1-project-management.sql` from this branch as a second migration.** It contains overlapping project/archive triggers and replaces student RPC functions. Review its logic as reference only; any behavior that is genuinely missing from the deployed PR #3 database must be extracted into a separate, narrowly scoped migration after reviewing the live schema and functions.
+## Preview checks
+1. Deploy branch `p1/pr2-aligned-with-pr3` to Vercel Preview and confirm the build is Ready.
+2. Confirm Preview is connected to the intended Supabase project. Do not use real student data for destructive tests.
+3. Create two disposable active projects called `UJI P1 PROYEK A` and `UJI P1 PROYEK B`.
+4. Add one video, one question, and one group to each project. Assign only each project's video to its own group.
+5. Switch A → B → A. Confirm dashboard, videos, questions, groups, assignments, submissions, and answers stay within the selected project.
+6. Check project selection in two browser tabs and after refresh. There should be no silent fallback to the first project.
+7. Archive only one temporary project. Confirm teacher results remain readable and edit/assignment actions are read-only. Test draft save/submit blocking and submitted result viewing.
+8. Reactivate the test project and confirm the data still exists.
+9. Never archive or delete the real CIVIC VISION project. Only delete explicitly identified disposable test projects after confirming their attached data may be removed.
 
-## Archive policy to verify
-
-- `projects.is_active=true` means active; `false` means archived.
-- Archiving must not delete videos, questions, groups, submissions, or answers.
-- Teachers must be able to select an archived project and review historical results; write actions should be blocked.
-- Students with draft work must not continue or submit while archived. Submitted work must remain available read-only if supported by the deployed RPC/API implementation.
-- Video assignment must never connect a group and video across different projects.
-
-## Preview test plan
-
-1. Deploy this branch to Vercel Preview and verify the build is Ready before any merge.
-2. Confirm it uses the intended Supabase project. Do not use production student data for destructive tests.
-3. Create two temporary active projects named `UJI P1 PROYEK A` and `UJI P1 PROYEK B`.
-4. Add one video, one question, and one group to each project. Assign each project's video only to its own group.
-5. Switch A → B → A. Verify every page shows only the selected project's videos, questions, groups, assignments, submissions, and answers.
-6. Test the selection behavior in two tabs and after refresh. The UI should not silently select the first project.
-7. Archive only one temporary project. Verify teacher history remains readable and project edit/assignment controls are read-only. Verify draft work cannot be saved/submitted, while previously submitted work stays readable if the active API supports that policy.
-8. Reactivate the temporary project and confirm the retained records are still present.
-9. Do not archive or delete the real CIVIC VISION project. Only remove explicitly identified temporary test projects after confirming their dependent data is disposable.
-
-## Completion record
-
-Record the Preview deployment URL, build status, selected project, result of each isolation test, archive behavior, and any SQL/API errors. This checklist is a test plan, not proof that the tests have passed.
+## Record results
+Record the Preview URL, build result, project-isolation results, archive behavior, and any SQL/API error. This is a test plan and not proof that the test has passed.
