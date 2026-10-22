@@ -19,6 +19,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
   const [archiving, setArchiving] = useState(false);
   const [message, setMessage] = useState("");
   const [err, setErr] = useState("");
+  const [projectScreen, setProjectScreen] = useState<"list" | "create" | "edit">("list");
 
   useEffect(() => {
     if (P?.id) {
@@ -88,6 +89,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
         const refreshed = await refreshProjects();
         if (!refreshed) throw new Error("Proyek dibuat, tetapi daftar proyek gagal dimuat. Muat ulang halaman untuk memilihnya.");
         selectProject(data.id);
+        setProjectScreen("edit");
         setMessage("Proyek baru berhasil dibuat dan dipilih. Materi, pertanyaan, kelompok, dan hasil akan dikelola dalam lingkup proyek ini.");
       }
     } catch (e) {
@@ -179,31 +181,48 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
 
   const archived = P?.id && P.is_active === false;
 
-  return (
-    <>
+  const resetProjectForm = () => {
+    setTitle("CIVIC VISION");
+    setTagline("Menganalisis Pancasila dalam Kehidupan Sehari-hari");
+    setDescription("");
+    setErr("");
+    setMessage("");
+  };
+
+  const showProjectList = () => {
+    setProjectScreen("list");
+    setErr("");
+    setMessage("");
+  };
+
+  if (projectScreen === "list") {
+    return (
       <section className="glass">
         <div className="admin-section-head">
           <div>
             <h2>Daftar proyek</h2>
-            <p>Pilih proyek yang akan dikelola. Setiap proyek memiliki materi, pertanyaan, kelompok, serta hasilnya sendiri.</p>
+            <p>Pilih proyek yang akan dikelola. Setiap proyek memiliki video, pertanyaan, kelompok, dan hasilnya sendiri.</p>
           </div>
           <button
             type="button"
             className="btn"
             onClick={() => {
               selectProject("");
-              setTitle("CIVIC VISION");
-              setTagline("Menganalisis Pancasila dalam Kehidupan Sehari-hari");
-              setDescription("");
-              setErr("");
-              setMessage("");
+              resetProjectForm();
+              setProjectScreen("create");
             }}
           >
             + Buat proyek baru
           </button>
         </div>
+
+        {err && <div className="warn" role="alert">{err}</div>}
+        {message && <div className="admin-success-message" role="status" aria-live="polite">✓ {message}</div>}
+
         {projects.length === 0 ? (
-          <p>Belum ada proyek. Buat proyek baru menggunakan formulir di bawah.</p>
+          <div className="admin-empty">
+            Belum ada proyek. Klik <strong>+ Buat proyek baru</strong> untuk membuat proyek pertama.
+          </div>
         ) : (
           <div className="grid">
             {projects.map((project) => (
@@ -215,75 +234,99 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
                   </span>
                 </div>
                 {project.tagline && <p style={{ margin: "8px 0" }}>{project.tagline}</p>}
+                {project.description && <p style={{ margin: "8px 0" }}>{project.description}</p>}
                 <button
                   type="button"
                   className={project.id === projectId ? "btn" : "btn g"}
-                  disabled={project.id === projectId}
                   onClick={() => {
                     selectProject(project.id);
+                    setProjectScreen("edit");
                     setMessage("");
                     setErr("");
                   }}
                 >
-                  {project.id === projectId ? "Sedang dipilih" : "Pilih proyek"}
+                  {project.id === projectId ? "Buka proyek" : "Pilih proyek"}
                 </button>
               </article>
             ))}
           </div>
         )}
       </section>
+    );
+  }
 
-      <section className="glass">
-        <div className="admin-section-head">
-          <div>
-            <h2>{P?.id ? "Identitas proyek terpilih" : "Buat proyek baru"}</h2>
-            <p>Proyek yang diarsipkan tetap menyimpan data dan hasil siswa, tetapi tidak bisa diubah sampai diaktifkan kembali.</p>
-          </div>
-          {P?.id && (
-            <span className={"admin-status-pill " + (archived ? "off" : "active")}>
-              {activeLabel(P.is_active)}
-            </span>
-          )}
+  return (
+    <section className="glass">
+      <div className="admin-section-head">
+        <div>
+          <h2>{projectScreen === "create" ? "Buat proyek baru" : "Identitas proyek"}</h2>
+          <p>
+            {projectScreen === "create"
+              ? "Isi identitas proyek baru. Proyek dibuat aktif dan dapat dikelola secara terpisah."
+              : "Atur identitas proyek yang dipilih. Data proyek lain tidak akan diubah."}
+          </p>
         </div>
-
-        {err && <div className="warn" role="alert">{err}</div>}
-        {message && <div className="admin-success-message" role="status" aria-live="polite">✓ {message}</div>}
-        {archived && (
-          <div className="warn" role="status">
-            Proyek diarsipkan. Data lama tetap tersedia untuk ditinjau. Aktifkan kembali proyek untuk mengedit identitas atau melanjutkan pekerjaan siswa.
-          </div>
+        {projectScreen === "edit" && P?.id && (
+          <span className={"admin-status-pill " + (archived ? "off" : "active")}>
+            {activeLabel(P.is_active)}
+          </span>
         )}
+      </div>
 
-        <div className="admin-form-grid">
-          <div>
-            <label htmlFor="project-title">Judul proyek <span aria-hidden="true">*</span></label>
-            <input id="project-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: CIVIC VISION" required disabled={!!archived} />
-          </div>
-          <div>
-            <label htmlFor="project-tagline">Tagline</label>
-            <input id="project-tagline" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Ringkasan tujuan pembelajaran" disabled={!!archived} />
-          </div>
-          <div className="admin-span-2">
-            <label htmlFor="project-description">Deskripsi proyek</label>
-            <textarea id="project-description" rows={4} style={{ minHeight: 112 }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Jelaskan fokus, tujuan, dan konteks kegiatan analisis." disabled={!!archived} />
-            <small className="admin-field-hint">Gunakan deskripsi singkat agar siswa memahami konteks kegiatan sebelum memulai LKPD.</small>
-          </div>
-        </div>
+      <div className="row" style={{ marginTop: 0 }}>
+        <button type="button" className="btn g" onClick={showProjectList}>
+          ← Kembali ke daftar proyek
+        </button>
+      </div>
 
-        <div className="admin-form-actions">
-          <p>{P?.id ? "Pastikan identitas proyek sudah benar sebelum disimpan." : "Buat proyek terpisah untuk kelas atau kegiatan pembelajaran yang berbeda."}</p>
-          <div className="row" style={{ marginTop: 0 }}>
-            {P?.id && (
-              <button className={archived ? "btn" : "btn g"} type="button" onClick={toggleArchive} disabled={archiving}>
-                {archiving ? "Memperbarui…" : archived ? "Aktifkan kembali proyek" : "Arsipkan proyek"}
+      {projectScreen === "edit" && (!projectId || !P?.id) ? (
+        <div className="admin-empty" role="status">Memuat proyek terpilih…</div>
+      ) : (
+        <>
+          {err && <div className="warn" role="alert">{err}</div>}
+          {message && <div className="admin-success-message" role="status" aria-live="polite">✓ {message}</div>}
+          {archived && (
+            <div className="warn" role="status">
+              Proyek diarsipkan. Data lama tetap tersedia untuk ditinjau. Aktifkan kembali proyek untuk mengedit identitas atau melanjutkan pekerjaan siswa.
+            </div>
+          )}
+
+          <div className="admin-form-grid">
+            <div>
+              <label htmlFor="project-title">Judul proyek <span aria-hidden="true">*</span></label>
+              <input id="project-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Contoh: CIVIC VISION" required disabled={!!archived || saving} />
+            </div>
+            <div>
+              <label htmlFor="project-tagline">Tagline</label>
+              <input id="project-tagline" value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Ringkasan tujuan pembelajaran" disabled={!!archived || saving} />
+            </div>
+            <div className="admin-span-2">
+              <label htmlFor="project-description">Deskripsi proyek</label>
+              <textarea id="project-description" rows={4} style={{ minHeight: 112 }} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Jelaskan fokus, tujuan, dan konteks kegiatan analisis." disabled={!!archived || saving} />
+              <small className="admin-field-hint">Gunakan deskripsi singkat agar siswa memahami konteks kegiatan sebelum memulai LKPD.</small>
+            </div>
+          </div>
+
+          <div className="admin-form-actions">
+            <p>
+              {projectScreen === "create"
+                ? "Buat proyek terpisah untuk kelas atau kegiatan pembelajaran yang berbeda."
+                : "Perubahan identitas hanya berlaku untuk proyek yang sedang dipilih."}
+            </p>
+            <div className="row" style={{ marginTop: 0 }}>
+              {projectScreen === "edit" && P?.id && (
+                <button className={archived ? "btn" : "btn g"} type="button" onClick={toggleArchive} disabled={archiving || saving}>
+                  {archiving ? "Memperbarui…" : archived ? "Aktifkan kembali proyek" : "Arsipkan proyek"}
+                </button>
+              )}
+              <button className="btn" type="button" onClick={saveProject} disabled={saving || !!archived}>
+                {saving ? "Menyimpan…" : projectScreen === "create" ? "Buat proyek" : "Simpan perubahan"}
               </button>
-            )}
-            <button className="btn" type="button" onClick={saveProject} disabled={saving || !!archived}>
-              {saving ? "Menyimpan…" : P?.id ? "Simpan perubahan" : "Buat proyek"}
-            </button>
+            </div>
           </div>
-        </div>
-      </section>
-    </>
+        </>
+      )}
+    </section>
   );
+}
 }
