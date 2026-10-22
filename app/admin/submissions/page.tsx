@@ -35,7 +35,8 @@ export default function Submissions() {
             }).select("id,status,submitted_at").maybeSingle();
 
             if (error) {
-              window.alert(`Gagal membuka kembali pengerjaan: ${error.message}`);
+              console.error("Gagal membuka kembali pengerjaan:", error);
+              window.alert("Pengerjaan belum dapat dibuka kembali. Periksa akses admin dan kebijakan Supabase, lalu coba lagi.");
               return;
             }
             if (!data || data.status !== "draft" || data.submitted_at !== null) {
@@ -46,7 +47,8 @@ export default function Submissions() {
             window.alert("Pengerjaan berhasil dibuka kembali. Jawaban yang tersimpan tetap ada.");
             window.location.reload();
           } catch (e) {
-            window.alert(e instanceof Error ? e.message : "Terjadi kesalahan saat membuka kembali pengerjaan.");
+            console.error("Kesalahan saat membuka kembali pengerjaan:", e);
+            window.alert("Terjadi kesalahan saat membuka kembali pengerjaan. Periksa akses admin dan coba lagi.");
           }
         }} disabled={readOnly}>Buka kembali</button></>}</td></tr>)}</tbody></table></div>
     {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
