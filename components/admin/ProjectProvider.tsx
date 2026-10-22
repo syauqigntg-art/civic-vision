@@ -59,18 +59,18 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     const rows = (data || []) as AdminProject[];
     setProjects(rows);
     const stored = typeof window !== "undefined"
-      ? window.localStorage.getItem(STORAGE_KEY) || ""
+      ? window.sessionStorage.getItem(STORAGE_KEY) || ""
       : "";
 
     setProjectId((current) => {
       const candidate = current || stored;
       if (candidate && rows.some((project) => project.id === candidate)) {
         if (typeof window !== "undefined") {
-          window.localStorage.setItem(STORAGE_KEY, candidate);
+          window.sessionStorage.setItem(STORAGE_KEY, candidate);
         }
         return candidate;
       }
-      if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
+      if (typeof window !== "undefined") window.sessionStorage.removeItem(STORAGE_KEY);
       return "";
     });
     setLoading(false);
@@ -93,7 +93,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       // committed the refreshed list state.
       setProjectId(id);
       setError("");
-      if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, id);
+      if (typeof window !== "undefined") window.sessionStorage.setItem(STORAGE_KEY, id);
     },
     [projects],
   );
