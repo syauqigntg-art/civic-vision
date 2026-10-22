@@ -210,7 +210,7 @@ export default function Overview() {
 
           <div className="admin-callout">
             <strong>Butuh tindak lanjut?</strong>
-            <p>Gunakan filter status di halaman Jawaban Siswa untuk menemukan draft dan hasil yang sudah dikirim.</p>
+            <p>Gunakan filter status di halaman Jawaban Siswa untuk menemukan draf dan hasil yang sudah dikirim.</p>
             <Link href="/admin/submissions" className="btn">Periksa jawaban siswa →</Link>
           </div>
         </section>
