@@ -11,6 +11,9 @@ const emptyData = () => ({ P: {}, gs: [], vs: [], qs: [], gv: [], gm: [], subs: 
 
 export interface AdminData {
   P: any;
+  projects: any[];
+  activeProjectId: string;
+  setActiveProjectId: (id: string) => void;
   gs: any[];
   vs: any[];
   qs: Q[];
@@ -24,7 +27,7 @@ export interface AdminData {
 }
 
 export function useAdmin(parts: Part[] = ALL): AdminData {
-  const { projectId, loading: projectsLoading } = useProjectContext();
+  const { projects, projectId, loading: projectsLoading, selectProject } = useProjectContext();
   const [d, setD] = useState<any>(emptyData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -116,5 +119,5 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
     return () => { requestVersion.current += 1; };
   }, [load]);
 
-  return { ...d, loading: loading || projectsLoading, error, load };
+  return { ...d, projects, activeProjectId: projectId, setActiveProjectId: selectProject, loading: loading || projectsLoading, error, load };
 }
