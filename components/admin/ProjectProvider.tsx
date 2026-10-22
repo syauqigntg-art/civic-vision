@@ -96,7 +96,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       setError("");
       if (typeof window !== "undefined") window.sessionStorage.setItem(STORAGE_KEY, id);
     },
-    [projects],
+    [],
   );
 
   const project = useMemo(
