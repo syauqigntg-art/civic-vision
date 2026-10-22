@@ -32,7 +32,9 @@ function ProjectPicker() {
 
   return (
     <label className="admin-project-picker" style={{ display: "flex", alignItems: "center", gap: 8, maxWidth: 300 }}>
-      <span style={{ fontSize: 12, opacity: 0.75, whiteSpace: "nowrap" }}>Project aktif</span>
+      <span style={{ fontSize: 12, opacity: 0.75, whiteSpace: "nowrap" }}>
+        {P?.is_active === false ? "Project arsip · baca saja" : "Project aktif"}
+      </span>
       <select
         aria-label="Pilih project aktif"
         value={selectedId}
