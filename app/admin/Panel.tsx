@@ -5,7 +5,7 @@ import { sb } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin";
 
 export default function Panel({ tab }: { tab: "project" | "settings" }) {
-  const { P, load, loading, error: loadError } = useAdmin(["P"]);
+  const { P, projects, activeProjectId, setActiveProjectId, load, loading, error: loadError } = useAdmin(["P"]);
   const [title, setTitle] = useState("CIVIC VISION");
   const [tagline, setTagline] = useState("Menganalisis Pancasila dalam Kehidupan Sehari-hari");
   const [description, setDescription] = useState("");
@@ -125,7 +125,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
         </span>
       </div>
 
-      {err && <div className="warn" role="alert">{err}</div>}
+      <div style={{ marginBottom: 18 }}>\n        <label htmlFor="project-switcher">Pilih project yang dikelola</label>\n        <select id="project-switcher" value={activeProjectId || P.id || ""} onChange={(e) => setActiveProjectId(e.target.value)} disabled={loading || projects.length === 0}>\n          <option value="">Pilih project…</option>\n          {projects.map((project: any) => <option key={project.id} value={project.id}>{project.title}{project.is_active === false ? " (Diarsipkan)" : ""}</option>)}\n        </select>\n      </div>\n      {P.id && <div style={{ marginBottom: 18 }}>\n        <strong>Status project: </strong>{P.is_active === false ? "Diarsipkan (mode baca saja)" : "Aktif"}\n        <button className="btn g" style={{ marginLeft: 12 }} onClick={async () => {\n          const nextActive = P.is_active === false;\n          const prompt = nextActive ? "Aktifkan kembali project ini? Siswa dapat memulai atau melanjutkan draft." : "Arsipkan project? Data dan hasil siswa tetap disimpan dan dapat ditinjau guru, tetapi siswa tidak dapat memulai atau mengubah pekerjaan. Draft yang sudah ada dipertahankan.";\n          if (!window.confirm(prompt)) return;\n          const { error } = await sb.from("projects").update({ is_active: nextActive, updated_at: new Date().toISOString() }).eq("id", P.id);\n          if (error) { setErr("Status project gagal diperbarui."); return; }\n          setMessage(nextActive ? "Project diaktifkan." : "Project diarsipkan; hasil siswa tetap tersimpan.");\n          await load();\n        }}>{P.is_active === false ? "Aktifkan project" : "Arsipkan project"}</button>\n      </div>}\n      {err && <div className="warn" role="alert">{err}</div>}
       {message && <div className="admin-success-message" role="status" aria-live="polite">✓ {message}</div>}
 
       <div className="admin-form-grid">
