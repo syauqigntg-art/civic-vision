@@ -8,11 +8,9 @@ import { useAdmin, upd } from "@/lib/admin";
 function Members({
   init,
   onSave,
-  readOnly = false,
 }: {
   init: string[];
   onSave: (a: string[]) => void;
-  readOnly?: boolean;
 }) {
   const [m, setM] = useState(
     [...init, "", "", "", "", ""].slice(
@@ -29,7 +27,6 @@ function Members({
           key={i}
           style={{ marginTop: 6 }}
           value={x}
-          disabled={readOnly}
           placeholder={`Anggota ${i + 1}`}
           onChange={(e) => {
             const a = [...m];
@@ -41,14 +38,12 @@ function Members({
       <div className="row">
         <button
           className="btn g"
-          disabled={readOnly}
           onClick={() => setM([...m, ""])}
         >
           + Anggota
         </button>
         <button
           className="btn g"
-          disabled={readOnly}
           onClick={() => onSave(m)}
         >
           Simpan anggota
@@ -67,14 +62,15 @@ export default function Groups() {
     "gm",
     "subs",
   ]);
+  const readOnly = P?.is_active === false;
 
   const [bulkVideoId, setBulkVideoId] = useState("");
   const [selectedGroupIds, setSelectedGroupIds] =
     useState<string[]>([]);
   const [assignBusy, setAssignBusy] = useState(false);
   const [assignMessage, setAssignMessage] = useState("");
-  const archived = P.is_active === false;
-  const readOnlyNotice = "Project ini sedang diarsipkan. Aktifkan project terlebih dahulu untuk mengubah data.";
+  const [copiedGroupId, setCopiedGroupId] = useState("");
+  const [copyFailedGroupId, setCopyFailedGroupId] = useState("");
 
   const selectedVideo = vs.find(
     (v: any) => v.id === bulkVideoId
@@ -114,7 +110,7 @@ export default function Groups() {
   // Setiap kelompok tetap mempunyai satu video tugas aktif
   // dalam alur penugasan ini.
   const assignMany = async () => {
-    if (archived) { setAssignMessage(readOnlyNotice); return; }
+    if (readOnly) { setAssignMessage("Proyek diarsipkan. Aktifkan kembali sebelum mengubah penugasan."); return; }
     setAssignMessage("");
 
     if (!selectedVideo) {
@@ -223,7 +219,7 @@ export default function Groups() {
     gid: string,
     vid: string
   ) => {
-    if (archived) { alert(readOnlyNotice); return; }
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum mengubah penugasan."); return; }
     const group = gs.find((g: any) => g.id === gid);
     const video = vs.find((v: any) => v.id === vid);
 
@@ -269,7 +265,7 @@ export default function Groups() {
     gid: string,
     a: string[]
   ) => {
-    if (archived) { alert(readOnlyNotice); return; }
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum mengubah anggota."); return; }
     const { error: deleteError } = await sb
       .from("group_members")
       .delete()
@@ -303,7 +299,7 @@ export default function Groups() {
   };
 
   const auto = async () => {
-    if (archived) { alert(readOnlyNotice); return; }
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum mengubah penugasan."); return; }
     if (
       !confirm(
         "Tetapkan Kelompok n → Video n untuk semua kelompok? " +
@@ -327,7 +323,7 @@ export default function Groups() {
   };
 
   const add = async () => {
-    if (archived) { alert(readOnlyNotice); return; }
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum membuat kelompok."); return; }
     if (!P.id) {
       alert("Buat atau pilih proyek terlebih dahulu.");
       return;
@@ -360,7 +356,7 @@ export default function Groups() {
   };
 
   const del = async (g: any) => {
-    if (archived) { alert(readOnlyNotice); return; }
+    if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum menghapus kelompok."); return; }
     const has = subs.some(
       (s: any) => s.group_id === g.id
     );
@@ -389,8 +385,8 @@ export default function Groups() {
 
   return (
     <>
-      {archived && <section className="glass" role="alert" style={{border:"1px solid #d97706",background:"#fff7ed",color:"#9a3412"}}><strong>Project diarsipkan — halaman Kelompok dalam mode baca saja.</strong><p>{readOnlyNotice}</p></section>}
-      <section className="glass" style={archived ? {opacity:0.7} : undefined}>
+      <section className="glass">
+        <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <h2>Penugasan Video ke Banyak Kelompok</h2>
         <p>
           Unggah video satu kali di menu Video Kasus, lalu
@@ -409,7 +405,6 @@ export default function Groups() {
         <select
           id="bulk-video"
           value={bulkVideoId}
-          disabled={archived}
           onChange={(e) => chooseVideo(e.target.value)}
         >
           <option value="">— Pilih video —</option>
@@ -443,7 +438,6 @@ export default function Groups() {
                   <button
                     className="btn g"
                     type="button"
-                    disabled={archived}
                     onClick={() =>
                       setSelectedGroupIds(
                         allSelected
@@ -477,7 +471,6 @@ export default function Groups() {
                           width: "auto",
                           margin: 0,
                         }}
-                        disabled={archived}
                         checked={selectedGroupIds.includes(g.id)}
                         onChange={(e) =>
                           toggleGroup(
@@ -512,7 +505,6 @@ export default function Groups() {
                     className="btn"
                     type="button"
                     disabled={
-                      archived ||
                       assignBusy ||
                       selectedGroupIds.length === 0
                     }
@@ -533,15 +525,17 @@ export default function Groups() {
             {assignMessage}
           </p>
         )}
+        </fieldset>
       </section>
 
       <section className="glass">
+        <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
         <h2>Kelompok</h2>
         <div className="row" style={{ marginTop: 0 }}>
-          <button className="btn" disabled={archived} onClick={add}>
+          <button className="btn" onClick={add}>
             + Buat Kelompok
           </button>
-          <button className="btn g" disabled={archived} onClick={auto}>
+          <button className="btn g" onClick={auto}>
             Kelompok n → Video n
           </button>
         </div>
@@ -561,19 +555,77 @@ export default function Groups() {
               key={g.id}
               style={{ marginTop: 14 }}
             >
-              <p style={{ margin: "0 0 8px" }}>
-                Kode akses:{" "}
-                <b style={{ color: "#fff" }}>
-                  {g.access_code}
-                </b>
-              </p>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  background: "#f8fafc",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  marginBottom: 14,
+                }}
+              >
+                <div style={{ minWidth: 0, flex: "1 1 220px" }}>
+                  <div style={{ color: "#475569", fontSize: 12, fontWeight: 600, marginBottom: 5 }}>
+                    KODE AKSES KELOMPOK
+                  </div>
+                  <code
+                    style={{
+                      display: "block",
+                      color: "#111827",
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                      fontWeight: 750,
+                      fontSize: 14,
+                      letterSpacing: "0.045em",
+                      lineHeight: 1.5,
+                      overflowWrap: "anywhere",
+                      userSelect: "all",
+                    }}
+                  >
+                    {g.access_code || "Kode belum tersedia"}
+                  </code>
+                  {copyFailedGroupId === g.id && (
+                    <small role="alert" style={{ display: "block", color: "#b91c1c", marginTop: 5 }}>
+                      Tidak dapat menyalin otomatis. Pilih kode di atas lalu tekan Ctrl+C.
+                    </small>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="btn g"
+                  style={{
+                    color: "#111827",
+                    background: "#ffffff",
+                    border: "1px solid #94a3b8",
+                    minHeight: 38,
+                    flexShrink: 0,
+                  }}
+                  disabled={!g.access_code}
+                  aria-label={`Salin kode akses kelompok ${g.group_number ?? ""}`}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(String(g.access_code));
+                      setCopiedGroupId(g.id);
+                      setCopyFailedGroupId("");
+                    } catch {
+                      setCopiedGroupId("");
+                      setCopyFailedGroupId(g.id);
+                    }
+                  }}
+                >
+                  {copiedGroupId === g.id ? "✓ Tersalin" : "Salin kode"}
+                </button>
+              </div>
 
               <div className="mini">
                 <input
                   type="number"
                   placeholder="Nomor"
                   defaultValue={g.group_number ?? ""}
-                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       group_number:
@@ -584,7 +636,6 @@ export default function Groups() {
                 <input
                   placeholder="Nama kelompok"
                   defaultValue={g.group_name || ""}
-                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       group_name: e.target.value,
@@ -594,7 +645,6 @@ export default function Groups() {
                 <input
                   placeholder="Kelas"
                   defaultValue={g.class_name || ""}
-                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       class_name: e.target.value,
@@ -604,7 +654,6 @@ export default function Groups() {
                 <input
                   placeholder="Ketua"
                   defaultValue={g.leader_name || ""}
-                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       leader_name: e.target.value,
@@ -616,7 +665,6 @@ export default function Groups() {
               <label>Video yang ditugaskan</label>
               <select
                 value={cur?.video_id || ""}
-                disabled={archived}
                 onChange={(e) =>
                   setVideo(g.id, e.target.value)
                 }
@@ -637,14 +685,12 @@ export default function Groups() {
                 init={gm
                   .filter((m: any) => m.group_id === g.id)
                   .map((m: any) => m.name)}
-                readOnly={archived}
                 onSave={(a) => members(g.id, a)}
               />
 
               <div className="row">
                 <button
                   className="btn g"
-                  disabled={archived}
                   onClick={() => del(g)}
                 >
                   Hapus kelompok
@@ -653,6 +699,7 @@ export default function Groups() {
             </div>
           );
         })}
+        </fieldset>
       </section>
     </>
   );
