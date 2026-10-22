@@ -25,6 +25,10 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
       setTitle(P.title || "");
       setTagline(P.tagline || "");
       setDescription(P.description || "");
+    } else {
+      setTitle("CIVIC VISION");
+      setTagline("Menganalisis Pancasila dalam Kehidupan Sehari-hari");
+      setDescription("");
     }
   }, [P?.id, P?.title, P?.tagline, P?.description]);
 
