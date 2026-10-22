@@ -19,21 +19,21 @@ import { Button } from "@/components/ui/Button";
 const PHASES = ["think", "connect", "act"] as const;
 type WorkPhase = (typeof PHASES)[number];
 
-const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string }> = {
+const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string; output: string }> = {
   think: {
-    title: "THINK — Memikirkan dan menganalisis",
-    instruction:
-      "Identifikasi masalah, fakta penting, penyebab, dan pihak yang terdampak.",
+    title: "THINK — Menganalisis masalah",
+    instruction: "Identifikasi masalah utama, telusuri penyebab, gunakan bukti, dan perhatikan sudut pandang pihak yang terdampak.",
+    output: "Analisis masalah yang didukung fakta dan bukti.",
   },
   connect: {
-    title: "CONNECT — Menghubungkan dengan Pancasila",
-    instruction:
-      "Hubungkan hasil analisis dengan sila, nilai, hak, kewajiban, atau prinsip Pancasila yang relevan.",
+    title: "CONNECT — Menghubungkan konsep",
+    instruction: "Hubungkan hasil analisis dengan nilai Pancasila, hak dan kewajiban, keadilan, atau konsep IPS yang relevan.",
+    output: "Argumentasi yang menunjukkan hubungan kasus dengan konsep atau nilai yang tepat.",
   },
   act: {
-    title: "ACT — Menentukan tindakan nyata",
-    instruction:
-      "Rumuskan solusi dan tindakan nyata yang bisa dilakukan untuk memperbaiki keadaan.",
+    title: "ACT — Merancang tindakan",
+    instruction: "Rancang solusi yang realistis, urutan langkah, pembagian peran, serta cara menilai apakah solusi berhasil.",
+    output: "Rencana aksi dengan langkah pelaksanaan dan indikator keberhasilan.",
   },
 };
 
@@ -309,6 +309,9 @@ export default function Analisis() {
         {left ? `sisa ${left} tahap` : "tahap terakhir"}
       </p>
       <p>{PHASE_INFO[activePhase].instruction}</p>
+      <div className="hint" style={{ marginTop: 8 }}>
+        <b>Hasil yang diharapkan:</b> {PHASE_INFO[activePhase].output}
+      </div>
 
       {locked && (
         <Alert>
@@ -331,10 +334,11 @@ export default function Analisis() {
       )}
 
       {cur.length === 0 && (
-        <p>
-          Belum ada pertanyaan pada tahap ini. Kalian dapat melanjutkan ke tahap
-          berikutnya.
-        </p>
+        <div className="hint" role="status">
+          <b>Belum ada pertanyaan aktif pada fase {PHASE_INFO[activePhase].title}.</b>
+          <p style={{ marginBottom: 6 }}>Gunakan panduan fase dan hasil yang diharapkan di atas untuk memahami tujuan kegiatan.</p>
+          <p style={{ marginBottom: 0 }}>Fase tetap menjadi bagian urutan PBL. Guru perlu memastikan fase ini memang sengaja dibiarkan tanpa soal sebelum LKPD digunakan.</p>
+        </div>
       )}
 
       <fieldset
