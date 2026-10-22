@@ -67,6 +67,33 @@ alter table answers drop constraint if exists answers_project_question_fkey;
 alter table answers add constraint answers_project_question_fkey
   foreign key(project_id,question_id) references questions(project_id,id) on delete cascade;
 
+-- Updated answer RPC: populate the new project_id column and reject questions
+-- that do not belong to the coded group's project.
+create or replace function save_answer(code text,qid uuid,val text)
+returns boolean language plpgsql security definer set search_path=public as $
+declare
+  gid uuid;
+  pid uuid;
+  sid uuid;
+begin
+  select g.id, g.project_id, s.id into gid, pid, sid
+  from groups g
+  join submissions s on s.group_id = g.id and s.status = 'draft'
+  join projects p on p.id = g.project_id and p.is_active = true
+  where g.access_code = upper(code);
+
+  if sid is null then return false; end if;
+  if not exists(select 1 from questions q where q.id=qid and q.project_id=pid) then
+    raise exception 'Pertanyaan bukan milik project kelompok.';
+  end if;
+
+  insert into answers(project_id,submission_id,question_id,answer_text)
+  values(pid,sid,qid,val)
+  on conflict(submission_id,question_id)
+  do update set answer_text=excluded.answer_text,updated_at=now();
+  return found;
+end $;
+
 -- Backward-compatible trigger: current admin UI inserts group_id/video_id only.
 -- The trigger fills project_id and rejects a cross-project pair before FK checks.
 create or replace function enforce_group_video_project()
