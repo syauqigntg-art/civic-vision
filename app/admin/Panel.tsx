@@ -43,7 +43,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
       setMessage("");
       return;
     }
-    if (P?.id && P.is_active === false) {
+    if (projectScreen === "edit" && P?.id && P.is_active === false) {
       setErr("Proyek diarsipkan. Aktifkan kembali proyek sebelum mengubah identitasnya.");
       setMessage("");
       return;
@@ -54,7 +54,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
     setMessage("");
 
     try {
-      if (P?.id) {
+      if (projectScreen === "edit" && P?.id) {
         const { data, error } = await sb
           .from("projects")
           .update({
@@ -179,7 +179,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
     );
   }
 
-  const archived = P?.id && P.is_active === false;
+  const archived = projectScreen === "edit" && P?.id && P.is_active === false;
 
   const resetProjectForm = () => {
     setTitle("CIVIC VISION");
@@ -279,7 +279,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
         </button>
       </div>
 
-      {projectScreen === "edit" && (!projectId || !P?.id) ? (
+      {projectScreen === "edit" && (!projectId || !P?.id || P.id !== projectId || loading) ? (
         <div className="admin-empty" role="status">Memuat proyek terpilih…</div>
       ) : (
         <>
@@ -328,5 +328,4 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
       )}
     </section>
   );
-}
 }
