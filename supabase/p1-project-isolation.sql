@@ -58,7 +58,7 @@ alter table submissions add constraint submissions_project_group_fkey
   foreign key(project_id,group_id) references groups(project_id,id) on delete cascade;
 alter table submissions drop constraint if exists submissions_project_video_fkey;
 alter table submissions add constraint submissions_project_video_fkey
-  foreign key(project_id,video_id) references videos(project_id,id) on delete set null;
+  foreign key(project_id,video_id) references videos(project_id,id);
 
 alter table answers drop constraint if exists answers_project_submission_fkey;
 alter table answers add constraint answers_project_submission_fkey
