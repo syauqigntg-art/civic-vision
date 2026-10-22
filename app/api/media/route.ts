@@ -63,33 +63,33 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (!groupError && group) {
-      const { data: project, error: projectError } = await admin
-        .from("projects")
-        .select("is_active")
-        .eq("id", group.project_id)
-        .maybeSingle();
+      const [projectResult, submissionResult] = await Promise.all([
+        admin.from("projects").select("is_active").eq("id", group.project_id).maybeSingle(),
+        admin.from("submissions").select("status").eq("group_id", group.id).maybeSingle(),
+      ]);
+      const canReadArchived = projectResult.data?.is_active === false &&
+        submissionResult.data?.status === "submitted";
+      const projectCanServeContent = !!projectResult.data && (projectResult.data.is_active !== false || canReadArchived);
 
-      if (projectError || !project || project.is_active === false) {
-        return fail(403);
-      }
-
-      const { data: videos, error: videoError } = await admin
-        .from("videos")
-        .select("id")
-        .eq("project_id", group.project_id)
-        .eq("is_active", true)
-        .or(`video_url.eq.${path},thumbnail_url.eq.${path}`);
-
-      if (!videoError && videos?.length) {
-        const ids = videos.map((video) => video.id);
-        const { data: assignments, error: assignmentError } = await admin
-          .from("group_videos")
+      if (!projectResult.error && !submissionResult.error && projectCanServeContent) {
+        const { data: videos, error: videoError } = await admin
+          .from("videos")
           .select("id")
-          .eq("group_id", group.id)
-          .in("video_id", ids)
-          .limit(1);
+          .eq("project_id", group.project_id)
+          .eq("is_active", true)
+          .or(`video_url.eq.${path},thumbnail_url.eq.${path}`);
 
-        allowed = !assignmentError && !!assignments?.length;
+        if (!videoError && videos?.length) {
+          const ids = videos.map((video) => video.id);
+          const { data: assignments, error: assignmentError } = await admin
+            .from("group_videos")
+            .select("id")
+            .eq("group_id", group.id)
+            .in("video_id", ids)
+            .limit(1);
+
+          allowed = !assignmentError && !!assignments?.length;
+        }
       }
     }
   }
