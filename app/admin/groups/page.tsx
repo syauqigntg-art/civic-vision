@@ -69,6 +69,8 @@ export default function Groups() {
     useState<string[]>([]);
   const [assignBusy, setAssignBusy] = useState(false);
   const [assignMessage, setAssignMessage] = useState("");
+  const [copiedGroupId, setCopiedGroupId] = useState("");
+  const [copyFailedGroupId, setCopyFailedGroupId] = useState("");
 
   const selectedVideo = vs.find(
     (v: any) => v.id === bulkVideoId
@@ -553,12 +555,71 @@ export default function Groups() {
               key={g.id}
               style={{ marginTop: 14 }}
             >
-              <p style={{ margin: "0 0 8px" }}>
-                Kode akses:{" "}
-                <b style={{ color: "#fff" }}>
-                  {g.access_code}
-                </b>
-              </p>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 12,
+                  flexWrap: "wrap",
+                  background: "#f8fafc",
+                  border: "1px solid #cbd5e1",
+                  borderRadius: 10,
+                  padding: "12px 14px",
+                  marginBottom: 14,
+                }}
+              >
+                <div style={{ minWidth: 0, flex: "1 1 220px" }}>
+                  <div style={{ color: "#475569", fontSize: 12, fontWeight: 600, marginBottom: 5 }}>
+                    KODE AKSES KELOMPOK
+                  </div>
+                  <code
+                    style={{
+                      display: "block",
+                      color: "#111827",
+                      fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+                      fontWeight: 750,
+                      fontSize: 14,
+                      letterSpacing: "0.045em",
+                      lineHeight: 1.5,
+                      overflowWrap: "anywhere",
+                      userSelect: "all",
+                    }}
+                  >
+                    {g.access_code || "Kode belum tersedia"}
+                  </code>
+                  {copyFailedGroupId === g.id && (
+                    <small role="alert" style={{ display: "block", color: "#b91c1c", marginTop: 5 }}>
+                      Tidak dapat menyalin otomatis. Pilih kode di atas lalu tekan Ctrl+C.
+                    </small>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  className="btn g"
+                  style={{
+                    color: "#111827",
+                    background: "#ffffff",
+                    border: "1px solid #94a3b8",
+                    minHeight: 38,
+                    flexShrink: 0,
+                  }}
+                  disabled={!g.access_code}
+                  aria-label={`Salin kode akses kelompok ${g.group_number ?? ""}`}
+                  onClick={async () => {
+                    try {
+                      await navigator.clipboard.writeText(String(g.access_code));
+                      setCopiedGroupId(g.id);
+                      setCopyFailedGroupId("");
+                    } catch {
+                      setCopiedGroupId("");
+                      setCopyFailedGroupId(g.id);
+                    }
+                  }}
+                >
+                  {copiedGroupId === g.id ? "✓ Tersalin" : "Salin kode"}
+                </button>
+              </div>
 
               <div className="mini">
                 <input
