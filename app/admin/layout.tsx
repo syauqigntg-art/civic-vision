@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
+import { ProjectPageScope, ProjectProvider, ProjectSwitcher } from "@/components/admin/ProjectProvider";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", hint: "Ringkasan", icon: "⌂" },
@@ -100,6 +101,7 @@ export default function AdminLayout({
   };
 
   return (
+    <ProjectProvider>
     <div className="admin-workspace">
       <aside className="admin-sidebar">
         <Link href="/admin" className="admin-brand">
@@ -151,6 +153,7 @@ export default function AdminLayout({
             <p>{page.desc}</p>
           </div>
           <div className="admin-top-actions">
+            <ProjectSwitcher />
             <Link className="admin-outline-action" href="/" target="_blank" rel="noreferrer">
               Lihat website <span aria-hidden="true">↗</span>
             </Link>
@@ -166,7 +169,7 @@ export default function AdminLayout({
 
         {authError && <div className="admin-inline-error" role="alert">{authError}</div>}
         <main id="konten" tabIndex={-1} className="admin-page-content">
-          {children}
+          <ProjectPageScope path={path}>{children}</ProjectPageScope>
         </main>
         <footer className="admin-footer">
           <span>CIVIC VISION <span aria-hidden="true">·</span> Ruang kerja guru</span>
@@ -174,5 +177,6 @@ export default function AdminLayout({
         </footer>
       </div>
     </div>
+    </ProjectProvider>
   );
 }
