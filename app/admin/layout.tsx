@@ -151,6 +151,7 @@ export default function AdminLayout({
             <p>{page.desc}</p>
           </div>
           <div className="admin-top-actions">
+            <ProjectPicker />
             <Link className="admin-outline-action" href="/" target="_blank" rel="noreferrer">
               Lihat website <span aria-hidden="true">↗</span>
             </Link>
