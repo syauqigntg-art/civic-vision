@@ -170,12 +170,13 @@ export default function Groups() {
 
       const { error: insertError } = await sb
         .from("group_videos")
-        .insert(
-          ids.map((group_id: string) => ({
-            group_id,
-            video_id: selectedVideo.id,
-          }))
-        );
+       .insert(
+  ids.map((group_id: string) => ({
+    project_id: P.id,
+    group_id,
+    video_id: selectedVideo.id,
+  }))
+);
 
       if (insertError) {
         // Pulihkan penugasan sebelumnya jika penyimpanan gagal.
@@ -246,10 +247,11 @@ export default function Groups() {
     if (vid) {
       const { error: insertError } = await sb
         .from("group_videos")
-        .insert({
-          group_id: gid,
-          video_id: vid,
-        });
+      .insert({
+  project_id: P.id,
+  group_id: gid,
+  video_id: vid,
+});
 
       if (insertError) {
         alert("Video gagal ditugaskan ke kelompok ini.");
