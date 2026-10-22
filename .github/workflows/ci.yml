@@ -35,6 +35,9 @@ jobs:
 
       - name: TypeScript check
         run: npx tsc --noEmit
+      
+      - name: PBL and security regression invariants
+        run: node scripts/check-pbl-invariants.mjs
 
       - name: Report production dependency advisories
         run: npm audit --omit=dev
