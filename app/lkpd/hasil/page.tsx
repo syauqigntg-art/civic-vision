@@ -85,8 +85,8 @@ export default function Hasil() {
         </h1>
         <p>
           {sent
-            ? "Kalian telah menyelesaikan analisis kasus CIVIC VISION."
-            : "Hasil saat ini masih berupa draft dan belum dikirim."}
+            ? "Pengiriman berhasil. Jawaban kelompok telah tersimpan di server dan terkunci. Guru dapat membuka kembali pengerjaan jika diperlukan."
+            : "Hasil saat ini masih berupa draft dan belum dikirim. Pastikan semua jawaban tersimpan sebelum melakukan pengiriman akhir."}
         </p>
       </section>
       {error && <section className="glass"><div role="alert" className="warn">{error}</div></section>}
