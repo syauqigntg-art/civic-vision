@@ -512,10 +512,10 @@ export default function Groups() {
                     className="btn"
                     type="button"
                     disabled={
+                      archived ||
                       assignBusy ||
                       selectedGroupIds.length === 0
                     }
-                    disabled={archived || assignBusy}
                     onClick={assignMany}
                   >
                     {assignBusy
@@ -541,7 +541,7 @@ export default function Groups() {
           <button className="btn" disabled={archived} onClick={add}>
             + Buat Kelompok
           </button>
-          <button className="btn g" onClick={auto}>
+          <button className="btn g" disabled={archived} onClick={auto}>
             Kelompok n → Video n
           </button>
         </div>
@@ -573,6 +573,7 @@ export default function Groups() {
                   type="number"
                   placeholder="Nomor"
                   defaultValue={g.group_number ?? ""}
+                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       group_number:
@@ -583,6 +584,7 @@ export default function Groups() {
                 <input
                   placeholder="Nama kelompok"
                   defaultValue={g.group_name || ""}
+                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       group_name: e.target.value,
@@ -592,6 +594,7 @@ export default function Groups() {
                 <input
                   placeholder="Kelas"
                   defaultValue={g.class_name || ""}
+                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       class_name: e.target.value,
@@ -601,6 +604,7 @@ export default function Groups() {
                 <input
                   placeholder="Ketua"
                   defaultValue={g.leader_name || ""}
+                  disabled={archived}
                   onBlur={(e) =>
                     upd("groups", g.id, {
                       leader_name: e.target.value,
@@ -612,6 +616,7 @@ export default function Groups() {
               <label>Video yang ditugaskan</label>
               <select
                 value={cur?.video_id || ""}
+                disabled={archived}
                 onChange={(e) =>
                   setVideo(g.id, e.target.value)
                 }
@@ -633,12 +638,13 @@ export default function Groups() {
                   .filter((m: any) => m.group_id === g.id)
                   .map((m: any) => m.name)}
                 readOnly={archived}
-              onSave={(a) => members(g.id, a)}
+                onSave={(a) => members(g.id, a)}
               />
 
               <div className="row">
                 <button
                   className="btn g"
+                  disabled={archived}
                   onClick={() => del(g)}
                 >
                   Hapus kelompok
