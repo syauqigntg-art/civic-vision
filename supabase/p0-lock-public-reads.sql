@@ -40,7 +40,7 @@ from public, anon;
 -- RPC yang dipakai siswa hanya boleh dipanggil oleh backend dengan service_role.
 -- Revokasi dibuat dinamis agar tetap idempoten pada instalasi yang memiliki fungsi versi berbeda.
 -- Fungsi yang tidak ada dilewati; semua overload dengan nama berikut ikut diamankan.
-do $
+do $$
 declare
   fn record;
 begin
@@ -64,7 +64,7 @@ begin
       'public', fn.proname, fn.identity_args
     );
   end loop;
-end $;
+end $$;
 
 -- Pastikan bucket video tetap privat dengan batas file dan tipe yang telah disepakati.
 update storage.buckets
