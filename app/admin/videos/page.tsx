@@ -28,6 +28,7 @@ const two = (n: number | string) => String(n ?? "").padStart(2, "0");
 
 export default function Videos() {
   const { P, vs, gv, load, loading, error } = useAdmin(["P", "vs", "gv"]);
+  const readOnly = P?.is_active === false;
   const [f, setF] = useState<any>(blank);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -56,6 +57,7 @@ export default function Videos() {
   }, [vs, search, statusFilter]);
 
   const add = async () => {
+    if (readOnly) { setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah video."); return; }
     setErr("");
     setMessage("");
 
@@ -120,6 +122,7 @@ export default function Videos() {
   };
 
   const saveEdit = async () => {
+    if (readOnly) { setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah video."); return; }
     if (!editForm) return;
     const parsed = videoForm.safeParse({
       title: editForm.title,
@@ -163,6 +166,7 @@ export default function Videos() {
   };
 
   const replaceVideo = async (v: any, newUrl: string) => {
+    if (readOnly) throw new Error("Proyek diarsipkan. Aktifkan kembali sebelum mengganti video.");
     const oldPath = pathOf(v.video_url);
     const newPath = pathOf(newUrl);
     const { data, error: updateError } = await sb
@@ -191,6 +195,7 @@ export default function Videos() {
   };
 
   const toggleActive = async (v: any) => {
+    if (readOnly) { setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah status video."); return; }
     setErr("");
     setMessage("");
     const { error: updateError } = await sb
@@ -206,6 +211,7 @@ export default function Videos() {
   };
 
   const del = async (v: any) => {
+    if (readOnly) { setErr("Proyek diarsipkan. Aktifkan kembali sebelum menghapus video."); return; }
     if (!confirm("Hapus video ini? Pastikan kelompok tidak lagi memerlukan tugas tersebut. Jawaban yang tersimpan mungkin tetap ada, tetapi referensi video pada hasil dapat terlepas.")) return;
 
     setErr("");
@@ -246,6 +252,7 @@ export default function Videos() {
               setErr("");
             }}
             type="button"
+            disabled={readOnly}
           >
             {formOpen ? "Tutup formulir" : "+ Tambah video"}
           </button>
@@ -297,7 +304,7 @@ export default function Videos() {
               <p>Pastikan file dan judul sudah benar. Maksimum video 50 MB.</p>
               <div className="row" style={{ marginTop: 0 }}>
                 <button className="btn g" type="button" onClick={() => { setFormOpen(false); setErr(""); }}>Batal</button>
-                <button className="btn" type="button" onClick={add} disabled={saving}>{saving ? "Menyimpan…" : "Simpan video"}</button>
+                <button className="btn" type="button" onClick={add} disabled={saving || readOnly}>{saving ? "Menyimpan…" : "Simpan video"}</button>
               </div>
             </div>
           </div>
@@ -365,9 +372,9 @@ export default function Videos() {
                         <td><span className={"admin-status-pill " + (v.is_active === false ? "off" : "active")}>{v.is_active === false ? "Nonaktif" : "Aktif"}</span></td>
                         <td>
                           <div className="admin-row-actions">
-                            <button className="btn g" type="button" onClick={() => editing ? setEditForm(null) : startEdit(v)}>{editing ? "Tutup" : "Edit"}</button>
-                            <button className="btn g" type="button" onClick={() => toggleActive(v)}>{v.is_active === false ? "Aktifkan" : "Nonaktifkan"}</button>
-                            <button className="btn g danger" type="button" onClick={() => del(v)}>Hapus</button>
+                            <button className="btn g" type="button" onClick={() => editing ? setEditForm(null) : startEdit(v)} disabled={readOnly}>{editing ? "Tutup" : "Edit"}</button>
+                            <button className="btn g" type="button" onClick={() => toggleActive(v)} disabled={readOnly}>{v.is_active === false ? "Aktifkan" : "Nonaktifkan"}</button>
+                            <button className="btn g danger" type="button" onClick={() => del(v)} disabled={readOnly}>Hapus</button>
                           </div>
                         </td>
                       </tr>
@@ -409,7 +416,7 @@ export default function Videos() {
                               </div>
                               <div className="admin-form-actions">
                                 <p>Penggantian video akan memperbarui file yang digunakan pada halaman siswa.</p>
-                                <button className="btn" type="button" onClick={saveEdit} disabled={editSaving}>{editSaving ? "Menyimpan…" : "Simpan perubahan"}</button>
+                                <button className="btn" type="button" onClick={saveEdit} disabled={editSaving || readOnly}>{editSaving ? "Menyimpan…" : "Simpan perubahan"}</button>
                               </div>
                               {v.video_url && <details className="admin-expand" style={{ marginTop: 12 }}>
                                 <summary>Pratinjau video saat ini</summary>
