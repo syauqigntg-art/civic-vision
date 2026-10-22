@@ -45,7 +45,7 @@ export default function Video() {
         ]);
 
         if (contentResult.error || groupResult.error) {
-          setMsg("Data video atau kelompok tidak dapat diperiksa. Muat ulang halaman.");
+          setMsg(contentResult.error?.message || groupResult.error?.message || "Data video atau kelompok tidak dapat diperiksa. Muat ulang halaman.");
           setSt("err");
           return;
         }
