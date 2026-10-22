@@ -147,14 +147,23 @@ export async function POST(req: Request) {
     return fail(counted.data === true ? 404 : 429);
   }
 
-  const { data: project, error: projectError } = await admin
-    .from("projects")
-    .select("is_active")
-    .eq("id", group.project_id)
-    .maybeSingle();
-  if (projectError) return fail(503, "Project tidak dapat diverifikasi.");
-  if (!project || project.is_active === false) {
-    return fail(403, "Project ini telah diarsipkan. Hubungi guru jika perlu melanjutkan.");
+  // Archived projects preserve all historical answers. Submitted groups may
+  // still view their read-only results; draft groups must wait until reactivated.
+  const [projectResult, submissionResult] = await Promise.all([
+    admin.from("projects").select("is_active").eq("id", group.project_id).maybeSingle(),
+    admin.from("submissions").select("status").eq("group_id", group.id).maybeSingle(),
+  ]);
+  if (projectResult.error || submissionResult.error || !projectResult.data) {
+    console.error("Project archive status lookup failed.");
+    return fail(500);
+  }
+  const projectArchived = projectResult.data.is_active === false;
+  const alreadySubmitted = submissionResult.data?.status === "submitted";
+  if (projectArchived && !alreadySubmitted) {
+    return fail(
+      403,
+      "Proyek ini diarsipkan. Jawaban draft tetap tersimpan; minta guru mengaktifkan kembali proyek untuk melanjutkan."
+    );
   }
 
   try {
