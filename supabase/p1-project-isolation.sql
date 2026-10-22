@@ -70,7 +70,7 @@ alter table answers add constraint answers_project_question_fkey
 -- Updated answer RPC: populate the new project_id column and reject questions
 -- that do not belong to the coded group's project.
 create or replace function save_answer(code text,qid uuid,val text)
-returns boolean language plpgsql security definer set search_path=public as $
+returns boolean language plpgsql security definer set search_path=public as $p1$
 declare
   gid uuid;
   pid uuid;
@@ -92,7 +92,7 @@ begin
   on conflict(submission_id,question_id)
   do update set answer_text=excluded.answer_text,updated_at=now();
   return found;
-end $;
+end $p1$;
 
 -- Backward-compatible trigger: current admin UI inserts group_id/video_id only.
 -- The trigger fills project_id and rejects a cross-project pair before FK checks.
@@ -133,7 +133,8 @@ begin
   if pid is not null and exists(select 1 from projects where id=pid and is_active=false) then
     raise exception 'Project diarsipkan: data pembelajaran bersifat baca-saja.';
   end if;
-  return coalesce(new,old);
+  if tg_op = 'DELETE' then return old; end if;
+  return new;
 end $$;
 
 drop trigger if exists archived_project_guard_videos on videos;
