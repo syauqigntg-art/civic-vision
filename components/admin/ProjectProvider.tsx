@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Fragment,
   createContext,
   useCallback,
   useContext,
@@ -175,10 +176,10 @@ export function ProjectPageScope({ children, path }: { children: React.ReactNode
         <section className="warn" role="status">
           Proyek ini diarsipkan. Data dan hasil siswa tetap dipertahankan dan masih dapat ditinjau. Perubahan konten/kelompok serta pengerjaan siswa dinonaktifkan; aktifkan kembali proyek dari menu Project untuk melanjutkan.
         </section>
-        {children}
+        <Fragment key={projectId}>{children}</Fragment>
       </>
     );
   }
 
-  return <>{children}</>;
+  return <Fragment key={projectId}>{children}</Fragment>;
 }
