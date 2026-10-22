@@ -165,7 +165,7 @@ export function ProjectPageScope({ children, path }: { children: React.ReactNode
       <section className="glass">
         <h2>Pilih proyek terlebih dahulu</h2>
         <p>Halaman video, pertanyaan, kelompok, dashboard, dan hasil siswa selalu dibatasi ke satu proyek terpilih. Tidak ada proyek yang dipilih otomatis.</p>
-        <p>Pilih proyek melalui pemilih <strong>Proyek Aktif</strong> di bagian atas, atau buka menu Project untuk membuat proyek baru.</p>
+        <p>Pilih proyek melalui pemilih <strong>Proyek Terpilih</strong> di bagian atas, atau buka menu Project untuk membuat proyek baru.</p>
       </section>
     );
   }
