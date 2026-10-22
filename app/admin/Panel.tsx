@@ -13,6 +13,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [err, setErr] = useState("");
+  const archived = P.is_active === false;
 
   useEffect(() => {
     if (P.id) {
@@ -27,6 +28,12 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
   }, []);
 
   const saveProject = async () => {
+    // Guard the mutation as well as the disabled UI: archived projects are read-only.
+    if (P.id && archived) {
+      setErr("Project ini sedang diarsipkan. Aktifkan project terlebih dahulu untuk melakukan perubahan.");
+      setMessage("");
+      return;
+    }
     if (!title.trim()) {
       setErr("Judul project wajib diisi.");
       setMessage("");
@@ -153,6 +160,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
           <label htmlFor="project-title">Judul project <span aria-hidden="true">*</span></label>
           <input
             id="project-title"
+            disabled={archived}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Contoh: CIVIC VISION"
@@ -163,6 +171,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
           <label htmlFor="project-tagline">Tagline</label>
           <input
             id="project-tagline"
+            disabled={archived}
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
             placeholder="Ringkasan tujuan pembelajaran"
@@ -172,6 +181,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
           <label htmlFor="project-description">Deskripsi project</label>
           <textarea
             id="project-description"
+            disabled={archived}
             rows={4}
             style={{ minHeight: 112 }}
             value={description}
@@ -183,8 +193,8 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
       </div>
 
       <div className="admin-form-actions">
-        <p>Periksa kembali judul dan deskripsi sebelum disimpan.</p>
-        <button className="btn" onClick={saveProject} disabled={saving}>
+        <p>{archived ? "Project diarsipkan: aktifkan project untuk mengedit informasi." : "Periksa kembali judul dan deskripsi sebelum disimpan."}</p>
+        <button className="btn" onClick={saveProject} disabled={saving || archived}>
           {saving ? "Menyimpan…" : P.id ? "Simpan perubahan" : "Buat project"}
         </button>
       </div>
