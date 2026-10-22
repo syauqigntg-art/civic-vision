@@ -123,7 +123,7 @@ export function ProjectSwitcher() {
   return (
     <div style={{ minWidth: 220, maxWidth: 340, flex: "1 1 240px" }}>
       <label htmlFor="admin-project-switcher" style={{ margin: "0 0 5px", fontSize: 11, color: "#b7c8e4" }}>
-        PROYEK AKTIF
+        PROYEK TERPILIH
       </label>
       <select
         id="admin-project-switcher"
@@ -173,11 +173,9 @@ export function ProjectPageScope({ children, path }: { children: React.ReactNode
     return (
       <>
         <section className="warn" role="status">
-          Proyek ini diarsipkan. Data dan hasil siswa tetap dipertahankan untuk ditinjau, tetapi pengelolaan konten/kelompok dan pengerjaan siswa dinonaktifkan. Aktifkan kembali proyek dari menu Project untuk melanjutkan.
+          Proyek ini diarsipkan. Data dan hasil siswa tetap dipertahankan dan masih dapat ditinjau. Perubahan konten/kelompok serta pengerjaan siswa dinonaktifkan; aktifkan kembali proyek dari menu Project untuk melanjutkan.
         </section>
-        <fieldset disabled style={{ border: 0, padding: 0, margin: 0, minWidth: 0, opacity: 0.84, pointerEvents: "none" }}>
-          {children}
-        </fieldset>
+        {children}
       </>
     );
   }
