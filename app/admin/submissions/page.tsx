@@ -1,7 +1,8 @@
 "use client"; import { MediaPlayer as Media } from "@/components/video/MediaPlayer"; import { useState } from "react"; import { show } from "@/lib/supabase"; import { useAdmin, subOf, rawOf } from "@/lib/admin"; import { toCsv, toXlsx, saveBlob, stamp } from "@/lib/utils/export";
 const two = (n: any) => String(n ?? "").padStart(2, "0");
 export default function Submissions() {
-  const { gs, vs, qs, gv, gm, subs, ans, loading, error } = useAdmin(); const [fl, setFl] = useState({ g: "", v: "", s: "", c: "", from: "", to: "" }); const [sel, setSel] = useState("");
+  const { P, gs, vs, qs, gv, gm, subs, ans, loading, error } = useAdmin();
+  const readOnly = P?.is_active === false; const [fl, setFl] = useState({ g: "", v: "", s: "", c: "", from: "", to: "" }); const [sel, setSel] = useState("");
   const set = (k: string, v: string) => setFl({ ...fl, [k]: v });
   const rows = gs.map(g => { const s = subOf(g, subs); const vid = s?.video_id || gv.find(x => x.group_id === g.id)?.video_id; return { g, s, v: vs.find(x => x.id === vid), status: s?.status || "belum mulai", date: (s?.submitted_at || s?.updated_at || "").slice(0, 10) }; })
     .filter(r => (!fl.g || r.g.id === fl.g) && (!fl.v || r.v?.id === fl.v) && (!fl.s || r.status === fl.s) && (!fl.c || r.g.class_name === fl.c) && (!fl.from || (r.date && r.date >= fl.from)) && (!fl.to || (r.date && r.date <= fl.to)));
@@ -24,6 +25,7 @@ export default function Submissions() {
     <div style={{ overflowX: "auto", marginTop: 12 }}><table><thead><tr><th>Kelompok</th><th>Video</th><th>Kelas</th><th>Status</th><th>Tanggal</th><th /></tr></thead><tbody>{rows.map(r => <tr key={r.g.id}><td>Kelompok {two(r.g.group_number)}</td><td>{r.v?.title || "—"}</td><td>{r.g.class_name || "—"}</td><td>{r.status}</td><td>{r.date || "—"}</td>
       <td style={{ whiteSpace: "nowrap" }}><button className="btn g" style={{ padding: "4px 12px" }} onClick={() => setSel(r.g.id)}>Buka</button>{r.status === "submitted" && <> <button className="btn g" style={{ padding: "4px 12px" }} onClick={async () => {
           const groupLabel = `Kelompok ${two(r.g.group_number)}${r.g.group_name ? " — " + r.g.group_name : ""}`;
+          if (readOnly) { window.alert("Proyek diarsipkan. Aktifkan kembali proyek sebelum membuka pengerjaan."); return; }
           if (!window.confirm(`Buka kembali pengerjaan ${groupLabel}? Jawaban yang sudah ada tetap tersimpan.`)) return;
           try {
             const { upd } = await import("@/lib/admin");
@@ -46,7 +48,7 @@ export default function Submissions() {
           } catch (e) {
             window.alert(e instanceof Error ? e.message : "Terjadi kesalahan saat membuka kembali pengerjaan.");
           }
-        }}>Buka kembali</button></>}</td></tr>)}</tbody></table></div>
+        }} disabled={readOnly}>Buka kembali</button></>}</td></tr>)}</tbody></table></div>
     {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
     <div className="row"><button className="btn" onClick={() => saveBlob(`hasil-civic-vision-${stamp()}.csv`, new Blob([toCsv(exportRows())], { type: "text/csv;charset=utf-8" }))}>Export CSV</button><button className="btn" onClick={() => toXlsx(exportRows(), `hasil-civic-vision-${stamp()}.xlsx`)}>Export Excel</button></div>
     <p style={{ fontSize: 13 }}>Export mengikuti filter yang aktif dan hanya membaca data, tidak mengubah jawaban asli.</p></section>);
