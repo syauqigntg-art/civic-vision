@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { ProjectPageScope, ProjectProvider, ProjectSwitcher } from "@/components/admin/ProjectProvider";
+import { useAdmin } from "@/lib/admin";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", hint: "Ringkasan", icon: "⌂" },
