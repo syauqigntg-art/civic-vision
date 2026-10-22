@@ -67,3 +67,13 @@ Hasil uji yang tepat untuk endpoint konten adalah tidak ada data video/pertanyaa
 
 ## 9. Pemeriksaan otomatis GitHub
 Pull request ke `main` dan push ke `main` menjalankan GitHub Actions untuk memasang dependensi secara reproduktif (`npm ci`) dan memeriksa TypeScript (`npx tsc --noEmit`). Build aplikasi tetap diverifikasi melalui deployment Preview/Production Vercel; GitHub Actions tidak memerlukan atau menyimpan `SUPABASE_SERVICE_ROLE_KEY`.
+
+
+## 10. PBL editor, security audit, and regression checklist
+
+- The teacher question editor saves question content and answer options through one transactional RPC. If a question already has answers, changes to its meaning (text, phase, type, placeholder, description, or options) are rejected; create a new question and deactivate the old one to preserve interpretation of historical answers.
+- Reordering and deleting questions use server-side guarded RPCs. A question that has answers is deactivated, not physically deleted.
+- Teacher question previews and PBL phase guidance use SEE (observe and define the problem), THINK (analyze causes/evidence/impact), CONNECT (connect the case to relevant concepts/values), and ACT (design an action and success criteria).
+- Run the read-only Supabase audit in [supabase/p0-post-hardening-audit-readonly.sql](supabase/p0-post-hardening-audit-readonly.sql).
+- Follow [docs/p0-regression-status.md](docs/p0-regression-status.md) for the distinction between automated checks already passed and browser scenarios still pending.
+- GitHub Actions runs npm ci, TypeScript checks, and source-level PBL/security regression invariants. These checks do not replace teacher/student browser tests on a staging database.
