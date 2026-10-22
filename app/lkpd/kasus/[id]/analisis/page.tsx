@@ -52,6 +52,7 @@ export default function Analisis() {
   const [a, setA] = useState<Record<string, string>>({});
   const [step, setStep] = useState(0);
   const [warn, setWarn] = useState("");
+  const [loadMessage, setLoadMessage] = useState("");
   const [locked, setLocked] = useState(false);
   const [sending, setSending] = useState(false);
   const [view, setView] = useState<"load" | "ok" | "err">("load");
@@ -73,6 +74,7 @@ export default function Analisis() {
     ])
       .then(([q, ans, g]) => {
         if (q.error || ans.error || g.error) {
+          setLoadMessage(q.error?.message || ans.error?.message || g.error?.message || "LKPD tidak dapat dimuat. Periksa koneksi.");
           setView("err");
           return;
         }
@@ -232,7 +234,9 @@ export default function Analisis() {
         return;
       }
 
-      if (data === "belum lengkap") {
+      if (data === "proyek diarsipkan") {
+        setWarn("Proyek ini telah diarsipkan. Jawaban draft tetap aman; minta guru mengaktifkan kembali proyek untuk melanjutkan.");
+      } else if (data === "belum lengkap") {
         setWarn(
           "Server menolak pengiriman karena masih ada jawaban wajib yang belum lengkap. Periksa setiap tahap, lalu simpan kembali."
         );
@@ -259,7 +263,7 @@ export default function Analisis() {
   if (view === "err") {
     return (
       <GlassCard>
-        <Alert>LKPD tidak dapat dimuat. Silakan muat ulang halaman.</Alert>
+        <Alert>{loadMessage || "LKPD tidak dapat dimuat. Silakan muat ulang halaman."}</Alert>
       </GlassCard>
     );
   }
