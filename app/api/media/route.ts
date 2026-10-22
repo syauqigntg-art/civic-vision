@@ -69,7 +69,7 @@ export async function POST(req: Request) {
       ]);
       const canReadArchived = projectResult.data?.is_active === false &&
         submissionResult.data?.status === "submitted";
-      const projectCanServeContent = projectResult.data?.is_active !== false || canReadArchived;
+      const projectCanServeContent = !!projectResult.data && (projectResult.data.is_active !== false || canReadArchived);
 
       if (!projectResult.error && !submissionResult.error && projectCanServeContent) {
         const { data: videos, error: videoError } = await admin
