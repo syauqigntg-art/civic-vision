@@ -75,7 +75,9 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
     const selectedId = readProjectId();
     const selected = allProjects.find((p: any) => p.id === selectedId) || null;
     if (selected && selected.is_active === false) {
-      setData(emptyData);
+      // Keep project metadata visible so the teacher can restore it;
+      // archived content and student records are intentionally not loaded.
+      setData({ ...emptyData, P: selected });
       setError(false);
       setLoading(false);
       return;
