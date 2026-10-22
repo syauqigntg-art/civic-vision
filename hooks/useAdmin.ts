@@ -74,6 +74,10 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
     setProjects(allProjects);
     const selectedId = readProjectId();
     const selected = allProjects.find((p: any) => p.id === selectedId) || null;
+    if (selectedId && !selected) {
+      publishProjectId("");
+      setActiveProjectIdState("");
+    }
     if (!selected) {
       // No implicit "first project": wait for the teacher to choose one.
       setData(emptyData);
@@ -84,7 +88,7 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
 
     const requested = key.split(",") as Part[];
     const needs = new Set(requested);
-    const jobs: Promise<any>[] = [];
+    const jobs: PromiseLike<any>[] = [];
     const names: Part[] = [];
     const add = (name: Part, query: any) => {
       if (needs.has(name)) { names.push(name); jobs.push(query); }
