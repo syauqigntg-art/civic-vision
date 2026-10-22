@@ -215,8 +215,10 @@ export default function Video() {
       {!v.video_url && <p>Video belum diunggah oleh guru.</p>}
       {v.description && <p>{v.description}</p>}
       <div className="hint">
-        Perhatikan video dengan saksama. Catat apa yang terjadi, siapa yang
-        terdampak, dan masalah apa yang perlu diperhatikan.
+        <b>Tujuan SEE — Mengamati masalah.</b> Perhatikan video dengan saksama.
+        Catat fakta yang benar-benar terlihat, siapa yang terdampak, dan masalah
+        awal yang perlu diselidiki. Bedakan fakta dari dugaan.
+        <p style={{ marginBottom: 0 }}><b>Hasil yang diharapkan:</b> catatan fakta pengamatan dan rumusan awal masalah.</p>
       </div>
 
       {seeQs.length > 0 && (
