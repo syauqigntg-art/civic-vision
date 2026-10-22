@@ -373,9 +373,10 @@ export default function Groups() {
       )
     ) {
       const { error } = await sb
-        .from("groups")
-        .delete()
-        .eq("id", g.id);
+       .from("groups")
+.delete()
+.eq("project_id", P.id)
+.eq("id", g.id);
 
       if (error) {
         alert("Kelompok gagal dihapus.");
