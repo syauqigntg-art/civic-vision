@@ -74,6 +74,12 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
     setProjects(allProjects);
     const selectedId = readProjectId();
     const selected = allProjects.find((p: any) => p.id === selectedId) || null;
+    if (selected && selected.is_active === false) {
+      setData(emptyData);
+      setError(false);
+      setLoading(false);
+      return;
+    }
 
     if (!selected) {
       // No implicit "first project": wait for the teacher to choose one.
