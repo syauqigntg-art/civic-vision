@@ -85,7 +85,7 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
     (id: string) => {
       if (!id) {
         setProjectId("");
-        if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
+        if (typeof window !== "undefined") window.sessionStorage.removeItem(STORAGE_KEY);
         return;
       }
       // IDs normally come from the selector or a just-created project.
