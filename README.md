@@ -10,7 +10,7 @@ Node.js 20.6+ · akun Supabase (gratis cukup) · akun Vercel (untuk deploy).
    1. `supabase/schema.sql` (tabel, fungsi, RLS dasar, bucket, indeks).
    2. `supabase/security.sql` (mengunci RPC siswa, menutup baca publik tabel konten, memprivatkan bucket, dan membatasi input).
    - Database lama: jangan menjalankan ulang `schema.sql` pada produksi. Terapkan migrasi yang sesuai setelah membaca instruksinya.
-   - Untuk deployment yang sudah berjalan, deploy aplikasi terbaru hingga Vercel berstatus **Ready**, lalu jalankan `supabase/p0-lock-public-reads.sql` di SQL Editor. Ini menutup baca langsung tabel konten oleh anon; siswa kemudian mendapat konten lewat API yang memeriksa kode kelompok dan penugasan.
+   - Untuk deployment yang sudah berjalan, deploy aplikasi terbaru hingga Vercel berstatus **Ready**, lalu jalankan `supabase/p0-lock-public-reads.sql` di SQL Editor. Skrip ini menutup baca langsung tabel konten oleh anon, mengunci RPC siswa (termasuk `student_rate_limit` bila tersedia) agar hanya dapat dipanggil `service_role`, dan menjaga bucket video tetap privat; siswa kemudian mendapat konten lewat API server yang memeriksa kode kelompok dan penugasan.
    - Sebelum kode kelompok dibagikan ke kelas, pertimbangkan menjalankan `supabase/p0-rotate-group-codes.sql`. Skrip ini mengganti semua kode yang ada, sehingga kode baru wajib dibagikan ulang kepada semua kelompok.
 3. **Bucket video** — dibuat otomatis oleh `schema.sql`. Cek di **Storage → videos**: *Public* harus **off**, batas 50 MB, tipe mp4/webm/mov/jpg/png/webp. Video diputar lewat URL bertanda tangan (1 jam) yang hanya diberikan kepada guru atau kelompok dengan kode valid. Untuk file lebih dari 50 MB, naikkan batas di Storage Settings (sesuai paketmu) dan ubah `MAX_VIDEO` di `lib/storage/upload.ts`.
 4. **Akun admin (guru)**
@@ -64,3 +64,6 @@ Hasil uji yang tepat untuk endpoint konten adalah tidak ada data video/pertanyaa
 
 ## 8. Struktur
 `app/` rute (`lkpd/*` siswa, `admin/*` guru, `api/*` server) · `components/{ui,glass,video,lkpd,admin}` · `hooks/` · `lib/{supabase,auth,validation,db,api,storage,utils}` · `types/` · `proxy.ts` penjaga rute admin · `scripts/seed.mjs` · `supabase/*.sql`
+
+## 9. Pemeriksaan otomatis GitHub
+Pull request ke `main` dan push ke `main` menjalankan GitHub Actions untuk memasang dependensi secara reproduktif (`npm ci`) dan memeriksa TypeScript (`npx tsc --noEmit`). Build aplikasi tetap diverifikasi melalui deployment Preview/Production Vercel; GitHub Actions tidak memerlukan atau menyimpan `SUPABASE_SERVICE_ROLE_KEY`.
