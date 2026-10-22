@@ -27,6 +27,7 @@ const PAGE_INFO = [
   { href: "/admin/settings", title: "Pengaturan Akun", desc: "Informasi akun guru dan akses keluar." },
 ];
 
+
 export default function AdminLayout({
   children,
 }: {
