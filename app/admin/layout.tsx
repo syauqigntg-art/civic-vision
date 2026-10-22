@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
+import { useAdmin } from "@/lib/admin";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", hint: "Ringkasan", icon: "⌂" },
@@ -24,6 +25,31 @@ const PAGE_INFO = [
   { href: "/admin/submissions", title: "Jawaban Siswa", desc: "Pantau status pengerjaan, tinjau jawaban, dan ekspor hasil." },
   { href: "/admin/settings", title: "Pengaturan Akun", desc: "Informasi akun guru dan akses keluar." },
 ];
+
+function ProjectPicker() {
+  const { projects, P, activeProjectId, setActiveProjectId, loading, error } = useAdmin(["P"]);
+  const selectedId = activeProjectId || P?.id || "";
+
+  return (
+    <label className="admin-project-picker" style={{ display: "flex", alignItems: "center", gap: 8, maxWidth: 300 }}>
+      <span style={{ fontSize: 12, opacity: 0.75, whiteSpace: "nowrap" }}>Project aktif</span>
+      <select
+        aria-label="Pilih project aktif"
+        value={selectedId}
+        disabled={loading || !!error || projects.length === 0}
+        onChange={(event) => setActiveProjectId(event.target.value)}
+        style={{ maxWidth: 220 }}
+      >
+        <option value="">Pilih project…</option>
+        {projects.map((project: any) => (
+          <option key={project.id} value={project.id}>
+            {project.title}{project.is_active === false ? " (Arsip)" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
 
 export default function AdminLayout({
   children,
