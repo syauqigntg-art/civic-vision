@@ -187,6 +187,20 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
             <h2>Daftar proyek</h2>
             <p>Pilih proyek yang akan dikelola. Setiap proyek memiliki materi, pertanyaan, kelompok, serta hasilnya sendiri.</p>
           </div>
+          <button
+            type="button"
+            className="btn"
+            onClick={() => {
+              selectProject("");
+              setTitle("CIVIC VISION");
+              setTagline("Menganalisis Pancasila dalam Kehidupan Sehari-hari");
+              setDescription("");
+              setErr("");
+              setMessage("");
+            }}
+          >
+            + Buat proyek baru
+          </button>
         </div>
         {projects.length === 0 ? (
           <p>Belum ada proyek. Buat proyek baru menggunakan formulir di bawah.</p>
