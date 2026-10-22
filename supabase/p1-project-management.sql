@@ -453,8 +453,8 @@ BEGIN
   ON CONFLICT (group_id) DO UPDATE
   SET video_id = EXCLUDED.video_id,
       updated_at = now()
-  WHERE public.submissions.status = 'draft'
-    AND public.submissions.project_id = EXCLUDED.project_id;
+  WHERE submissions.status = 'draft'
+    AND submissions.project_id = EXCLUDED.project_id;
 END;
 $function$;
 
