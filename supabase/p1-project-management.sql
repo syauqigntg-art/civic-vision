@@ -73,7 +73,7 @@ BEGIN
     RAISE EXCEPTION 'Proyek tidak ditemukan.';
   END IF;
 
-  IF v_active IS DISTINCT FROM TRUE THEN
+  IF v_active IS FALSE THEN
     RAISE EXCEPTION 'Proyek diarsipkan. Aktifkan kembali proyek sebelum mengubah atau menghapus data.';
   END IF;
 
@@ -156,7 +156,7 @@ BEGIN
     RAISE EXCEPTION 'Proyek tidak ditemukan.';
   END IF;
 
-  IF v_active IS DISTINCT FROM TRUE THEN
+  IF v_active IS FALSE THEN
     RAISE EXCEPTION 'Proyek diarsipkan. Aktifkan kembali proyek sebelum mengubah atau menghapus data.';
   END IF;
 
@@ -212,7 +212,7 @@ BEGIN
     RAISE EXCEPTION 'Kelompok penugasan tidak ditemukan.';
   END IF;
 
-  IF v_project_active IS DISTINCT FROM TRUE THEN
+  IF v_project_active IS FALSE THEN
     RAISE EXCEPTION 'Proyek diarsipkan. Aktifkan kembali proyek sebelum mengubah penugasan.';
   END IF;
 
@@ -317,7 +317,7 @@ BEGIN
   -- Archived projects are read-only: existing results remain stored, but
   -- students cannot change answers until a teacher reactivates the project.
   PERFORM 1 FROM public.projects
-  WHERE id = v_project_id AND is_active IS TRUE
+  WHERE id = v_project_id AND is_active IS NOT FALSE
   FOR SHARE;
   IF NOT FOUND THEN
     RETURN false;
@@ -387,7 +387,7 @@ BEGIN
   END IF;
 
   PERFORM 1 FROM public.projects
-  WHERE id = g.project_id AND is_active IS TRUE
+  WHERE id = g.project_id AND is_active IS NOT FALSE
   FOR SHARE;
   IF NOT FOUND THEN
     RETURN 'proyek diarsipkan';
@@ -567,7 +567,7 @@ BEGIN
   WHERE p.id = v_project_id
   FOR SHARE;
 
-  IF v_project_active IS DISTINCT FROM TRUE THEN
+  IF v_project_active IS FALSE THEN
     RAISE EXCEPTION 'Proyek diarsipkan. Minta guru mengaktifkannya kembali sebelum mengubah identitas.';
   END IF;
 
@@ -623,7 +623,7 @@ BEGIN
   WHERE p.id = v_group.project_id
   FOR SHARE;
 
-  IF v_project_active IS DISTINCT FROM TRUE THEN
+  IF v_project_active IS FALSE THEN
     RAISE EXCEPTION 'Proyek diarsipkan. Jawaban draft tetap tersimpan; minta guru mengaktifkan kembali proyek.';
   END IF;
 
