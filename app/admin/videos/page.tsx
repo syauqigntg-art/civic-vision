@@ -269,6 +269,7 @@ export default function Videos() {
             </div>
             {err && <div className="warn" role="alert">{err}</div>}
 
+            <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
             <div className="admin-form-grid">
               <div>
                 <label>File video (MP4, WebM, MOV · maks. 50 MB)</label>
@@ -299,6 +300,7 @@ export default function Videos() {
                 <textarea id="new-video-description" rows={2} style={{ minHeight: 76 }} value={f.description} onChange={(e) => set("description", e.target.value)} placeholder="Konteks kasus yang perlu diamati siswa." />
               </div>
             </div>
+            </fieldset>
 
             <div className="admin-form-actions">
               <p>Pastikan file dan judul sudah benar. Maksimum video 50 MB.</p>
@@ -390,6 +392,7 @@ export default function Videos() {
                                 <button className="btn g" type="button" onClick={() => setEditForm(null)}>Tutup editor</button>
                               </div>
                               {err && <div className="warn" role="alert">{err}</div>}
+                              <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
                               <div className="admin-form-grid">
                                 <div>
                                   <label>Judul</label>
@@ -414,6 +417,7 @@ export default function Videos() {
                                   <Uploader kind="video" onUrl={(url) => replaceVideo(v, url)} />
                                 </div>
                               </div>
+                              </fieldset>
                               <div className="admin-form-actions">
                                 <p>Penggantian video akan memperbarui file yang digunakan pada halaman siswa.</p>
                                 <button className="btn" type="button" onClick={saveEdit} disabled={editSaving || readOnly}>{editSaving ? "Menyimpan…" : "Simpan perubahan"}</button>
