@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { ProjectPageScope, ProjectProvider, ProjectSwitcher } from "@/components/admin/ProjectProvider";
-import { useAdmin } from "@/lib/admin";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", hint: "Ringkasan", icon: "⌂" },
@@ -39,21 +38,6 @@ export default function AdminLayout({
   const [email, setEmail] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const [authError, setAuthError] = useState("");
-  const { P, load: reloadProject } = useAdmin(["P"]);
-  const archived = P?.is_active === false;
-  const [activating, setActivating] = useState(false);
-  const [archiveActionError, setArchiveActionError] = useState("");
-
-  const reactivateProject = async () => {
-    if (!P?.id || activating) return;
-    setActivating(true);
-    setArchiveActionError("");
-    const { error } = await sb.from("projects").update({ is_active: true, updated_at: new Date().toISOString() }).eq("id", P.id);
-    if (error) setArchiveActionError("Proyek belum berhasil diaktifkan. Coba lagi atau periksa izin database.");
-    else await reloadProject();
-    setActivating(false);
-  };
-
   useEffect(() => {
     if (path === "/admin/login") return;
     let live = true;
@@ -184,13 +168,6 @@ export default function AdminLayout({
         </header>
 
         {authError && <div className="admin-inline-error" role="alert">{authError}</div>}
-        {archived && path !== "/admin/project" && path !== "/admin/settings" && (
-          <section className="warn" role="status" style={{ margin: "12px 24px 0" }}>
-            Proyek terpilih diarsipkan. Halaman ini berada dalam mode baca-saja.{" "}
-            <Link href="/admin/project">Buka pengaturan proyek</Link> untuk mengaktifkannya kembali.
-          </section>
-        )}
-        {archiveActionError && <div className="warn" role="alert">{archiveActionError}</div>}
         <main id="konten" tabIndex={-1} className="admin-page-content">
           <ProjectPageScope path={path}>{children}</ProjectPageScope>
         </main>
