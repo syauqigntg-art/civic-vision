@@ -83,6 +83,28 @@ export async function POST(req: Request) {
     );
   }
 
+  // Arsip menghentikan perubahan/pekerjaan baru, tetapi tidak menghapus
+  // draft maupun submission dan tetap mengizinkan operasi baca.
+  if (["save_identity", "begin_submission", "save_answer", "submit_group"].includes(parsed.data.op)) {
+    const code = parsed.data.args.code;
+    const { data: group, error: groupError } = await admin
+      .from("groups")
+      .select("project_id")
+      .eq("access_code", code.trim().toUpperCase())
+      .maybeSingle();
+    if (groupError) return fail("Project tidak dapat diverifikasi.", 503);
+    if (!group) return fail("Kode kelompok tidak ditemukan.", 404);
+    const { data: project, error: projectError } = await admin
+      .from("projects")
+      .select("is_active")
+      .eq("id", group.project_id)
+      .maybeSingle();
+    if (projectError) return fail("Project tidak dapat diverifikasi.", 503);
+    if (!project || project.is_active === false) {
+      return fail("Project telah diarsipkan. Jawaban yang tersimpan tetap aman, tetapi pengerjaan baru/perubahan dinonaktifkan.", 403);
+    }
+  }
+
   // Periksa batas percobaan kode kelompok sebelum mencari kelompok.
   if (parsed.data.op === "get_group") {
     const {

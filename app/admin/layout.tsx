@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
+import { useAdmin } from "@/lib/admin";
 
 const NAV = [
   { href: "/admin", label: "Dashboard", hint: "Ringkasan", icon: "⌂" },
@@ -25,6 +26,33 @@ const PAGE_INFO = [
   { href: "/admin/settings", title: "Pengaturan Akun", desc: "Informasi akun guru dan akses keluar." },
 ];
 
+function ProjectPicker() {
+  const { projects, P, activeProjectId, setActiveProjectId, loading, error } = useAdmin(["P"]);
+  const selectedId = activeProjectId || P?.id || "";
+
+  return (
+    <label className="admin-project-picker" style={{ display: "flex", alignItems: "center", gap: 8, maxWidth: 300 }}>
+      <span style={{ fontSize: 12, opacity: 0.75, whiteSpace: "nowrap" }}>
+        {P?.is_active === false ? "Project arsip · baca saja" : "Project aktif"}
+      </span>
+      <select
+        aria-label="Pilih project aktif"
+        value={selectedId}
+        disabled={loading || !!error || projects.length === 0}
+        onChange={(event) => setActiveProjectId(event.target.value)}
+        style={{ maxWidth: 220 }}
+      >
+        <option value="">Pilih project…</option>
+        {projects.map((project: any) => (
+          <option key={project.id} value={project.id}>
+            {project.title}{project.is_active === false ? " (Arsip)" : ""}
+          </option>
+        ))}
+      </select>
+    </label>
+  );
+}
+
 export default function AdminLayout({
   children,
 }: {
@@ -36,6 +64,23 @@ export default function AdminLayout({
   const [email, setEmail] = useState("");
   const [loggingOut, setLoggingOut] = useState(false);
   const [authError, setAuthError] = useState("");
+  const { P, load: reloadProject } = useAdmin(["P"]);
+  const archived = P?.is_active === false;
+  const [activating, setActivating] = useState(false);
+  const [archiveActionError, setArchiveActionError] = useState("");
+
+  const reactivateProject = async () => {
+    if (!P?.id || activating) return;
+    setActivating(true);
+    setArchiveActionError("");
+    const { error } = await sb.from("projects").update({ is_active: true, updated_at: new Date().toISOString() }).eq("id", P.id);
+    if (error) {
+      setArchiveActionError("Project belum berhasil diaktifkan. Coba lagi atau periksa izin database.");
+    } else {
+      await reloadProject();
+    }
+    setActivating(false);
+  };
 
   useEffect(() => {
     if (path === "/admin/login") return;
@@ -151,6 +196,7 @@ export default function AdminLayout({
             <p>{page.desc}</p>
           </div>
           <div className="admin-top-actions">
+            <ProjectPicker />
             <Link className="admin-outline-action" href="/" target="_blank" rel="noreferrer">
               Lihat website <span aria-hidden="true">↗</span>
             </Link>

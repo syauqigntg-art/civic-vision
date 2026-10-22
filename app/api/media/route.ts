@@ -63,6 +63,16 @@ export async function POST(req: Request) {
       .maybeSingle();
 
     if (!groupError && group) {
+      const { data: project, error: projectError } = await admin
+        .from("projects")
+        .select("is_active")
+        .eq("id", group.project_id)
+        .maybeSingle();
+
+      if (projectError || !project || project.is_active === false) {
+        return fail(403);
+      }
+
       const { data: videos, error: videoError } = await admin
         .from("videos")
         .select("id")

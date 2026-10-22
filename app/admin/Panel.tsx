@@ -5,7 +5,7 @@ import { sb } from "@/lib/supabase";
 import { useAdmin } from "@/lib/admin";
 
 export default function Panel({ tab }: { tab: "project" | "settings" }) {
-  const { P, load, loading, error: loadError } = useAdmin(["P"]);
+  const { P, projects, activeProjectId, setActiveProjectId, load, loading, error: loadError } = useAdmin(["P"]);
   const [title, setTitle] = useState("CIVIC VISION");
   const [tagline, setTagline] = useState("Menganalisis Pancasila dalam Kehidupan Sehari-hari");
   const [description, setDescription] = useState("");
@@ -13,6 +13,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [err, setErr] = useState("");
+  const archived = P.is_active === false;
 
   useEffect(() => {
     if (P.id) {
@@ -27,6 +28,12 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
   }, []);
 
   const saveProject = async () => {
+    // Guard the mutation as well as the disabled UI: archived projects are read-only.
+    if (P.id && P.is_active === false) {
+      setErr("Project ini sedang diarsipkan. Aktifkan project terlebih dahulu untuk melakukan perubahan.");
+      setMessage("");
+      return;
+    }
     if (!title.trim()) {
       setErr("Judul project wajib diisi.");
       setMessage("");
@@ -57,13 +64,15 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
         }
         setMessage("Perubahan project berhasil disimpan.");
       } else {
-        const { error } = await sb.from("projects").insert({
+        const { data, error } = await sb.from("projects").insert({
           title: title.trim(),
           tagline: tagline.trim() || null,
           description: description.trim() || null,
-        });
+          is_active: true,
+        }).select("id").single();
         if (error) throw error;
-        setMessage("Project berhasil dibuat.");
+        if (data?.id) setActiveProjectId(data.id);
+        setMessage("Project berhasil dibuat dan dipilih sebagai project aktif.");
       }
 
       await load();
@@ -125,14 +134,34 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
         </span>
       </div>
 
-      {err && <div className="warn" role="alert">{err}</div>}
+      <div style={{ marginBottom: 18 }}>
+        <label htmlFor="project-switcher">Pilih project yang dikelola</label>
+        <select id="project-switcher" value={activeProjectId || P.id || ""} onChange={(e) => setActiveProjectId(e.target.value)} disabled={loading || projects.length === 0}>
+          <option value="">Pilih project…</option>
+          {projects.map((project: any) => <option key={project.id} value={project.id}>{project.title}{project.is_active === false ? " (Diarsipkan)" : ""}</option>)}
+        </select>
+      </div>
+      {P.id && <div style={{ marginBottom: 18 }}>
+        <strong>Status project: </strong>{P.is_active === false ? "Diarsipkan (mode baca saja)" : "Aktif"}
+        <button className="btn g" style={{ marginLeft: 12 }} onClick={async () => {
+          const nextActive = P.is_active === false;
+          const prompt = nextActive ? "Aktifkan kembali project ini? Siswa dapat memulai atau melanjutkan draft." : "Arsipkan project? Data dan hasil siswa tetap disimpan dan dapat ditinjau guru, tetapi siswa tidak dapat memulai atau mengubah pekerjaan. Draft yang sudah ada dipertahankan.";
+          if (!window.confirm(prompt)) return;
+          const { error } = await sb.from("projects").update({ is_active: nextActive, updated_at: new Date().toISOString() }).eq("id", P.id);
+          if (error) { setErr("Status project gagal diperbarui."); return; }
+          setMessage(nextActive ? "Project diaktifkan." : "Project diarsipkan; hasil siswa tetap tersimpan.");
+          await load();
+        }}>{P.is_active === false ? "Aktifkan project" : "Arsipkan project"}</button>
+      </div>}\n      {err && <div className="warn" role="alert">{err}</div>}
       {message && <div className="admin-success-message" role="status" aria-live="polite">✓ {message}</div>}
 
-      <div className="admin-form-grid">
+      {P.is_active === false && <div role="alert" style={{padding:14,marginBottom:16,border:"1px solid #d97706",borderRadius:12,background:"#fff7ed",color:"#9a3412",fontWeight:700}}>PROJECT DIARSIPKAN — FORM PENGEDITAN DIKUNCI. Aktifkan project terlebih dahulu untuk mengubah informasi.</div>}
+      <div className="admin-form-grid" style={P.is_active === false ? {opacity:0.55,pointerEvents:"none"} : undefined}>
         <div>
           <label htmlFor="project-title">Judul project <span aria-hidden="true">*</span></label>
           <input
             id="project-title"
+            disabled={P.is_active === false}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="Contoh: CIVIC VISION"
@@ -143,6 +172,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
           <label htmlFor="project-tagline">Tagline</label>
           <input
             id="project-tagline"
+            disabled={archived}
             value={tagline}
             onChange={(e) => setTagline(e.target.value)}
             placeholder="Ringkasan tujuan pembelajaran"
@@ -152,6 +182,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
           <label htmlFor="project-description">Deskripsi project</label>
           <textarea
             id="project-description"
+            disabled={archived}
             rows={4}
             style={{ minHeight: 112 }}
             value={description}
@@ -163,8 +194,8 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
       </div>
 
       <div className="admin-form-actions">
-        <p>Periksa kembali judul dan deskripsi sebelum disimpan.</p>
-        <button className="btn" onClick={saveProject} disabled={saving}>
+        <p>{P.is_active === false ? "Project diarsipkan: aktifkan project untuk mengedit informasi." : "Periksa kembali judul dan deskripsi sebelum disimpan."}</p>
+        <button className="btn" type="button" onClick={saveProject} disabled={saving || P.is_active === false} aria-disabled={P.is_active === false}>
           {saving ? "Menyimpan…" : P.id ? "Simpan perubahan" : "Buat project"}
         </button>
       </div>

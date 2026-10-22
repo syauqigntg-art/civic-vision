@@ -147,6 +147,16 @@ export async function POST(req: Request) {
     return fail(counted.data === true ? 404 : 429);
   }
 
+  const { data: project, error: projectError } = await admin
+    .from("projects")
+    .select("is_active")
+    .eq("id", group.project_id)
+    .maybeSingle();
+  if (projectError) return fail(503, "Project tidak dapat diverifikasi.");
+  if (!project || project.is_active === false) {
+    return fail(403, "Project ini telah diarsipkan. Hubungi guru jika perlu melanjutkan.");
+  }
+
   try {
     if (parsed.data.op === "list_videos") {
       const { data: assignments, error: assignmentsError } = await admin
