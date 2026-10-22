@@ -25,7 +25,7 @@ from public, anon;
 revoke execute on function public.stats() from public, anon, authenticated;
 grant execute on function public.stats() to service_role;
 -- Jika student_rate_limit tersedia pada versi database ini, batasi RPC tersebut ke server.
-do $
+do $$
 declare
   fn record;
 begin
@@ -46,7 +46,7 @@ begin
       'public', fn.proname, fn.identity_args
     );
   end loop;
-end $;
+end $$;
 -- 3) Bucket video privat + batas ukuran/tipe dipaksa di sisi server. Tanpa policy baca publik; siswa memakai signed URL dari /api/media.
 update storage.buckets set public=false,file_size_limit=52428800,allowed_mime_types=array['video/mp4','video/webm','video/quicktime','image/jpeg','image/png','image/webp'] where id='videos';
 -- 4) Batas panjang input di database (pertahanan terakhir selain Zod).
