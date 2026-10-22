@@ -11,7 +11,7 @@ export default function Submissions() {
   const cur = rows.find(r => r.g.id === sel);
   if (cur) { const { g, s, v } = cur; const list = qsFor(s?.id); const cats = [...new Set(list.map(q => q.category))];
     return (<section className="glass"><button className="btn g" onClick={() => setSel("")}>← Semua hasil</button><h2 style={{ marginTop: 14 }}>Kelompok {two(g.group_number)} — {v?.title || "Video belum ditentukan"}</h2>
-      <p>Status: <b style={{ color: "#fff" }}>{cur.status}</b>{cur.date && ` · ${cur.date}`}</p>
+      <p>Status: <b style={{ color: "#fff" }}>{cur.status === "draft" ? "Draf" : cur.status === "submitted" ? "Sudah dikirim" : "Belum mulai"}</b>{cur.date && ` · ${cur.date}`}</p>
       <div className="qrow"><b>Identitas kelompok</b><p style={{ margin: "6px 0 0" }}>{g.group_name || "—"} · Kelas {g.class_name || "—"} · Ketua: {g.leader_name || "—"}<br />Anggota: {gm.filter(m => m.group_id === g.id).map(m => m.name).join(", ") || "—"}</p></div>
       {v?.video_url && <Media path={v.video_url} kind="video" />}
       {!s ? <p>Kelompok ini belum memulai analisis.</p> : cats.map(c => <div key={c} className="qrow" style={{ marginTop: 12 }}><b style={{ color: "#38bdf8" }}>{c}</b>{list.filter(q => q.category === c).map((q: any) => <div key={q.id} style={{ marginTop: 8 }}>
@@ -19,10 +19,10 @@ export default function Submissions() {
   return (<section className="glass"><h2>Hasil Siswa</h2>
     <div className="mini"><select value={fl.g} onChange={e => set("g", e.target.value)}><option value="">Semua kelompok</option>{gs.map(g => <option key={g.id} value={g.id}>Kelompok {two(g.group_number)}</option>)}</select>
       <select value={fl.v} onChange={e => set("v", e.target.value)}><option value="">Semua video</option>{vs.map(v => <option key={v.id} value={v.id}>Video {two(v.number)} — {v.title}</option>)}</select>
-      <select value={fl.s} onChange={e => set("s", e.target.value)}><option value="">Semua status</option><option value="draft">draft</option><option value="submitted">submitted</option><option value="belum mulai">belum mulai</option></select>
+      <select value={fl.s} onChange={e => set("s", e.target.value)}><option value="">Semua status</option><option value="draft">Draf</option><option value="submitted">Sudah dikirim</option><option value="belum mulai">Belum mulai</option></select>
       <select value={fl.c} onChange={e => set("c", e.target.value)}><option value="">Semua kelas</option>{[...new Set(gs.map(g => g.class_name).filter(Boolean))].map(c => <option key={c}>{c}</option>)}</select>
       <input type="date" aria-label="Dari tanggal" value={fl.from} onChange={e => set("from", e.target.value)} /><input type="date" aria-label="Sampai tanggal" value={fl.to} onChange={e => set("to", e.target.value)} /></div>
-    <div style={{ overflowX: "auto", marginTop: 12 }}><table><thead><tr><th>Kelompok</th><th>Video</th><th>Kelas</th><th>Status</th><th>Tanggal</th><th /></tr></thead><tbody>{rows.map(r => <tr key={r.g.id}><td>Kelompok {two(r.g.group_number)}</td><td>{r.v?.title || "—"}</td><td>{r.g.class_name || "—"}</td><td>{r.status}</td><td>{r.date || "—"}</td>
+    <div style={{ overflowX: "auto", marginTop: 12 }}><table><thead><tr><th>Kelompok</th><th>Video</th><th>Kelas</th><th>Status</th><th>Tanggal</th><th /></tr></thead><tbody>{rows.map(r => <tr key={r.g.id}><td>Kelompok {two(r.g.group_number)}</td><td>{r.v?.title || "—"}</td><td>{r.g.class_name || "—"}</td><td>{r.status === "draft" ? "Draf" : r.status === "submitted" ? "Sudah dikirim" : "Belum mulai"}</td><td>{r.date || "—"}</td>
       <td style={{ whiteSpace: "nowrap" }}><button className="btn g" style={{ padding: "4px 12px" }} onClick={() => setSel(r.g.id)}>Buka</button>{r.status === "submitted" && <> <button className="btn g" style={{ padding: "4px 12px" }} onClick={async () => {
           const groupLabel = `Kelompok ${two(r.g.group_number)}${r.g.group_name ? " — " + r.g.group_name : ""}`;
           if (readOnly) { window.alert("Proyek diarsipkan. Aktifkan kembali proyek sebelum membuka pengerjaan."); return; }
@@ -50,6 +50,6 @@ export default function Submissions() {
           }
         }} disabled={readOnly}>Buka kembali</button></>}</td></tr>)}</tbody></table></div>
     {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
-    <div className="row"><button className="btn" onClick={() => saveBlob(`hasil-civic-vision-${stamp()}.csv`, new Blob([toCsv(exportRows())], { type: "text/csv;charset=utf-8" }))}>Export CSV</button><button className="btn" onClick={() => toXlsx(exportRows(), `hasil-civic-vision-${stamp()}.xlsx`)}>Export Excel</button></div>
+    <div className="row"><button className="btn" onClick={() => saveBlob(`hasil-civic-vision-${stamp()}.csv`, new Blob([toCsv(exportRows())], { type: "text/csv;charset=utf-8" }))}>Unduh CSV</button><button className="btn" onClick={() => toXlsx(exportRows(), `hasil-civic-vision-${stamp()}.xlsx`)}>Unduh Excel</button></div>
     <p style={{ fontSize: 13 }}>Export mengikuti filter yang aktif dan hanya membaca data, tidak mengubah jawaban asli.</p></section>);
 }
