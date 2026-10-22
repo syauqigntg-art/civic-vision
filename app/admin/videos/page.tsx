@@ -39,6 +39,8 @@ export default function Videos() {
   const [editSaving, setEditSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
 
+  const archived = P?.is_active === false;
+  const readOnlyNotice = "Project ini sedang diarsipkan. Aktifkan project terlebih dahulu untuk mengubah data.";
   const set = (key: string, value: string) => setF((prev: any) => ({ ...prev, [key]: value }));
 
   const filteredVideos = useMemo(() => {
@@ -56,6 +58,7 @@ export default function Videos() {
   }, [vs, search, statusFilter]);
 
   const add = async () => {
+    if (archived) { setErr(readOnlyNotice); return; }
     setErr("");
     setMessage("");
 
@@ -108,6 +111,7 @@ export default function Videos() {
   };
 
   const startEdit = (v: any) => {
+    if (archived) { setErr(readOnlyNotice); return; }
     setErr("");
     setMessage("");
     setEditForm({
@@ -120,6 +124,7 @@ export default function Videos() {
   };
 
   const saveEdit = async () => {
+    if (archived) { setErr(readOnlyNotice); return; }
     if (!editForm) return;
     const parsed = videoForm.safeParse({
       title: editForm.title,
@@ -163,6 +168,7 @@ export default function Videos() {
   };
 
   const replaceVideo = async (v: any, newUrl: string) => {
+    if (archived) throw new Error(readOnlyNotice);
     const oldPath = pathOf(v.video_url);
     const newPath = pathOf(newUrl);
     const { data, error: updateError } = await sb
@@ -191,6 +197,7 @@ export default function Videos() {
   };
 
   const toggleActive = async (v: any) => {
+    if (archived) { setErr(readOnlyNotice); return; }
     setErr("");
     setMessage("");
     const { error: updateError } = await sb
@@ -206,6 +213,7 @@ export default function Videos() {
   };
 
   const del = async (v: any) => {
+    if (archived) { setErr(readOnlyNotice); return; }
     if (!confirm("Hapus video ini? Pastikan kelompok tidak lagi memerlukan tugas tersebut. Jawaban yang tersimpan mungkin tetap ada, tetapi referensi video pada hasil dapat terlepas.")) return;
 
     setErr("");
@@ -233,6 +241,8 @@ export default function Videos() {
 
   return (
     <>
+      {archived && <section className="glass" role="alert" style={{border:"1px solid #d97706",background:"#fff7ed",color:"#9a3412"}}><strong>Project diarsipkan — Video Kasus dalam mode baca saja.</strong><p>{readOnlyNotice}</p></section>}
+      <fieldset disabled={archived} style={{border:0,padding:0,margin:0,minWidth:0}}>
       <section className="glass">
         <div className="admin-section-head">
           <div>
@@ -427,6 +437,7 @@ export default function Videos() {
           </div>
         )}
       </section>
+      </fieldset>
     </>
   );
 }
