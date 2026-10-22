@@ -88,10 +88,9 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
         if (typeof window !== "undefined") window.localStorage.removeItem(STORAGE_KEY);
         return;
       }
-      if (!projects.some((project) => project.id === id)) {
-        setError("Proyek yang dipilih tidak ditemukan. Muat ulang daftar proyek.");
-        return;
-      }
+      // IDs normally come from the selector or a just-created project.
+      // Allow selecting immediately after refreshProjects(), before React has
+      // committed the refreshed list state.
       setProjectId(id);
       setError("");
       if (typeof window !== "undefined") window.localStorage.setItem(STORAGE_KEY, id);
