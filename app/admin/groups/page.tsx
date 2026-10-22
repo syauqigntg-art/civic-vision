@@ -8,9 +8,11 @@ import { useAdmin, upd } from "@/lib/admin";
 function Members({
   init,
   onSave,
+  readOnly = false,
 }: {
   init: string[];
   onSave: (a: string[]) => void;
+  readOnly?: boolean;
 }) {
   const [m, setM] = useState(
     [...init, "", "", "", "", ""].slice(
@@ -27,6 +29,7 @@ function Members({
           key={i}
           style={{ marginTop: 6 }}
           value={x}
+          disabled={readOnly}
           placeholder={`Anggota ${i + 1}`}
           onChange={(e) => {
             const a = [...m];
@@ -38,12 +41,14 @@ function Members({
       <div className="row">
         <button
           className="btn g"
+          disabled={readOnly}
           onClick={() => setM([...m, ""])}
         >
           + Anggota
         </button>
         <button
           className="btn g"
+          disabled={readOnly}
           onClick={() => onSave(m)}
         >
           Simpan anggota
@@ -68,6 +73,8 @@ export default function Groups() {
     useState<string[]>([]);
   const [assignBusy, setAssignBusy] = useState(false);
   const [assignMessage, setAssignMessage] = useState("");
+  const archived = P.is_active === false;
+  const readOnlyNotice = "Project ini sedang diarsipkan. Aktifkan project terlebih dahulu untuk mengubah data.";
 
   const selectedVideo = vs.find(
     (v: any) => v.id === bulkVideoId
@@ -107,6 +114,7 @@ export default function Groups() {
   // Setiap kelompok tetap mempunyai satu video tugas aktif
   // dalam alur penugasan ini.
   const assignMany = async () => {
+    if (archived) { setAssignMessage(readOnlyNotice); return; }
     setAssignMessage("");
 
     if (!selectedVideo) {
@@ -215,6 +223,7 @@ export default function Groups() {
     gid: string,
     vid: string
   ) => {
+    if (archived) { alert(readOnlyNotice); return; }
     const group = gs.find((g: any) => g.id === gid);
     const video = vs.find((v: any) => v.id === vid);
 
@@ -260,6 +269,7 @@ export default function Groups() {
     gid: string,
     a: string[]
   ) => {
+    if (archived) { alert(readOnlyNotice); return; }
     const { error: deleteError } = await sb
       .from("group_members")
       .delete()
@@ -293,6 +303,7 @@ export default function Groups() {
   };
 
   const auto = async () => {
+    if (archived) { alert(readOnlyNotice); return; }
     if (
       !confirm(
         "Tetapkan Kelompok n → Video n untuk semua kelompok? " +
@@ -316,6 +327,7 @@ export default function Groups() {
   };
 
   const add = async () => {
+    if (archived) { alert(readOnlyNotice); return; }
     if (!P.id) {
       alert("Buat atau pilih proyek terlebih dahulu.");
       return;
@@ -348,6 +360,7 @@ export default function Groups() {
   };
 
   const del = async (g: any) => {
+    if (archived) { alert(readOnlyNotice); return; }
     const has = subs.some(
       (s: any) => s.group_id === g.id
     );
@@ -376,7 +389,8 @@ export default function Groups() {
 
   return (
     <>
-      <section className="glass">
+      {archived && <section className="glass" role="alert" style={{border:"1px solid #d97706",background:"#fff7ed",color:"#9a3412"}}><strong>Project diarsipkan — halaman Kelompok dalam mode baca saja.</strong><p>{readOnlyNotice}</p></section>}
+      <section className="glass" style={archived ? {opacity:0.7} : undefined}>
         <h2>Penugasan Video ke Banyak Kelompok</h2>
         <p>
           Unggah video satu kali di menu Video Kasus, lalu
@@ -395,6 +409,7 @@ export default function Groups() {
         <select
           id="bulk-video"
           value={bulkVideoId}
+          disabled={archived}
           onChange={(e) => chooseVideo(e.target.value)}
         >
           <option value="">— Pilih video —</option>
@@ -428,6 +443,7 @@ export default function Groups() {
                   <button
                     className="btn g"
                     type="button"
+                    disabled={archived}
                     onClick={() =>
                       setSelectedGroupIds(
                         allSelected
@@ -461,6 +477,7 @@ export default function Groups() {
                           width: "auto",
                           margin: 0,
                         }}
+                        disabled={archived}
                         checked={selectedGroupIds.includes(g.id)}
                         onChange={(e) =>
                           toggleGroup(
@@ -498,6 +515,7 @@ export default function Groups() {
                       assignBusy ||
                       selectedGroupIds.length === 0
                     }
+                    disabled={archived || assignBusy}
                     onClick={assignMany}
                   >
                     {assignBusy
@@ -520,7 +538,7 @@ export default function Groups() {
       <section className="glass">
         <h2>Kelompok</h2>
         <div className="row" style={{ marginTop: 0 }}>
-          <button className="btn" onClick={add}>
+          <button className="btn" disabled={archived} onClick={add}>
             + Buat Kelompok
           </button>
           <button className="btn g" onClick={auto}>
@@ -614,7 +632,8 @@ export default function Groups() {
                 init={gm
                   .filter((m: any) => m.group_id === g.id)
                   .map((m: any) => m.name)}
-                onSave={(a) => members(g.id, a)}
+                readOnly={archived}
+              onSave={(a) => members(g.id, a)}
               />
 
               <div className="row">
