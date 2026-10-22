@@ -39,7 +39,7 @@ export default function Submissions() {
               return;
             }
             if (!data || data.status !== "draft" || data.submitted_at !== null) {
-              window.alert("Status belum berubah menjadi draft. Periksa izin akun guru dan kebijakan RLS Supabase, lalu coba lagi.");
+              window.alert("Status belum berubah menjadi draf. Periksa izin akun guru dan kebijakan RLS Supabase, lalu coba lagi.");
               return;
             }
 
@@ -51,5 +51,5 @@ export default function Submissions() {
         }} disabled={readOnly}>Buka kembali</button></>}</td></tr>)}</tbody></table></div>
     {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
     <div className="row"><button className="btn" onClick={() => saveBlob(`hasil-civic-vision-${stamp()}.csv`, new Blob([toCsv(exportRows())], { type: "text/csv;charset=utf-8" }))}>Unduh CSV</button><button className="btn" onClick={() => toXlsx(exportRows(), `hasil-civic-vision-${stamp()}.xlsx`)}>Unduh Excel</button></div>
-    <p style={{ fontSize: 13 }}>Export mengikuti filter yang aktif dan hanya membaca data, tidak mengubah jawaban asli.</p></section>);
+    <p style={{ fontSize: 13 }}>Unduhan mengikuti filter yang aktif dan hanya membaca data, tidak mengubah jawaban asli.</p></section>);
 }
