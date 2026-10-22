@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { sb } from "@/lib/supabase/client";
 import { useProjectContext } from "@/components/admin/ProjectProvider";
 import type { Q } from "@/types";
@@ -28,9 +28,11 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
   const [d, setD] = useState<any>(emptyData);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const requestVersion = useRef(0);
   const key = parts.join(",");
 
   const load = useCallback(async () => {
+    const version = ++requestVersion.current;
     if (projectsLoading) return;
 
     if (!projectId) {
@@ -95,6 +97,7 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
     };
 
     const results = await Promise.all(ks.map((part) => query(part)));
+    if (version !== requestVersion.current) return;
     const next: any = {};
     ks.forEach((part, index) => {
       const result: any = results[index];
@@ -110,6 +113,7 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
 
   useEffect(() => {
     void load();
+    return () => { requestVersion.current += 1; };
   }, [load]);
 
   return { ...d, loading: loading || projectsLoading, error, load };
