@@ -14,7 +14,7 @@ SELECT t.table_name,
   has_table_privilege('anon',format('public.%I',t.table_name),'INSERT') AS anon_insert,
   has_table_privilege('anon',format('public.%I',t.table_name),'UPDATE') AS anon_update,
   has_table_privilege('anon',format('public.%I',t.table_name),'DELETE') AS anon_delete
-FROM (VALUES ('users'),('projects'),('groups'),('group_members'),('videos'),('group_videos'),('questions'),('question_options'),('submissions'),('answers'),('api_rate_limits') AS t(table_name)
+FROM (VALUES ('users'),('projects'),('groups'),('group_members'),('videos'),('group_videos'),('questions'),('question_options'),('submissions'),('answers'),('api_rate_limits')) AS t(table_name)
 ORDER BY t.table_name;
 
 -- 03 — Admin helper location and public exposure.
