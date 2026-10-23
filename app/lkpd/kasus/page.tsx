@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getCode } from "@/lib/supabase";
 import { rpcS } from "@/lib/api/student";
 import { studentContent } from "@/lib/api/student-content";
+import { loadStudentCaseList } from "@/lib/student/load-case-list";
 
 type VideoItem = {
   id: string;
@@ -20,46 +21,45 @@ export default function Kasus() {
   const [err, setErr] = useState(false);
   const [errMessage, setErrMessage] = useState("");
 
-  useEffect(() => {
-    const code = getCode();
-    if (!code) {
-      setVideos([]);
-      setGroupError(true);
-      setGroupLoaded(true);
-      return;
-    }
+  const loadInFlight = useRef(false);
 
-    Promise.all([
-      studentContent("list_videos", { code }),
-      rpcS("get_group", { code }),
-    ])
-      .then(([videoResult, groupResult]) => {
-        if (videoResult.error) {
-          setErr(true);
-          setErrMessage(videoResult.error.message);
-          setVideos([]);
-        } else {
-          const assignedIds = Array.isArray(groupResult.data?.video_ids)
-            ? groupResult.data.video_ids
-            : [];
-          setVideos(
-            (videoResult.data || []).filter((video: VideoItem) =>
-              assignedIds.includes(video.id)
-            ) as VideoItem[]
-          );
-        }
+  const load = async () => {
+    if (loadInFlight.current) return;
+    loadInFlight.current = true;
+    setVideos(null);
+    setGroupLoaded(false);
+    setGroupError(false);
+    setErr(false);
+    setErrMessage("");
 
-        if (groupResult.error || !groupResult.data?.id) {
-          setGroupError(true);
-          setVideos([]);
-        }
-        setGroupLoaded(true);
-      })
-      .catch(() => {
+    try {
+      const result = await loadStudentCaseList(
+        getCode(),
+        (code) => studentContent("list_videos", { code }),
+        (code) => rpcS("get_group", { code }),
+      );
+
+      if (result.kind === "missing-code") {
+        setVideos([]);
+        setGroupError(true);
+      } else if (result.kind === "invalid-group") {
+        setVideos([]);
+        setGroupError(true);
+      } else if (result.kind === "failed") {
+        setVideos([]);
         setErr(true);
-        setErrMessage("Daftar video tidak dapat dimuat. Periksa koneksi dan coba kembali.");
-        setGroupLoaded(true);
-      });
+        setErrMessage(result.message);
+      } else {
+        setVideos(result.videos);
+      }
+    } finally {
+      loadInFlight.current = false;
+      setGroupLoaded(true);
+    }
+  };
+
+  useEffect(() => {
+    void load();
   }, []);
 
   if (err) {
@@ -72,7 +72,8 @@ export default function Kasus() {
           <button
             className="btn"
             type="button"
-            onClick={() => window.location.reload()}
+            onClick={() => void load()}
+            disabled={!groupLoaded}
           >
             Coba lagi
           </button>
