@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+      - "phase3/**"
   push:
     branches:
       - main
