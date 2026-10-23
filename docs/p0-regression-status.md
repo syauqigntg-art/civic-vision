@@ -3,75 +3,57 @@
 ## Status lingkungan staging (2026-10-23)
 
 - [x] Proyek Supabase staging terpisah dibuat: `civic-vision-staging` (`bneqqkvhehrlcjhvvyvv`), region `ap-northeast-1`, estimasi pembuatan US$0/bulan.
-- [x] Skema dasar, konfigurasi keamanan, project isolation, rate limiter, public-read lockdown, dan migrasi hardening diterapkan pada staging.
+- [x] Skema dasar, konfigurasi keamanan, project isolation, rate limiter, public-read lockdown, editor RPC, dan migrasi hardening diterapkan pada staging.
 - [x] Tidak ada data proyek/kelompok/submission/jawaban yang disalin dari Production; tabel yang diperiksa masih kosong.
-- [x] Seluruh 11 tabel aplikasi memiliki RLS; akses baca langsung anon ditolak; video bucket privat; RPC siswa dibatasi ke `service_role`.
-- [x] Security Advisor setelah hardening hanya menampilkan INFO untuk `api_rate_limits` yang tidak memiliki policy RLS. Tabel tetap tidak dapat diakses `anon`/`authenticated`.
-- [ ] Vercel Preview belum dapat diarahkan ke staging karena tool Vercel mengembalikan HTTP 403 untuk scope tim `uki8`; daftar tim yang bisa diakses kosong. Belum ada environment variable Vercel yang diubah.
-- [ ] Browser/concurrency tests tetap ditahan sampai Preview dipastikan menggunakan staging.
+- [x] Seluruh 11 tabel aplikasi memiliki RLS; akses baca langsung anon ditolak; bucket video privat; RPC siswa dibatasi ke `service_role`.
+- [x] Security Advisor staging hanya menampilkan INFO untuk `api_rate_limits` yang tidak memiliki policy RLS. Tabel itu tidak dapat diakses role client.
+- [x] Migrasi staging `20261023023649 serialize_submit_group_with_answer_saves` diterapkan; definisi aktif `save_answer()` dan `submit_group()` kini sama-sama mengunci baris submission menggunakan `FOR UPDATE` sebelum menulis/memfinalisasi jawaban.
+- [x] Query read-only mengonfirmasi kedua fungsi memakai `search_path=''`; hanya `service_role` dapat menjalankan keduanya; anon/authenticated EXECUTE ditolak.
+- [ ] Vercel Preview masih terblokir: tool mengembalikan HTTP 403 untuk scope tim `uki8`; tidak ada environment variable Vercel yang diubah.
+- [ ] Browser/concurrency tests belum dijalankan dan hanya boleh dilaksanakan setelah Preview terverifikasi memakai staging.
 
 Rincian: [docs/staging-setup.md](./staging-setup.md).
 
-## Pengujian otomatis yang sudah dijalankan
+## Pengujian otomatis dan dependency
 
-- [x] Instalasi dependensi (`npm ci`) berhasil pada GitHub Actions.
-- [x] Pemeriksaan TypeScript (`npx tsc --noEmit`) lulus pada commit UI PBL terbaru yang diperiksa.
-- [x] Pemeriksaan invariants PBL dan keamanan lulus pada run #23 untuk head SHA `261176eb9aafc986244baa0b606eabecebbc0c7b`.
-- [x] `npm audit --omit=dev` benar-benar dijalankan pada run #23, tetapi **gagal dengan exit code 1**: satu temuan kritis pada `next@16.4.0`; laporan menampilkan GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r, dan GHSA-673q-mjm6-r5xr. Next.js menyatakan versi 16.4.1 sebagai versi perbaikan ([advisory image optimization](https://github.com/vercel/next.js/security/advisories/GHSA-2464-fhr4-w9xw), [advisory typed arrays](https://github.com/vercel/next.js/security/advisories/GHSA-673q-mjm6-r5xr), [advisory Server Actions](https://github.com/vercel/next.js/security/advisories/GHSA-p3m5-59mp-jv5r)).
-- [ ] Naikkan dependency `next` ke versi yang sudah dipatch (minimal 16.4.1), regenerasi `package-lock.json`, lalu jalankan audit ulang.
-- [x] Status keseluruhan run #23 `success` **tidak berarti audit bersih**: workflow lama memakai `continue-on-error: true`, sehingga exit code audit 1 tidak menggagalkan job. Workflow diperbaiki pada commit tinjauan ini agar audit menjadi blocking; run baru harus diperiksa terhadap SHA baru.
-- [x] RLS aktif pada 11 tabel aplikasi yang diperiksa.
-- [x] Query langsung mengonfirmasi tidak ada grant tabel untuk anon pada 11 tabel yang diperiksa.
-- [x] RPC siswa (termasuk `student_rate_limit`) tidak dapat dieksekusi anon/authenticated dan hanya dapat dijalankan `service_role`.
-- [x] `public.is_admin()` sudah tidak ada; helper berada di schema `private` dan anon tidak bisa mengeksekusinya.
-- [x] Tiga RPC editor terpasang; anon tidak memiliki EXECUTE, authenticated dapat memanggilnya dengan pemeriksaan admin di dalam fungsi.
-- [x] Bucket `videos` terverifikasi privat, batas 50 MiB, MIME sesuai kebijakan.
-- [x] Performance Advisor tidak lagi menandai foreign key yang sebelumnya tidak memiliki indeks; indeks baru masih mungkin berstatus unused karena beban kueri kecil.
-- [x] **P0 autosave/submit diperbaiki pada database aktif** melalui migrasi `20261023010223_serialize_answer_saves_with_submission`.
-- [x] Definisi `save_answer()` setelah migrasi diverifikasi: mengambil `FOR UPDATE` pada baris submission yang sama dengan `submit_group()`, memeriksa status `draft`, mengisi `answers.project_id`, membatasi pertanyaan ke proyek kelompok, dan menolak akses dari `anon`/ `authenticated`. Hanya `service_role` yang memiliki EXECUTE.
-- [x] Fungsi `save_answer()` menggunakan `search_path = ''` dan seluruh referensi tabel/fungsi yang relevan dikualifikasi dengan schema.
+- [x] Workflow CI menggunakan audit dependency produksi sebagai gate blocking; tidak ada `continue-on-error` pada langkah `npm audit --omit=dev`.
+- [x] Run #24 pada SHA `02d7808b3ab7b68131b170e8135040c759e3640b` mendeteksi satu temuan kritis pada `next@16.4.0`; kegagalan ini valid, bukan regressi TypeScript.
+- [x] `package.json` sekarang meminta `next@^16.4.1`; lockfile diregenerasi melalui npm runner dan memilih `next@16.4.2`. Runner berhasil menjalankan `npm ci` pada lockfile hasil regenerasi.
+- [ ] Audit produksi, TypeScript, source invariants, dan build harus lulus pada satu commit head terbaru. Run CI baru sedang dipantau; jangan menandai gate bersih sebelum hasilnya tersedia.
+- [ ] `npm run build` ditambahkan ke CI dengan nilai environment placeholder khusus build yang tidak memiliki akses database dan bukan rahasia runtime.
 
-## Perlindungan yang diterapkan
+## Verifikasi database staging
 
-- Penyimpanan soal beserta opsi dilakukan dalam satu RPC transaksional.
-- Perubahan teks/fase/tipe/opsi soal yang sudah memiliki jawaban ditolak agar makna jawaban lama tidak berubah diam-diam.
-- Penghapusan soal yang memiliki jawaban menonaktifkan soal, bukan menghapus histori.
-- Pengurutan soal dilakukan lewat satu RPC transaksional.
-- Empat fase PBL menampilkan tujuan dan hasil yang diharapkan; fase kosong memberi pesan yang jelas.
-- Autosave dan submit sekarang menggunakan lock baris submission yang sama. Simpanan yang mendapatkan lock terlebih dahulu selesai sebelum submit memvalidasi; simpanan yang datang setelah submit tersimpan akan melihat status bukan `draft` dan ditolak.
-- File migrasi disimpan di `supabase/migrations/20261023010223_serialize_answer_saves_with_submission.sql`; salinan skrip P0 diselaraskan agar tidak lagi menimpa `submit_group()` dengan definisi lama.
+- [x] Seluruh 11 tabel aplikasi memiliki RLS.
+- [x] Privilege tabel langsung role `anon` untuk tabel aplikasi ditolak.
+- [x] RPC siswa hanya dapat dijalankan `service_role`.
+- [x] Helper admin berada pada schema `private`; `public.is_admin()` tidak tersedia.
+- [x] Bucket `videos` privat, batas 50 MiB dan MIME dibatasi.
+- [x] `save_answer()` menolak simpanan setelah submission bukan draft, validasi proyek/pertanyaan konsisten, mengisi `answers.project_id`, serta mengunci baris submission.
+- [x] `submit_group()` telah diperbaiki di staging agar mengunci baris submission yang sama sebelum validasi kelengkapan dan pengubahan status. Privilege, SECURITY DEFINER, dan empty search_path sudah diverifikasi.
+- [ ] Race test runtime belum lulus/belum dijalankan; query fungsi tidak menggantikan tes dua permintaan yang benar-benar berjalan bersamaan.
 
 ## Empat skenario utama yang belum diuji di browser
 
-Keempat skenario ini tetap **BELUM DIUJI** sampai ada Preview yang terbukti memakai staging. Source checks dan query database bukan bukti uji runtime.
+Keempat skenario berikut **BELUM DIUJI**. Jangan menyebutnya lulus dari CI atau pemeriksaan metadata:
 
-- [ ] **Submit segera setelah mengetik:** ketik atau ubah jawaban lalu tekan kirim secepatnya; nilai final di server harus sama dengan nilai terbaru.
-- [ ] **Koneksi putus saat autosave:** putuskan koneksi ketika penyimpanan tertunda, pulihkan koneksi, lalu pastikan antrean terkirim dan nilai terakhir tersimpan dengan benar.
-- [ ] **Save terlambat setelah submit:** tahan satu request save sampai submit berhasil, lalu lepaskan request; server harus menolak save terlambat dan jawaban submission yang sudah terkirim tidak berubah.
-- [ ] **Guru membuka kembali pengerjaan:** periksa dulu apakah aksi buka-kembali memang tersedia pada UI dan RPC saat ini. Jika ada, pastikan status/akses siswa kembali terbuka tanpa menghapus jawaban lama; jika tidak ada, catat sebagai fitur belum tersedia, bukan tes yang lulus.
+- [ ] **Submit segera setelah mengetik:** nilai jawaban terakhir di server harus sama dengan teks terakhir sebelum submit.
+- [ ] **Koneksi terputus saat autosave:** pulihkan koneksi; antrean harus mencoba ulang dan nilai terakhir tersimpan tanpa kehilangan data senyap.
+- [ ] **Save terlambat setelah submit:** save ditolak dan jawaban pada submission yang sudah terkirim tidak berubah.
+- [ ] **Guru membuka kembali submission:** cek apakah aksi UI dan RPC itu memang ada. Jika tersedia, uji tanpa menghapus histori; jika tidak, catat sebagai fitur belum tersedia/tidak berlaku.
 
-## Skenario regresi browser tambahan yang masih perlu dijalankan
+## Skenario tambahan yang masih perlu diuji
 
-Tes di bawah belum dapat dinyatakan lulus dari CI atau query metadata saja:
+- [ ] Guru login/logout dan perlindungan area admin.
+- [ ] Penyimpanan, penonaktifan/penghapusan, dan pengurutan pertanyaan serta opsi.
+- [ ] Kegagalan validasi/database tidak menutup form atau menampilkan sukses palsu.
+- [ ] Soal yang sudah memiliki jawaban melindungi makna jawaban historis.
+- [ ] Kode kelompok/video yang tidak ditugaskan tidak memberi akses ke konten.
+- [ ] Isolasi kelompok dan proyek tidak memungkinkan pembacaan lintas scope.
+- [ ] Signed URL Storage, tampilan mobile, dan fase kosong SEE/THINK/CONNECT/ACT.
 
-- [ ] Guru masuk/logout; akses area guru tanpa sesi ditolak.
-- [ ] Guru membuat/mengedit/nonaktifkan soal teks dan pilihan; opsi tersimpan secara atomik.
-- [ ] Kesalahan validasi/database membuat form tetap terbuka dan tidak menampilkan sukses.
-- [ ] Soal berjawaban ditolak jika teks/tipe/fase/opsi diubah; jawaban lama tetap utuh.
-- [ ] Soal berjawaban hanya dinonaktifkan; soal tanpa jawaban dapat dihapus.
-- [ ] Pengurutan soal bertahan setelah refresh dan tidak mencampur proyek.
-- [ ] Kode kelompok tidak valid dan video yang tidak ditugaskan tidak membuka konten.
-- [ ] Kelompok A tidak dapat membaca konten/jawaban kelompok B atau proyek lain.
-- [ ] **Autosave dan submit bersamaan**: ketik jawaban lalu segera kirim; periksa nilai akhir di server pada kelompok uji.
-- [ ] Putuskan koneksi ketika save tertunda, sambungkan lagi, lalu verifikasi nilai terakhir tersimpan tepat satu kali secara logis (upsert).
-- [ ] Refresh ketika ada jawaban tertunda dan verifikasi pemulihan antrean lokal/server.
-- [ ] Submit menunggu autosave; jawaban terkunci setelah submit dan tidak berubah walau ada percobaan save terlambat.
-- [ ] Guru membuka kembali tugas; siswa dapat melanjutkan tanpa kehilangan histori, jika fitur buka-kembali diaktifkan.
-- [ ] URL objek Storage tanpa izin ditolak; video untuk kelompok yang benar tetap bisa dibuka.
-- [ ] Tampilan ponsel dan fase kosong SEE/THINK/CONNECT/ACT.
+## Kesiapan Preview
 
-## Mengapa tes browser belum ditandai lulus
+Preview terbaru belum diverifikasi memakai SHA kandidat terkini dan database staging. Akses Vercel scope tim `uki8` menghasilkan HTTP 403; komentar Vercel sebelumnya menandai deployment sebagai Ignored dan percobaan lain mencapai batas deployment harian paket Free. Tidak ada environment variable Vercel yang diubah.
 
-Perbaikan P0 sudah diverifikasi pada definisi dan hak akses database, tetapi belum dibuktikan dengan uji browser/concurrency pada kelompok uji. Preview terbaru belum terbukti menggunakan SHA kandidat saat ini maupun database staging. Akses Vercel scope tim `uki8` menghasilkan HTTP 403, dan komentar Vercel sebelumnya melaporkan batas deployment harian paket Free. Tidak ada environment variable Vercel yang diubah. Jangan menjalankan tes yang menulis data melalui Preview sampai akses pulih, env Preview diarahkan ke staging, dan deployment SHA serta URL database terverifikasi.
-
-Jangan jalankan tes yang mengubah identitas, jawaban, kelompok, atau status submission pada kelompok nyata. Gunakan database staging dan kelompok uji setelah Preview diarahkan ke staging.
+Jangan jalankan tes tulis pada Preview sampai pemilik tim memberi akses resmi, ketiga environment variable Preview diarahkan ke staging, deployment Ready dengan SHA kandidat yang sama terkonfirmasi, dan URL/key staging diverifikasi tanpa menampilkan nilai rahasia. Jangan mengubah Production atau menyalin data siswa asli ke staging.
