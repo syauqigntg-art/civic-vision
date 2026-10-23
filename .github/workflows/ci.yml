@@ -6,6 +6,7 @@ on:
       - main
       - "phase3/**"
       - "phase4/**"
+      - "phase5/**"
   push:
     branches:
       - main
