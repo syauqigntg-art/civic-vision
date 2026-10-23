@@ -39,6 +39,7 @@ assert.match(analysis, /Belum ada pertanyaan aktif pada fase/, "Empty phases are
 assert.match(analysis, /Coba lagi/, "Analysis load errors expose an explicit retry action");
 assert.match(analysis, /onClick=\{\(\) => void load\(\)\}/, "Analysis retry invokes the tested loader");
 assert.match(analysis, /loadAnalysisSnapshot/, "Analysis page uses the testable snapshot loader");
+assert.match(analysis, /pendingAtLoad\.current === null/, "Analysis retry preserves the initially loaded pending queue");
 assert.match(analysisLoader, /input\.pending/, "Analysis snapshot receives queued draft values");
 assert.match(analysis, /Kembali ke video/, "Analysis load errors expose a safe back action");
 assert.match(cases, /Coba lagi/, "Case list errors expose an explicit retry action");
