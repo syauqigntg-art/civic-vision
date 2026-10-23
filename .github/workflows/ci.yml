@@ -41,7 +41,7 @@ jobs:
       - name: Patch whitespace check
         if: github.event_name == 'pull_request'
         run: git diff --check "${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }}"
-      
+
       - name: PBL and security regression invariants
         run: node scripts/check-pbl-invariants.mjs
 
