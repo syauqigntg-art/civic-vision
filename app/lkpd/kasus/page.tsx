@@ -66,7 +66,19 @@ export default function Kasus() {
     return (
       <section className="glass">
         <div className="warn" role="alert">
-          {errMessage || "Daftar video tidak dapat dimuat. Silakan muat ulang halaman."}
+          {errMessage || "Daftar video tidak dapat dimuat. Silakan coba kembali."}
+        </div>
+        <div className="row">
+          <button
+            className="btn"
+            type="button"
+            onClick={() => window.location.reload()}
+          >
+            Coba lagi
+          </button>
+          <Link className="btn g" href="/lkpd/identitas">
+            Kembali ke identitas
+          </Link>
         </div>
       </section>
     );
