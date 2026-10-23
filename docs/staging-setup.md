@@ -86,4 +86,3 @@ The mapping above reconciles the **recorded migration names to their intended so
 ## P0 submission/autosave audit
 
 The initial live staging definition of `submit_group()` was missing the lock on the same submission row, so the protocol was incomplete. The staging-only migration `serialize_submit_group_with_answer_saves` was applied through the Supabase migration API and recorded as version `20261023023649`. A read-only query confirmed both `save_answer(text,uuid,text)` and `submit_group(text)` are SECURITY DEFINER, use `search_path=''`, contain `FOR UPDATE` on the same row selected by `group_id` and `project_id`, and can be executed only by `service_role` (anon/authenticated EXECUTE=false). This confirms the live function definition and privileges now match the intended lock protocol; **it does not prove the race has passed at runtime**. Browser/concurrency tests remain pending until Preview is proven to use staging.
-
