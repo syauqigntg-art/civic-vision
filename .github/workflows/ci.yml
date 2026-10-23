@@ -5,11 +5,14 @@ on:
     branches:
       - main
       - "phase3/**"
+      - "phase4/**"
+      - "phase5/**"
   push:
     branches:
       - main
       - "phase3/**"
       - "phase4/**"
+      - "phase5/**"
 
 permissions:
   contents: read
