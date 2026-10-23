@@ -1,5 +1,17 @@
 # CIVIC VISION — Status pengujian keamanan dan regresi
 
+## Status lingkungan staging (2026-10-23)
+
+- [x] Proyek Supabase staging terpisah dibuat: `civic-vision-staging` (`bneqqkvhehrlcjhvvyvv`), region `ap-northeast-1`, estimasi pembuatan US$0/bulan.
+- [x] Skema dasar, konfigurasi keamanan, project isolation, rate limiter, public-read lockdown, dan migrasi hardening diterapkan pada staging.
+- [x] Tidak ada data proyek/kelompok/submission/jawaban yang disalin dari Production; tabel yang diperiksa masih kosong.
+- [x] Seluruh 11 tabel aplikasi memiliki RLS; akses baca langsung anon ditolak; video bucket privat; RPC siswa dibatasi ke `service_role`.
+- [x] Security Advisor setelah hardening hanya menampilkan INFO untuk `api_rate_limits` yang tidak memiliki policy RLS. Tabel tetap tidak dapat diakses `anon`/`authenticated`.
+- [ ] Vercel Preview belum dapat diarahkan ke staging karena tool Vercel mengembalikan HTTP 403 untuk scope tim `uki8`; daftar tim yang bisa diakses kosong. Belum ada environment variable Vercel yang diubah.
+- [ ] Browser/concurrency tests tetap ditahan sampai Preview dipastikan menggunakan staging.
+
+Rincian: [docs/staging-setup.md](./staging-setup.md).
+
 ## Pengujian otomatis yang sudah dijalankan
 
 - [x] Instalasi dependensi (`npm ci`) berhasil pada GitHub Actions.
