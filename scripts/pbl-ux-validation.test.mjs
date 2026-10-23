@@ -179,11 +179,13 @@ test("identity save validates input and never calls persistence for invalid draf
   const missing = await controller.save(identityDraft({ name: "   " }));
   const numberOutOfRange = await controller.save(identityDraft({ number: "100" }));
   const numberNotInteger = await controller.save(identityDraft({ number: "2.5" }));
+  const malformedMembers = await controller.save(identityDraft({ members: [7] }));
 
   assert.equal(missing.kind, "invalid");
   assert.match(missing.message, /wajib diisi/);
   assert.equal(numberOutOfRange.kind, "invalid");
   assert.equal(numberNotInteger.kind, "invalid");
+  assert.equal(malformedMembers.kind, "invalid");
   assert.equal(calls, 0);
 });
 
