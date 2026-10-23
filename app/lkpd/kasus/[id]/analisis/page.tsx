@@ -263,7 +263,19 @@ export default function Analisis() {
   if (view === "err") {
     return (
       <GlassCard>
-        <Alert>{loadMessage || "LKPD tidak dapat dimuat. Silakan muat ulang halaman."}</Alert>
+        <Alert>{loadMessage || "LKPD tidak dapat dimuat. Periksa koneksi lalu coba kembali."}</Alert>
+        <div className="row">
+          <button
+            className="btn"
+            type="button"
+            onClick={() => window.location.reload()}
+          >
+            Coba lagi
+          </button>
+          <Link className="btn g" href={`/lkpd/kasus/${id}`}>
+            Kembali ke video
+          </Link>
+        </div>
       </GlassCard>
     );
   }
