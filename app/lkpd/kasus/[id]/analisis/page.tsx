@@ -293,7 +293,6 @@ export default function Analisis() {
             className="btn"
             type="button"
             onClick={() => void load()}
-            disabled={view === "load"}
           >
             Coba lagi
           </button>
