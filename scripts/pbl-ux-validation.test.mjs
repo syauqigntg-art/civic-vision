@@ -408,3 +408,51 @@ test("student RPC client and content client normalize HTTP and network errors wi
     assert.match(contentError.error.message, /Periksa koneksi/);
   });
 });
+
+
+test("case-list loader retries successfully after a transient failure", async () => {
+  let attempts = 0;
+  const listVideos = async () => {
+    attempts += 1;
+    if (attempts === 1) throw new Error("temporary offline");
+    return ok([{ id: "v1", number: 1, title: "Kasus", category: null }]);
+  };
+  const getGroup = async () => ok({ id: "g1", video_ids: ["v1"] });
+
+  const first = await loadStudentCaseList("CV-12345", listVideos, getGroup);
+  assert.equal(first.kind, "failed");
+
+  const second = await loadStudentCaseList("CV-12345", listVideos, getGroup);
+  assert.deepEqual(second, {
+    kind: "loaded",
+    videos: [{ id: "v1", number: 1, title: "Kasus", category: null }],
+  });
+  assert.equal(attempts, 2);
+});
+
+test("analysis loader recovers on retry and keeps pending draft values", async () => {
+  let attempts = 0;
+  const fetchQuestions = async () => {
+    attempts += 1;
+    if (attempts === 1) throw new Error("temporary network failure");
+    return ok([{ id: "q1", question_text: "Bukti?" }]);
+  };
+  const input = {
+    code: "CV-12345",
+    videoId: "video-1",
+    pending: { q1: "jawaban yang belum terkirim" },
+    fetchQuestions,
+    getAnswers: async () => ok({ q1: "jawaban server yang lebih lama" }),
+    getGroup: async () => ok({ id: "g1", submission: { status: "draft" } }),
+  };
+
+  const first = await loadAnalysisSnapshot(input);
+  assert.equal(first.kind, "failed");
+
+  const second = await loadAnalysisSnapshot(input);
+  assert.equal(second.kind, "ready");
+  if (second.kind !== "ready") return;
+  assert.deepEqual(second.answers, { q1: "jawaban yang belum terkirim" });
+  assert.equal(second.shouldFlushPending, true);
+  assert.equal(attempts, 2);
+});
