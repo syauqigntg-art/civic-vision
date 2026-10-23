@@ -277,9 +277,9 @@ export default function Videos() {
                 {f.video_url && <div className="admin-upload-confirm">✓ Video siap disimpan</div>}
               </div>
               <div>
-                <label>Thumbnail (JPG, PNG, WebP · maks. 2 MB, opsional)</label>
+                <label>Gambar pratinjau (JPG, PNG, WebP · maks. 2 MB, opsional)</label>
                 <Uploader kind="image" onUrl={(url) => set("thumbnail_url", url)} />
-                {f.thumbnail_url && <div className="admin-upload-confirm">✓ Thumbnail siap disimpan</div>}
+                {f.thumbnail_url && <div className="admin-upload-confirm">✓ Gambar pratinjau siap disimpan</div>}
               </div>
               <div>
                 <label htmlFor="new-video-title">Judul video <span aria-hidden="true">*</span></label>
