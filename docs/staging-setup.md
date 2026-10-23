@@ -36,11 +36,27 @@ The staging migration history was populated through the Supabase migration API. 
 - Security Advisor currently reports only the informational finding about `api_rate_limits` having no RLS policy.
 - Counts verified as zero for `users`, `projects`, `groups`, `submissions`, `answers`, and `api_rate_limits`.
 
+## Current readiness and audit findings (2026-10-23)
+
+- Staging database setup is complete and isolated; this does **not** mean frontend runtime tests have passed.
+- Vercel Preview is blocked: the connected Vercel tools return HTTP 403 for team scope `uki8`. The latest Vercel bot comment marked its deployment as **Ignored**, and an earlier attempt hit the free daily deployment limit. No Vercel environment variables were changed.
+- GitHub Actions run #23 used the PR head SHA `261176eb9aafc986244baa0b606eabecebbc0c7b`. TypeScript and source invariants passed, but `npm audit --omit=dev` exited 1 with a critical advisory on `next@16.4.0`. The old workflow masked that exit with `continue-on-error: true`; the workflow is being changed so the audit is blocking. Patch `next` to at least 16.4.1 and regenerate the lockfile before calling the candidate clean.
+- PR #6 remains Draft and unmerged. CI and database metadata checks are not browser/runtime tests.
+
+## Four required browser scenarios — all NOT TESTED
+
+Run only after Preview is confirmed to use this staging project and its deployment commit SHA is confirmed:
+
+- [ ] **Type an answer and submit immediately:** final stored value must equal the latest typed value.
+- [ ] **Disconnect during autosave and reconnect:** pending values retry; latest answer is stored correctly after connection returns.
+- [ ] **Release a delayed save after submission:** server rejects the late save and the submitted answer remains unchanged.
+- [ ] **Teacher reopens a submission, if this capability exists:** first verify a real UI action/RPC exists; if present, ensure existing answers remain and the student can continue. If absent, record the feature as not implemented rather than marking the scenario passed.
+
 ## Remaining before browser tests
 
-- [ ] Authorize the Vercel team scope `uki8` for this connection. Current Vercel tools return HTTP 403 for that scope, and team listing returns no accessible teams.
-- [ ] Set Preview-only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to the staging project's values. Do not alter Production targets.
-- [ ] Verify the selected Preview deployment uses the latest PR commit and confirm its runtime environment points to this staging project.
-- [ ] Create test-only admin/group/video/question fixtures in staging and run the four autosave/submit browser scenarios.
+- [ ] Restore authorized access to Vercel team scope `uki8` for this connection; current tools return HTTP 403 and cannot list accessible teams.
+- [ ] Set Preview-only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to staging values. Do not alter Production targets.
+- [ ] Create or confirm a fresh Preview deployment from the latest PR commit and verify runtime points to staging without printing secret values.
+- [ ] Create test-only admin/group/video/question fixtures in staging and execute the four scenarios above.
 
 Do not run student write-flow tests in the current Preview until the environment is proven to use this staging project. Do not copy real student data or secrets into source control.
