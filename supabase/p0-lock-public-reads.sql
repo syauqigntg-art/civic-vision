@@ -37,9 +37,34 @@ revoke all on table
   public.api_rate_limits
 from public, anon;
 
--- Statistik total kelompok/konten tidak lagi tersedia sebagai RPC publik.
-revoke execute on function public.stats() from public, anon, authenticated;
-grant execute on function public.stats() to service_role;
+-- RPC yang dipakai siswa hanya boleh dipanggil oleh backend dengan service_role.
+-- Revokasi dibuat dinamis agar tetap idempoten pada instalasi yang memiliki fungsi versi berbeda.
+-- Fungsi yang tidak ada dilewati; semua overload dengan nama berikut ikut diamankan.
+do $$
+declare
+  fn record;
+begin
+  for fn in
+    select p.proname, pg_get_function_identity_arguments(p.oid) as identity_args
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.prokind = 'f'
+      and p.proname in (
+        'get_group', 'save_identity', 'begin_submission', 'get_answers',
+        'save_answer', 'submit_group', 'student_rate_limit', 'stats'
+      )
+  loop
+    execute format(
+      'revoke execute on function %I.%I(%s) from public, anon, authenticated',
+      'public', fn.proname, fn.identity_args
+    );
+    execute format(
+      'grant execute on function %I.%I(%s) to service_role',
+      'public', fn.proname, fn.identity_args
+    );
+  end loop;
+end $$;
 
 -- Pastikan bucket video tetap privat dengan batas file dan tipe yang telah disepakati.
 update storage.buckets

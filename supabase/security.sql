@@ -24,6 +24,29 @@ from public, anon;
 -- RPC statistik menghitung jumlah kelompok/konten dan tidak dipakai oleh beranda lagi.
 revoke execute on function public.stats() from public, anon, authenticated;
 grant execute on function public.stats() to service_role;
+-- Jika student_rate_limit tersedia pada versi database ini, batasi RPC tersebut ke server.
+do $$
+declare
+  fn record;
+begin
+  for fn in
+    select p.proname, pg_get_function_identity_arguments(p.oid) as identity_args
+    from pg_proc p
+    join pg_namespace n on n.oid = p.pronamespace
+    where n.nspname = 'public'
+      and p.prokind = 'f'
+      and p.proname = 'student_rate_limit'
+  loop
+    execute format(
+      'revoke execute on function %I.%I(%s) from public, anon, authenticated',
+      'public', fn.proname, fn.identity_args
+    );
+    execute format(
+      'grant execute on function %I.%I(%s) to service_role',
+      'public', fn.proname, fn.identity_args
+    );
+  end loop;
+end $$;
 -- 3) Bucket video privat + batas ukuran/tipe dipaksa di sisi server. Tanpa policy baca publik; siswa memakai signed URL dari /api/media.
 update storage.buckets set public=false,file_size_limit=52428800,allowed_mime_types=array['video/mp4','video/webm','video/quicktime','image/jpeg','image/png','image/webp'] where id='videos';
 -- 4) Batas panjang input di database (pertahanan terakhir selain Zod).

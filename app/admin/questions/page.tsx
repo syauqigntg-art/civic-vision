@@ -1,5 +1,12 @@
-"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, catsOf, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin";
-const T: Record<string, string> = { text: "Text", textarea: "Textarea", multiple_text: "Multiple Text", single_select: "Single Select", multi_select: "Multi Select", scale: "Scale" };
+"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin"; import { QuestionField } from "@/components/lkpd/QuestionField";
+const T: Record<string, string> = { text: "Jawaban singkat", textarea: "Jawaban panjang", multiple_text: "Beberapa jawaban teks", single_select: "Pilih satu jawaban", multi_select: "Pilih beberapa jawaban", scale: "Skala 1–5" };
+const PBL_PHASES: Record<string, { title: string; subtitle: string; instruction: string; output: string }> = {
+  see: { title: "SEE", subtitle: "Mengamati masalah", instruction: "Amati stimulus/video, identifikasi fakta dan pihak yang terdampak.", output: "Fakta pengamatan dan rumusan awal masalah" },
+  think: { title: "THINK", subtitle: "Menganalisis masalah", instruction: "Uraikan penyebab, bukti, dampak, dan sudut pandang berbagai pihak.", output: "Analisis masalah yang didukung bukti" },
+  connect: { title: "CONNECT", subtitle: "Menghubungkan konsep", instruction: "Hubungkan kasus dengan nilai Pancasila, hak-kewajiban, keadilan, atau konsep IPS yang relevan.", output: "Argumentasi yang menghubungkan kasus dan konsep" },
+  act: { title: "ACT", subtitle: "Merancang tindakan", instruction: "Rancang solusi, langkah, pembagian peran, dan cara menilai keberhasilannya.", output: "Rencana aksi dan indikator keberhasilan" },
+};
+
 const blank = { id: "", question_text: "", category: "", newCat: "", question_type: "textarea", is_required: true, is_active: true, phase: "", placeholder: "", description: "", display_order: 1, min_items: 2, options: [""] };
 const PLACEHOLDER_BY_PHASE: Record<string, string[]> = {
   see: [
@@ -85,7 +92,7 @@ function getPlaceholderOptions(category: string, phase: string) {
 }
 
 export default function Questions() {
-  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
+  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
   const filteredQs = useMemo(() => {
     const query = search.trim().toLowerCase();
     return qs.filter((q: any) => {
@@ -95,14 +102,16 @@ export default function Questions() {
       return matchesSearch && matchesPhase && matchesStatus;
     }).sort((a: any, b: any) => a.display_order - b.display_order);
   }, [qs, search, phaseFilter, statusFilter]);
-  const edit = (q?: Q) => { setErr(""); setF(q ? { id: q.id, question_text: String(q.question_text || ""), category: String(q.category || ""), newCat: "", question_type: q.question_type, is_required: q.is_required, is_active: (q as any).is_active !== false, phase: (q as any).phase || "", placeholder: q.placeholder || "", description: q.description || "", display_order: q.display_order, min_items: q.min_items, options: opts(q).length ? opts(q) : [""] }
+  const edit = (q?: Q) => { setErr(""); setPreviewAnswer(""); setF(q ? { id: q.id, question_text: String(q.question_text || ""), category: String(q.category || ""), newCat: "", question_type: q.question_type, is_required: q.is_required, is_active: (q as any).is_active !== false, phase: (q as any).phase || "", placeholder: q.placeholder || "", description: q.description || "", display_order: q.display_order, min_items: q.min_items, options: opts(q).length ? opts(q) : [""] }
     : { ...blank, category: cats[0] || "", display_order: (qs[qs.length - 1]?.display_order || 0) + 1 }); };
-  const set = (k: string, v: any) =>
+  const set = (k: string, v: any) => {
+    if (k === "question_type") setPreviewAnswer("");
     setF((previous: any) =>
       k === "category" || k === "phase"
         ? { ...previous, [k]: v, placeholder: "" }
         : { ...previous, [k]: v }
     );
+  };
   // Form is closed on the list view (f === null). Only build placeholder
   // options while a question form is open to avoid reading properties of null.
   const activeCategory = f
@@ -116,40 +125,201 @@ export default function Questions() {
   const placeholderOptions = f?.placeholder && !placeholderChoices.includes(f.placeholder)
     ? [f.placeholder, ...placeholderChoices]
     : placeholderChoices;
-  const save = async () => { if (readOnly) return setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan."); const cat = f.category === "__new" ? f.newCat.trim() : f.category; const sel = f.question_type.endsWith("select"); const o = f.options.map((s: string) => s.trim()).filter(Boolean);
-    if (!f.question_text.trim() || !cat) return setErr("Pertanyaan dan kategori wajib diisi."); if (sel && o.length < 2) return setErr("Tambahkan minimal 2 pilihan jawaban.");
-    const row = { question_text: f.question_text, category: cat, phase: f.phase || null, question_type: f.question_type, is_required: f.is_required, is_active: f.is_active, placeholder: f.placeholder || null, description: f.description || null, display_order: +f.display_order, min_items: +f.min_items || 1, updated_at: new Date().toISOString() };
-    const pr = questionForm.safeParse(row); if (!pr.success) return setErr(pr.error.issues[0].message);
-    if (qs.some(x => x.id !== f.id && x.display_order === +f.display_order)) for (const q of qs) if (q.id !== f.id && q.display_order >= +f.display_order) await sb.from("questions").update({ display_order: q.display_order + 1 }).eq("id", q.id);
-    let id = f.id; if (id) await sb.from("questions").update(row).eq("id", id); else { const r = await sb.from("questions").insert({ ...row, project_id: P.id }).select("id").single(); id = r.data?.id; }
-    await sb.from("question_options").delete().eq("question_id", id); if (sel) await sb.from("question_options").insert(o.map((t: string, i: number) => ({ question_id: id, option_text: t, display_order: i + 1 })));
-    setF(null); load(); };
-  const del = async (q: Q) => { if (readOnly) return setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan."); const n = ans.filter(a => a.question_id === q.id).length;
-    if (n > 0) { if (confirm(`Pertanyaan ini sudah memiliki ${n} jawaban siswa, jadi tidak dihapus permanen. Pertanyaan akan dinonaktifkan (disembunyikan dari siswa) dan jawaban lama tetap tersimpan. Lanjutkan?`)) { await sb.from("questions").update({ is_active: false }).eq("id", q.id); load(); } return; }
-    if (confirm("Hapus pertanyaan ini secara permanen?")) { await sb.from("questions").delete().eq("id", q.id); load(); } };
-  const reorder = async (from: string, to: string) => { if (readOnly || !from || from === to) return; const a = [...qs]; const i = a.findIndex(x => x.id === from), j = a.findIndex(x => x.id === to); const [m] = a.splice(i, 1); a.splice(j, 0, m);
-    await Promise.all(a.map((q, k) => q.display_order === k + 1 ? null : sb.from("questions").update({ display_order: k + 1 }).eq("id", q.id))); load(); };
+  const previewQuestion = f ? ({
+    id: f.id || "preview-question",
+    question_text: f.question_text || "Pertanyaan akan tampil di sini.",
+    category: (f.category === "__new" ? f.newCat : f.category) || "Kategori",
+    phase: f.phase || null,
+    question_type: f.question_type,
+    is_required: f.is_required,
+    is_active: f.is_active,
+    placeholder: f.placeholder || null,
+    description: f.description || null,
+    display_order: Number(f.display_order) || 1,
+    min_items: Number(f.min_items) || 1,
+    question_options: (f.options || []).map((option_text: string, index: number) => ({ option_text, display_order: index + 1 })),
+  } as Q) : null;
+  const previewRaw = typeof previewAnswer === "string" ? previewAnswer : JSON.stringify(previewAnswer);
+
+  const save = async () => {
+    if (readOnly) {
+      setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan.");
+      return;
+    }
+    if (saving) return;
+
+    const cat = f.category === "__new" ? f.newCat.trim() : f.category.trim();
+    const isSelect = ["single_select", "multi_select"].includes(f.question_type);
+    const options = Array.isArray(f.options)
+      ? f.options.map((value: string) => String(value).trim()).filter(Boolean)
+      : [];
+
+    const row = {
+      question_text: String(f.question_text || "").trim(),
+      category: cat,
+      phase: f.phase || null,
+      question_type: f.question_type,
+      is_required: Boolean(f.is_required),
+      is_active: Boolean(f.is_active),
+      placeholder: f.placeholder || null,
+      description: f.description || null,
+      display_order: Number(f.display_order),
+      min_items: Number(f.min_items) || 1,
+    };
+    const parsed = questionForm.safeParse(row);
+    if (!parsed.success) {
+      setErr(parsed.error.issues[0]?.message || "Periksa kembali isian pertanyaan.");
+      return;
+    }
+    if (!P?.id) {
+      setErr("Proyek belum dipilih. Pilih proyek terlebih dahulu.");
+      return;
+    }
+    if (isSelect && options.length < 2) {
+      setErr("Tambahkan minimal 2 pilihan jawaban.");
+      return;
+    }
+    if (isSelect && new Set(options).size !== options.length) {
+      setErr("Setiap pilihan jawaban harus berbeda.");
+      return;
+    }
+
+    setSaving(true);
+    setErr("");
+    try {
+      const { error } = await sb.rpc("admin_save_question", {
+        p_id: f.id || null,
+        p_project_id: P.id,
+        p_question_text: parsed.data.question_text,
+        p_category: cat,
+        p_phase: parsed.data.phase,
+        p_question_type: parsed.data.question_type,
+        p_is_required: parsed.data.is_required,
+        p_is_active: parsed.data.is_active,
+        p_placeholder: parsed.data.placeholder,
+        p_description: parsed.data.description,
+        p_display_order: parsed.data.display_order,
+        p_min_items: parsed.data.min_items,
+        p_options: isSelect ? options : [],
+      });
+
+      if (error) {
+        const message = error.message.toLowerCase();
+        if (message.includes("question_has_answers_create_new_version")) {
+          setErr("Pertanyaan ini sudah memiliki jawaban siswa. Untuk melindungi hasil lama, teks, fase, tipe, dan opsi tidak dapat diubah. Buat pertanyaan baru, lalu nonaktifkan pertanyaan lama.");
+        } else if (message.includes("duplicate_question_options")) {
+          setErr("Pilihan jawaban tidak boleh duplikat.");
+        } else if (message.includes("invalid_question_options")) {
+          setErr("Pilihan jawaban tidak valid. Isi minimal 2 pilihan yang masing-masing maksimal 300 karakter.");
+        } else if (message.includes("project_archived")) {
+          setErr("Proyek diarsipkan. Aktifkan kembali proyek sebelum mengubah pertanyaan.");
+        } else if (message.includes("admin_required") || message.includes("permission denied")) {
+          setErr("Akses ditolak. Masuk kembali menggunakan akun guru/admin.");
+        } else {
+          console.error("Transactional question save failed:", error.message);
+          setErr("Pertanyaan gagal disimpan. Perubahan belum diterapkan; periksa isian dan coba lagi.");
+        }
+        return;
+      }
+
+      setF(null);
+      setPreviewAnswer("");
+      setErr("");
+      await load();
+    } catch {
+      setErr("Koneksi gagal saat menyimpan. Formulir tetap terbuka dan perubahan belum dikonfirmasi.");
+    } finally {
+      setSaving(false);
+    }
+  };
+  const del = async (q: Q) => {
+    if (readOnly) {
+      setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan.");
+      return;
+    }
+    const answerCount = ans.filter((answer: any) => answer.question_id === q.id).length;
+    const prompt = answerCount > 0
+      ? `Pertanyaan ini memiliki ${answerCount} jawaban siswa. Sistem akan menonaktifkannya dan mempertahankan jawaban lama. Lanjutkan?`
+      : "Hapus pertanyaan ini secara permanen? Tindakan ini hanya tersedia jika belum ada jawaban siswa.";
+    if (!confirm(prompt)) return;
+
+    setErr("");
+    const { data, error } = await sb.rpc("admin_delete_question", {
+      p_id: q.id,
+      p_project_id: P.id,
+    });
+    if (error) {
+      const message = error.message.toLowerCase();
+      setErr(message.includes("project_archived")
+        ? "Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan."
+        : "Pertanyaan gagal dihapus atau dinonaktifkan. Data belum dinyatakan berubah.");
+      return;
+    }
+    if (data === "deactivated") {
+      setErr("Pertanyaan memiliki jawaban lama, sehingga dinonaktifkan dan tidak dihapus.");
+    } else if (data === "not_found") {
+      setErr("Pertanyaan tidak ditemukan pada proyek yang sedang dipilih. Muat ulang daftar.");
+    } else {
+      setErr("");
+    }
+    await load();
+  };
+  const reorder = async (from: string, to: string) => {
+    if (readOnly || !from || from === to || !P?.id) return;
+    const ordered = [...qs];
+    const fromIndex = ordered.findIndex((question) => question.id === from);
+    const toIndex = ordered.findIndex((question) => question.id === to);
+    if (fromIndex < 0 || toIndex < 0) return;
+    const [moved] = ordered.splice(fromIndex, 1);
+    ordered.splice(toIndex, 0, moved);
+
+    setErr("");
+    const { error } = await sb.rpc("admin_reorder_questions", {
+      p_project_id: P.id,
+      p_question_ids: ordered.map((question) => question.id),
+    });
+    if (error) {
+      setErr(error.message.toLowerCase().includes("project_archived")
+        ? "Proyek diarsipkan. Aktifkan kembali sebelum mengurutkan pertanyaan."
+        : "Urutan pertanyaan gagal disimpan. Daftar akan tetap menggunakan urutan server.");
+      await load();
+      return;
+    }
+    await load();
+  };
   const bump = (i: number, d: number) => { const t = qs[i + d]; if (t) reorder(qs[i].id, t.id); };
   if (f) return (<section className="glass"><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
     <label>Pertanyaan</label><textarea value={f.question_text} onChange={e => set("question_text", e.target.value)} />
     <label>Kategori</label><select value={f.category} onChange={e => set("category", e.target.value)}><option value="">Pilih kategori</option>{cats.map(c => <option key={c}>{c}</option>)}<option value="__new">+ Kategori baru...</option></select>
     {f.category === "__new" && <input style={{ marginTop: 8 }} placeholder="Nama kategori baru" value={f.newCat} onChange={e => set("newCat", e.target.value)} />}
-    <label>Fase belajar</label><select value={f.phase} onChange={e => set("phase", e.target.value)}><option value="">— tanpa fase —</option><option value="see">SEE — Melihat permasalahan</option><option value="think">THINK — Memikirkan dan menganalisis</option><option value="connect">CONNECT — Menghubungkan dengan Pancasila</option><option value="act">ACT — Melakukan tindakan nyata</option></select>
+    <label>Fase belajar</label><select value={f.phase} onChange={e => set("phase", e.target.value)}><option value="">— tanpa fase —</option><option value="see">SEE — Mengamati masalah</option><option value="think">THINK — Menganalisis masalah</option><option value="connect">CONNECT — Menghubungkan konsep</option><option value="act">ACT — Merancang tindakan</option></select>
     <label>Tipe Pertanyaan</label><select value={f.question_type} onChange={e => set("question_type", e.target.value)}>{Object.entries(T).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
     {f.question_type === "multiple_text" && <><label>Minimal jawaban</label><input type="number" min={1} value={f.min_items} onChange={e => set("min_items", e.target.value)} /></>}
     <label><input type="checkbox" style={{ width: "auto", marginRight: 8 }} checked={f.is_required} onChange={e => set("is_required", e.target.checked)} />Required (wajib dijawab)</label>
     <label><input type="checkbox" style={{ width: "auto", marginRight: 8 }} checked={f.is_active} onChange={e => set("is_active", e.target.checked)} />Aktif (tampil untuk siswa)</label>
-    <label htmlFor="question-placeholder">Placeholder jawaban</label>
+    <label htmlFor="question-placeholder">Petunjuk/contoh jawaban</label>
     <select id="question-placeholder" value={f.placeholder} onChange={e => set("placeholder", e.target.value)}>
       <option value="">— Tanpa placeholder —</option>
       {placeholderOptions.map((value: string) => <option key={value} value={value}>{value}</option>)}
     </select>
     <small className="admin-field-hint">Pilihan otomatis menyesuaikan kategori dan fase. Ubah kategori atau fase untuk melihat rekomendasi lain.</small>
     <label htmlFor="question-description">Instruksi tambahan (opsional)</label><input id="question-description" value={f.description} onChange={e => set("description", e.target.value)} />
-    <label>Urutan</label><input type="number" min={1} value={f.display_order} onChange={e => set("display_order", e.target.value)} />
+    <label>Posisi tampil</label><input type="number" min={1} value={f.display_order} onChange={e => set("display_order", e.target.value)} />
     {f.question_type.endsWith("select") && <><label>Pilihan Jawaban</label>{f.options.map((o: string, i: number) => <div className="row" style={{ marginTop: 6 }} key={i}><input value={o} placeholder={`Pilihan ${i + 1}`} onChange={e => { const a = [...f.options]; a[i] = e.target.value; set("options", a); }} />
       <button className="btn g" onClick={() => set("options", f.options.filter((_: any, j: number) => j !== i))}>×</button></div>)}<div className="row"><button className="btn g" onClick={() => set("options", [...f.options, ""])}>+ Tambah pilihan</button></div></>}</fieldset>
-    <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly}>Simpan pertanyaan</button></div></div></section>);
+    <section className="glass" aria-label="Pratinjau soal siswa" style={{ marginTop: 18 }}>
+      <h3 id="question-preview-title">Pratinjau tampilan siswa</h3>
+      <p style={{ marginTop: 0, opacity: .85 }}>Pratinjau ini mengikuti fase, tipe jawaban, placeholder, instruksi, dan opsi yang sedang kamu atur. Jawaban di sini hanya contoh lokal dan tidak disimpan.</p>
+      {previewQuestion && <>
+        <span className="tag">{PBL_PHASES[f.phase]?.title || "TANPA FASE"} · {previewQuestion.category}</span>
+        <h4 id="question-preview-prompt" style={{ marginTop: 10 }}>
+          {previewQuestion.question_text}{previewQuestion.is_required ? " *" : " (opsional)"}
+        </h4>
+        <QuestionField q={previewQuestion} raw={previewRaw} onChange={setPreviewAnswer} labelledBy="question-preview-prompt" />
+        {previewQuestion.description && <p className="hint">{previewQuestion.description}</p>}
+      </>}
+    </section>
+    <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
       <div className="admin-section-head">
@@ -182,6 +352,27 @@ export default function Questions() {
         </select>
       </div>
 
+      <div className="admin-phase-overview" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 10, margin: "16px 0" }}>
+        {Object.entries(PBL_PHASES).map(([key, phase]) => {
+          const phaseQuestions = qs.filter((question: any) => question.phase === key);
+          const activeCount = phaseQuestions.filter((question: any) => question.is_active !== false).length;
+          return (
+            <article className="glass" key={key} style={{ padding: 14 }}>
+              <strong>{phase.title} — {phase.subtitle}</strong>
+              <p style={{ fontSize: 13, margin: "8px 0" }}>{phase.instruction}</p>
+              <p style={{ fontSize: 12, margin: "6px 0" }}><b>Output:</b> {phase.output}</p>
+              <p style={{ fontSize: 12, margin: "6px 0" }}>{activeCount} soal aktif · {phaseQuestions.length - activeCount} nonaktif</p>
+              <button className="btn g" type="button" onClick={() => { setPhaseFilter(key); setStatusFilter("all"); }}>Kelola soal {phase.title}</button>
+            </article>
+          );
+        })}
+      </div>
+      {qs.some((question: any) => question.is_active !== false && !question.phase) && (
+        <div className="warn" role="status">
+          Ada pertanyaan aktif tanpa fase. Pada alur siswa saat ini, pertanyaan tanpa fase masuk ke THINK. Tetapkan fase yang sesuai agar alur PBL lebih jelas.
+        </div>
+      )}
+
       {loading ? (
         <div className="admin-empty">Memuat pertanyaan…</div>
       ) : !qs.length ? (
@@ -195,7 +386,7 @@ export default function Questions() {
           <table>
             <thead>
               <tr>
-                <th>Urutan</th>
+                <th>Posisi tampil</th>
                 <th>Fase</th>
                 <th>Kategori & pertanyaan</th>
                 <th>Tipe</th>

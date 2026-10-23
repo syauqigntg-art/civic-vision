@@ -22,12 +22,14 @@ function Members({
   return (
     <>
       <label>Anggota</label>
+      <p className="admin-field-hint">Isi nama anggota, lalu pilih <strong>Simpan anggota</strong> untuk menyimpan daftar. Perubahan identitas kelompok disimpan otomatis setelah keluar dari kolom.</p>
       {m.map((x, i) => (
         <input
           key={i}
           style={{ marginTop: 6 }}
           value={x}
-          placeholder={`Anggota ${i + 1}`}
+          aria-label={`Nama anggota ${i + 1}`}
+          placeholder={`Nama anggota ${i + 1}`}
           onChange={(e) => {
             const a = [...m];
             a[i] = e.target.value;
@@ -628,7 +630,8 @@ export default function Groups() {
               <div className="mini">
                 <input
                   type="number"
-                  placeholder="Nomor"
+                  aria-label="Nomor kelompok"
+                  placeholder="Nomor kelompok"
                   defaultValue={g.group_number ?? ""}
                   onBlur={(e) =>
                     upd("groups", g.id, {
@@ -638,6 +641,7 @@ export default function Groups() {
                   }
                 />
                 <input
+                  aria-label="Nama kelompok"
                   placeholder="Nama kelompok"
                   defaultValue={g.group_name || ""}
                   onBlur={(e) =>
@@ -647,6 +651,7 @@ export default function Groups() {
                   }
                 />
                 <input
+                  aria-label="Kelas kelompok"
                   placeholder="Kelas"
                   defaultValue={g.class_name || ""}
                   onBlur={(e) =>
@@ -656,7 +661,8 @@ export default function Groups() {
                   }
                 />
                 <input
-                  placeholder="Ketua"
+                  aria-label="Nama ketua kelompok"
+                  placeholder="Nama ketua kelompok"
                   defaultValue={g.leader_name || ""}
                   onBlur={(e) =>
                     upd("groups", g.id, {

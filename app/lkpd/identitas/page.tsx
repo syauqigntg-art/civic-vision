@@ -2,7 +2,8 @@
 "use client";
 
 import { rpcS } from "@/lib/api/student";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createIdentitySaveController } from "@/lib/utils/identity-save-controller";
 import { useRouter } from "next/navigation";
 import { getCode, setCode } from "@/lib/supabase";
 
@@ -18,7 +19,15 @@ export default function Identitas() {
   const [code, setC] = useState("");
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
+  const identitySaveRef = useRef<ReturnType<typeof createIdentitySaveController> | null>(null);
+
+  if (!identitySaveRef.current) {
+    identitySaveRef.current = createIdentitySaveController((payload) =>
+      rpcS("save_identity", { code: getCode(), ...payload }),
+    );
+  }
 
   const [f, setF] = useState<any>({
     name: "",
@@ -68,27 +77,12 @@ export default function Identitas() {
   }, []);
 
   const save = async () => {
-    if (
-      !f.name.trim() ||
-      !f.number ||
-      !f.class_name.trim() ||
-      !f.leader.trim()
-    ) {
-      setErr("Nama kelompok, nomor, kelas, dan nama ketua wajib diisi.");
-      return;
-    }
+    setErr("");
+    const outcome = await identitySaveRef.current!.save(f, setSaving);
 
-    const { error } = await rpcS("save_identity", {
-      code: getCode(),
-      p_name: f.name,
-      p_number: +f.number,
-      p_class: f.class_name,
-      p_leader: f.leader,
-      p_members: f.members,
-    });
-
-    if (error) {
-      setErr(error.message);
+    if (outcome.kind === "busy") return;
+    if (outcome.kind === "invalid" || outcome.kind === "failed") {
+      setErr(outcome.message);
       return;
     }
 
@@ -212,8 +206,8 @@ export default function Identitas() {
       ))}
 
       <div className="row">
-        <button className="btn" onClick={save}>
-          LANJUTKAN →
+        <button className="btn" type="button" onClick={save} disabled={saving}>
+          {saving ? "Menyimpan identitas..." : "LANJUTKAN →"}
         </button>
       </div>
     </section>

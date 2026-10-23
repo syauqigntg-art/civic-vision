@@ -37,6 +37,7 @@ type ProjectContextValue = {
 
 const STORAGE_KEY = "civic-vision:active-project";
 const PROJECT_EVENT = "civic-vision:active-project-changed";
+const PROJECT_LOAD_ERROR = "Daftar proyek belum berhasil dimuat. Periksa koneksi Anda, lalu coba muat ulang halaman. Jika masalah berlanjut, hubungi pengelola.";
 const ProjectContext = createContext<ProjectContextValue | null>(null);
 
 export function ProjectProvider({ children }: { children: React.ReactNode }) {
@@ -53,7 +54,8 @@ export function ProjectProvider({ children }: { children: React.ReactNode }) {
       .order("created_at", { ascending: true });
 
     if (queryError) {
-      setError("Daftar proyek tidak dapat dimuat. Periksa koneksi dan izin admin.");
+      console.error("Gagal memuat daftar proyek admin.", { code: queryError.code });
+      setError(PROJECT_LOAD_ERROR);
       setLoading(false);
       return false;
     }
@@ -151,9 +153,9 @@ export function ProjectSwitcher() {
           </option>
         ))}
       </select>
-      {error && <small role="alert" style={{ display: "block", color: "#fecaca", marginTop: 4 }}>{error}</small>}
+      {error && <small role="alert" style={{ display: "block", color: "#fecaca", marginTop: 4 }}>{PROJECT_LOAD_ERROR}</small>}
       {!loading && projects.length === 0 && !error && (
-        <small style={{ display: "block", color: "#e2e8f0", marginTop: 4 }}>Belum ada proyek. Buat proyek dari menu Project.</small>
+        <small style={{ display: "block", color: "#e2e8f0", marginTop: 4 }}>Belum ada proyek. Buat proyek dari menu Proyek.</small>
       )}
       {project && (
         <small style={{ display: "block", color: project.is_active === false ? "#fde68a" : "#bbf7d0", marginTop: 4 }}>
@@ -169,13 +171,13 @@ export function ProjectPageScope({ children, path }: { children: React.ReactNode
 
   if (path === "/admin/project" || path === "/admin/settings") return <>{children}</>;
   if (loading) return <section className="glass"><p>Memuat daftar proyek…</p></section>;
-  if (error) return <section className="glass"><div className="warn" role="alert">{error}</div><p>Periksa koneksi Supabase, lalu muat ulang halaman.</p></section>;
+  if (error) return <section className="glass"><div className="warn" role="alert">{PROJECT_LOAD_ERROR}</div><p>Periksa koneksi Supabase, lalu muat ulang halaman.</p></section>;
   if (!projectId || !project) {
     return (
       <section className="glass">
         <h2>Pilih proyek terlebih dahulu</h2>
-        <p>Halaman video, pertanyaan, kelompok, dashboard, dan hasil siswa selalu dibatasi ke satu proyek terpilih. Tidak ada proyek yang dipilih otomatis.</p>
-        <p>Pilih proyek melalui pemilih <strong>Proyek Terpilih</strong> di bagian atas, atau buka menu Project untuk membuat proyek baru.</p>
+        <p>Halaman video, pertanyaan, kelompok, ringkasan, dan hasil siswa selalu dibatasi ke satu proyek terpilih. Tidak ada proyek yang dipilih otomatis.</p>
+        <p>Pilih proyek melalui pemilih <strong>Proyek Terpilih</strong> di bagian atas, atau buka menu Proyek untuk membuat proyek baru.</p>
       </section>
     );
   }
@@ -184,7 +186,7 @@ export function ProjectPageScope({ children, path }: { children: React.ReactNode
     return (
       <>
         <section className="warn" role="status">
-          Proyek ini diarsipkan. Data dan hasil siswa tetap dipertahankan dan masih dapat ditinjau. Perubahan konten/kelompok serta pengerjaan siswa dinonaktifkan; aktifkan kembali proyek dari menu Project untuk melanjutkan.
+          Proyek ini diarsipkan. Data dan hasil siswa tetap dipertahankan dan masih dapat ditinjau. Perubahan konten/kelompok serta pengerjaan siswa dinonaktifkan; aktifkan kembali proyek dari menu Proyek untuk melanjutkan.
         </section>
         <Fragment key={projectId}>{children}</Fragment>
       </>

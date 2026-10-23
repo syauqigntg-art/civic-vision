@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getCode, filled } from "@/lib/supabase";
 import { rpcS } from "@/lib/api/student";
 import { studentContent } from "@/lib/api/student-content";
 import type { Q } from "@/types";
+import { loadAnalysisSnapshot } from "@/lib/student/load-analysis-snapshot";
 import { useAutosave } from "@/hooks/useAutosave";
 import { QuestionField } from "@/components/lkpd/QuestionField";
 import { PhaseBar } from "@/components/lkpd/PhaseBar";
@@ -19,21 +20,21 @@ import { Button } from "@/components/ui/Button";
 const PHASES = ["think", "connect", "act"] as const;
 type WorkPhase = (typeof PHASES)[number];
 
-const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string }> = {
+const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string; output: string }> = {
   think: {
-    title: "THINK — Memikirkan dan menganalisis",
-    instruction:
-      "Identifikasi masalah, fakta penting, penyebab, dan pihak yang terdampak.",
+    title: "THINK — Menganalisis masalah",
+    instruction: "Identifikasi masalah utama, telusuri penyebab, gunakan bukti, dan perhatikan sudut pandang pihak yang terdampak.",
+    output: "Analisis masalah yang didukung fakta dan bukti.",
   },
   connect: {
-    title: "CONNECT — Menghubungkan dengan Pancasila",
-    instruction:
-      "Hubungkan hasil analisis dengan sila, nilai, hak, kewajiban, atau prinsip Pancasila yang relevan.",
+    title: "CONNECT — Menghubungkan konsep",
+    instruction: "Hubungkan hasil analisis dengan nilai Pancasila, hak dan kewajiban, keadilan, atau konsep IPS yang relevan.",
+    output: "Argumentasi yang menunjukkan hubungan kasus dengan konsep atau nilai yang tepat.",
   },
   act: {
-    title: "ACT — Menentukan tindakan nyata",
-    instruction:
-      "Rumuskan solusi dan tindakan nyata yang bisa dilakukan untuk memperbaiki keadaan.",
+    title: "ACT — Merancang tindakan",
+    instruction: "Rancang solusi yang realistis, urutan langkah, pembagian peran, serta cara menilai apakah solusi berhasil.",
+    output: "Rencana aksi dengan langkah pelaksanaan dan indikator keberhasilan.",
   },
 };
 
@@ -58,48 +59,71 @@ export default function Analisis() {
   const [view, setView] = useState<"load" | "ok" | "err">("load");
   const save = useAutosave(() => setLocked(true));
 
-  useEffect(() => {
-    const c = getCode();
-    if (!c) {
-      r.replace("/lkpd/identitas");
-      return;
+  const loadInFlight = useRef(false);
+  const pendingAtLoad = useRef<Record<string, string> | null>(null);
+
+  const load = async () => {
+    if (loadInFlight.current) return;
+    loadInFlight.current = true;
+    setView("load");
+    setLoadMessage("");
+
+    try {
+      const code = getCode();
+      if (!code) {
+        r.replace("/lkpd/identitas");
+        return;
+      }
+
+      // Load local queued edits once. On retries, retain the hook's in-memory
+      // queue too: re-reading storage could overwrite unsaved memory if storage
+      // itself had failed.
+      if (pendingAtLoad.current === null) pendingAtLoad.current = save.load();
+      const pending = pendingAtLoad.current;
+      const snapshot = await loadAnalysisSnapshot({
+        code,
+        videoId: id,
+        pending,
+        fetchQuestions: (groupCode, videoId) =>
+          studentContent("questions_for_video", { code: groupCode, vid: videoId }),
+        getAnswers: (groupCode) => rpcS("get_answers", { code: groupCode }),
+        getGroup: (groupCode) => rpcS("get_group", { code: groupCode }),
+      });
+
+      if (snapshot.kind === "missing-code" || snapshot.kind === "missing-group") {
+        r.replace("/lkpd/identitas");
+        return;
+      }
+
+      if (snapshot.kind === "failed") {
+        setLoadMessage(snapshot.message);
+        setView("err");
+        return;
+      }
+
+      setQs(snapshot.questions as unknown as Q[]);
+      if (snapshot.isSubmitted) {
+        // The server is authoritative after submission; queued local edits are
+        // intentionally discarded rather than restoring stale answer values.
+        save.clearPending(true);
+        setA(snapshot.answers);
+      } else {
+        setA(snapshot.answers);
+        if (snapshot.shouldFlushPending) void save.flush();
+      }
+
+      setLocked(snapshot.isSubmitted);
+      setView("ok");
+    } catch {
+      setLoadMessage("LKPD tidak dapat dimuat. Periksa koneksi lalu coba kembali.");
+      setView("err");
+    } finally {
+      loadInFlight.current = false;
     }
+  };
 
-    const pending = save.load();
-
-    Promise.all([
-      studentContent("questions_for_video", { code: c, vid: id }),
-      rpcS("get_answers", { code: c }),
-      rpcS("get_group", { code: c }),
-    ])
-      .then(([q, ans, g]) => {
-        if (q.error || ans.error || g.error) {
-          setLoadMessage(q.error?.message || ans.error?.message || g.error?.message || "LKPD tidak dapat dimuat. Periksa koneksi.");
-          setView("err");
-          return;
-        }
-        if (!g.data?.id) {
-          r.replace("/lkpd/identitas");
-          return;
-        }
-
-        const isSubmitted = g.data?.submission?.status === "submitted";
-        setQs((q.data || []) as unknown as Q[]);
-
-        if (isSubmitted) {
-          // Do not resurrect browser-queued edits after the server has locked
-          // this submission. The server's saved answers are authoritative.
-          save.clearPending(true);
-          setA(ans.data || {});
-        } else {
-          setA({ ...(ans.data || {}), ...pending });
-          if (Object.keys(pending).length > 0) void save.flush();
-        }
-
-        setLocked(isSubmitted);
-        setView("ok");
-      })
-      .catch(() => setView("err"));
+  useEffect(() => {
+    void load();
   }, []);
 
   useEffect(() => {
@@ -263,7 +287,19 @@ export default function Analisis() {
   if (view === "err") {
     return (
       <GlassCard>
-        <Alert>{loadMessage || "LKPD tidak dapat dimuat. Silakan muat ulang halaman."}</Alert>
+        <Alert>{loadMessage || "LKPD tidak dapat dimuat. Periksa koneksi lalu coba kembali."}</Alert>
+        <div className="row">
+          <button
+            className="btn"
+            type="button"
+            onClick={() => void load()}
+          >
+            Coba lagi
+          </button>
+          <Link className="btn g" href={`/lkpd/kasus/${id}`}>
+            Kembali ke video
+          </Link>
+        </div>
       </GlassCard>
     );
   }
@@ -309,6 +345,9 @@ export default function Analisis() {
         {left ? `sisa ${left} tahap` : "tahap terakhir"}
       </p>
       <p>{PHASE_INFO[activePhase].instruction}</p>
+      <div className="hint" style={{ marginTop: 8 }}>
+        <b>Hasil yang diharapkan:</b> {PHASE_INFO[activePhase].output}
+      </div>
 
       {locked && (
         <Alert>
@@ -331,10 +370,11 @@ export default function Analisis() {
       )}
 
       {cur.length === 0 && (
-        <p>
-          Belum ada pertanyaan pada tahap ini. Kalian dapat melanjutkan ke tahap
-          berikutnya.
-        </p>
+        <div className="hint" role="status">
+          <b>Belum ada pertanyaan aktif pada fase {PHASE_INFO[activePhase].title}.</b>
+          <p style={{ marginBottom: 6 }}>Gunakan panduan fase dan hasil yang diharapkan di atas untuk memahami tujuan kegiatan.</p>
+          <p style={{ marginBottom: 0 }}>Fase tetap menjadi bagian urutan PBL. Guru perlu memastikan fase ini memang sengaja dibiarkan tanpa soal sebelum LKPD digunakan.</p>
+        </div>
       )}
 
       <fieldset
