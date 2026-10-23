@@ -18,9 +18,9 @@ Rincian: [docs/staging-setup.md](./staging-setup.md).
 
 - [x] Workflow CI menggunakan audit dependency produksi sebagai gate blocking; tidak ada `continue-on-error` pada langkah `npm audit --omit=dev`.
 - [x] Run #24 pada SHA `02d7808b3ab7b68131b170e8135040c759e3640b` mendeteksi satu temuan kritis pada `next@16.4.0`; kegagalan ini valid, bukan regresi TypeScript.
-- [x] `package.json` sekarang meminta `next@^16.4.1`; lockfile diregenerasi melalui npm runner dan memilih `next@16.4.2`. Run #35 menjalankan `npm ci` dan audit produksi tanpa temuan.
-- [x] Run #35 (`39890622139`) pada SHA `7a5ad98804db508ff5ed797bda0945a8280f7867` lulus `npm ci`, TypeScript, source invariants, `npm run build`, dan `npm audit --omit=dev` (**found 0 vulnerabilities**). Build menggunakan placeholder CI khusus, bukan kredensial staging/Production. Perubahan workflow sesudah run tersebut menambahkan `git diff --check` dan fetch history penuh; gate tambahan itu masih menunggu hasil run untuk head terbaru.
-- [x] `npm run build` sekarang menjadi langkah CI dengan nilai environment placeholder khusus build. Run #35 berhasil membangun Next.js (`Compiled successfully` dan 17/17 static pages).
+- [x] `package.json` sekarang meminta `next@^16.4.1`; lockfile diregenerasi melalui npm runner dan memilih `next@16.4.2`. Run #38 menjalankan `npm ci` dan audit produksi tanpa temuan.
+- [x] Run #38 (`39890824427`) pada head SHA `8bfa17a21ea9529c2bbd4e7c23256731f6bfd2f2` lulus `npm ci`, TypeScript, `git diff --check`, source invariants, `npm run build`, dan `npm audit --omit=dev` (**found 0 vulnerabilities**). Build menggunakan placeholder CI khusus, bukan kredensial staging/Production. Output instalasi masih menampilkan ringkasan 7 advisori pada seluruh dependency tree (2 moderate, 5 high); audit produksi yang diblokir CI terpisah lulus. Full-tree audit/remediation belum dinyatakan selesai.
+- [x] `npm run build` sekarang menjadi langkah CI dengan nilai environment placeholder khusus build. Run #38 berhasil membangun Next.js (`Compiled successfully` dan 17/17 static pages).
 
 ## Verifikasi database staging
 
