@@ -18,6 +18,7 @@ export default function Identitas() {
   const [code, setC] = useState("");
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState("");
+  const [saving, setSaving] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
 
   const [f, setF] = useState<any>({
@@ -68,6 +69,8 @@ export default function Identitas() {
   }, []);
 
   const save = async () => {
+    if (saving) return;
+
     if (
       !f.name.trim() ||
       !f.number ||
@@ -78,21 +81,29 @@ export default function Identitas() {
       return;
     }
 
-    const { error } = await rpcS("save_identity", {
-      code: getCode(),
-      p_name: f.name,
-      p_number: +f.number,
-      p_class: f.class_name,
-      p_leader: f.leader,
-      p_members: f.members,
-    });
+    setSaving(true);
+    setErr("");
+    try {
+      const { error } = await rpcS("save_identity", {
+        code: getCode(),
+        p_name: f.name,
+        p_number: +f.number,
+        p_class: f.class_name,
+        p_leader: f.leader,
+        p_members: f.members,
+      });
 
-    if (error) {
-      setErr(error.message);
-      return;
+      if (error) {
+        setErr(error.message);
+        return;
+      }
+
+      r.push("/lkpd/kasus");
+    } catch {
+      setErr("Koneksi gagal saat menyimpan identitas. Data belum dikonfirmasi; periksa koneksi lalu coba lagi.");
+    } finally {
+      setSaving(false);
     }
-
-    r.push("/lkpd/kasus");
   };
 
   const set = (k: string, v: any) => {
@@ -212,8 +223,8 @@ export default function Identitas() {
       ))}
 
       <div className="row">
-        <button className="btn" onClick={save}>
-          LANJUTKAN →
+        <button className="btn" type="button" onClick={save} disabled={saving}>
+          {saving ? "Menyimpan identitas..." : "LANJUTKAN →"}
         </button>
       </div>
     </section>
