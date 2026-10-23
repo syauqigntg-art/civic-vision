@@ -17,10 +17,10 @@ Rincian: [docs/staging-setup.md](./staging-setup.md).
 ## Pengujian otomatis dan dependency
 
 - [x] Workflow CI menggunakan audit dependency produksi sebagai gate blocking; tidak ada `continue-on-error` pada langkah `npm audit --omit=dev`.
-- [x] Run #24 pada SHA `02d7808b3ab7b68131b170e8135040c759e3640b` mendeteksi satu temuan kritis pada `next@16.4.0`; kegagalan ini valid, bukan regressi TypeScript.
-- [x] `package.json` sekarang meminta `next@^16.4.1`; lockfile diregenerasi melalui npm runner dan memilih `next@16.4.2`. Runner berhasil menjalankan `npm ci` pada lockfile hasil regenerasi.
-- [ ] Audit produksi, TypeScript, source invariants, dan build harus lulus pada satu commit head terbaru. Run CI baru sedang dipantau; jangan menandai gate bersih sebelum hasilnya tersedia.
-- [ ] `npm run build` ditambahkan ke CI dengan nilai environment placeholder khusus build yang tidak memiliki akses database dan bukan rahasia runtime.
+- [x] Run #24 pada SHA `02d7808b3ab7b68131b170e8135040c759e3640b` mendeteksi satu temuan kritis pada `next@16.4.0`; kegagalan ini valid, bukan regresi TypeScript.
+- [x] `package.json` sekarang meminta `next@^16.4.1`; lockfile diregenerasi melalui npm runner dan memilih `next@16.4.2`. Run #35 menjalankan `npm ci` dan audit produksi tanpa temuan.
+- [x] Run #35 (`39890622139`) pada SHA `7a5ad98804db508ff5ed797bda0945a8280f7867` lulus `npm ci`, TypeScript, source invariants, `npm run build`, dan `npm audit --omit=dev` (**found 0 vulnerabilities**). Build menggunakan placeholder CI khusus, bukan kredensial staging/Production. Perubahan workflow sesudah run tersebut menambahkan `git diff --check` dan fetch history penuh; gate tambahan itu masih menunggu hasil run untuk head terbaru.
+- [x] `npm run build` sekarang menjadi langkah CI dengan nilai environment placeholder khusus build. Run #35 berhasil membangun Next.js (`Compiled successfully` dan 17/17 static pages).
 
 ## Verifikasi database staging
 
