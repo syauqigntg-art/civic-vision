@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - "phase3/**"
+      - "phase4/**"
 
 permissions:
   contents: read
@@ -59,3 +60,10 @@ jobs:
       - name: Report production dependency advisories
         # Production dependency vulnerabilities must block CI until fixed.
         run: npm audit --omit=dev
+
+      - name: Report full dependency-tree advisories (triage)
+        # Report-only while Stage 4 reviews the development/transitive advisories.
+        # Production dependency vulnerabilities remain blocking in the step above.
+        run: |
+          npm audit --json > /tmp/npm-audit-full.json || true
+          node scripts/report-full-dependency-audit.mjs /tmp/npm-audit-full.json
