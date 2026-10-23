@@ -40,7 +40,11 @@ function validate(draft: IdentityDraft): string | null {
     return "Nomor kelompok harus berupa angka bulat antara 1 dan 99.";
   }
 
-  if (!Array.isArray(draft.members) || draft.members.length > 10) {
+  if (
+    !Array.isArray(draft.members) ||
+    draft.members.length > 10 ||
+    draft.members.some((member) => typeof member !== "string")
+  ) {
     return "Daftar anggota tidak valid. Periksa kembali isian kelompok.";
   }
 
