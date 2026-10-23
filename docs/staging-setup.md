@@ -22,7 +22,7 @@ Last checked: 2026-10-23 (Asia/Jakarta)
 6. The five existing database hardening/editor migrations plus `20261023010223_serialize_answer_saves_with_submission.sql`.
 7. Staging-specific hardening for the `auth.users` trigger function `public.handle_new_user()`: empty search path and no EXECUTE grant to `anon` or `authenticated`.
 
-The staging migration history was populated through the Supabase migration API. Its generated staging versions are environment-specific; this was not a data clone or a Production migration.
+The staging migration history was populated through the Supabase migration API. Its generated staging versions do not match every pre-existing filename timestamp under `supabase/migrations`. This was not a data clone or a Production migration. **Do not run `supabase db push` against this staging project until migration history is reconciled with repository versions**; the current environment was bootstrapped for isolated runtime testing.
 
 ## Checks confirmed
 
