@@ -40,5 +40,5 @@ jobs:
         run: node scripts/check-pbl-invariants.mjs
 
       - name: Report production dependency advisories
+        # Production dependency vulnerabilities must block CI until fixed.
         run: npm audit --omit=dev
-        continue-on-error: true
