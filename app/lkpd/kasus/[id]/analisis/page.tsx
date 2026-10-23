@@ -60,6 +60,7 @@ export default function Analisis() {
   const save = useAutosave(() => setLocked(true));
 
   const loadInFlight = useRef(false);
+  const pendingAtLoad = useRef<Record<string, string> | null>(null);
 
   const load = async () => {
     if (loadInFlight.current) return;
@@ -74,9 +75,11 @@ export default function Analisis() {
         return;
       }
 
-      // Re-read browser-queued edits on retries so unsent draft values survive
-      // a temporary content/answer/group read failure.
-      const pending = save.load();
+      // Load local queued edits once. On retries, retain the hook's in-memory
+      // queue too: re-reading storage could overwrite unsaved memory if storage
+      // itself had failed.
+      if (pendingAtLoad.current === null) pendingAtLoad.current = save.load();
+      const pending = pendingAtLoad.current;
       const snapshot = await loadAnalysisSnapshot({
         code,
         videoId: id,
