@@ -1,7 +1,7 @@
 # Phase 6 — Final Verification & Release Decision
 
-**Snapshot date:** 2026-10-23 (Asia/Jakarta)  
-**Decision at snapshot:** **NO-GO for Production**  
+**Snapshot date:** 2026-10-23 (Asia/Jakarta)
+**Decision at snapshot:** **NO-GO for Production**
 **Scope:** Freeze and verify evidence; no merge, Production deploy, environment edits, migrations, or database writes.
 
 ## 1. Candidate freeze (6A)
