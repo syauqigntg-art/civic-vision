@@ -54,7 +54,7 @@ BEGIN
   END IF;
 
   IF COALESCE(v_group_name, '') = ''
-     OR pg_catalog.coalesce(v_leader_name, '') = '' THEN
+     OR COALESCE(v_leader_name, '') = '' THEN
     RETURN 'identitas belum lengkap';
   END IF;
 
@@ -72,7 +72,7 @@ BEGIN
       AND a.project_id = v_project_id
       AND a.question_id = q.id;
 
-    IF pg_catalog.coalesce(pg_catalog.btrim(v_answer), '') = '' THEN
+    IF COALESCE(pg_catalog.btrim(v_answer), '') = '' THEN
       RETURN 'belum lengkap';
     END IF;
 
