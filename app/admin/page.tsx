@@ -32,7 +32,7 @@ export default function Overview() {
     {
       label: "Kelompok terdaftar",
       value: gs.length,
-      note: "Kelompok dalam project",
+      note: "Kelompok dalam proyek",
       icon: "◎",
       tone: "",
     },
@@ -53,7 +53,7 @@ export default function Overview() {
     {
       label: "Sudah dikirim",
       value: submitted.length,
-      note: `${drafts.length} draft tersimpan`,
+      note: `${drafts.length} draf tersimpan`,
       icon: "✓",
       tone: "orange",
     },
@@ -145,9 +145,9 @@ export default function Overview() {
               const pct = groupPct(group, subs, qs, ans);
               const submission = subs.find((item: any) => item.group_id === group.id);
               const status = submission?.status === "submitted"
-                ? "Terkirim"
+                ? "Sudah dikirim"
                 : submission?.status === "draft"
-                  ? "Draft"
+                  ? "Draf"
                   : "Belum mulai";
               const statusClass = submission?.status === "submitted"
                 ? "done"
@@ -195,11 +195,11 @@ export default function Overview() {
 
           <div className="admin-status-summary">
             <div className="admin-summary-row">
-              <span><i className="admin-summary-mark blue" /> Terkirim</span>
+              <span><i className="admin-summary-mark blue" /> Sudah dikirim</span>
               <strong>{submitted.length}</strong>
             </div>
             <div className="admin-summary-row">
-              <span><i className="admin-summary-mark orange" /> Draft</span>
+              <span><i className="admin-summary-mark orange" /> Draf</span>
               <strong>{drafts.length}</strong>
             </div>
             <div className="admin-summary-row">
@@ -210,7 +210,7 @@ export default function Overview() {
 
           <div className="admin-callout">
             <strong>Butuh tindak lanjut?</strong>
-            <p>Gunakan filter status di halaman Jawaban Siswa untuk menemukan draft dan hasil yang sudah dikirim.</p>
+            <p>Gunakan filter status di halaman Jawaban Siswa untuk menemukan draf dan hasil yang sudah dikirim.</p>
             <Link href="/admin/submissions" className="btn">Periksa jawaban siswa →</Link>
           </div>
         </section>
@@ -220,7 +220,7 @@ export default function Overview() {
         <div className="admin-section-head">
           <div>
             <h2>Aktivitas terbaru</h2>
-            <p>Pengumpulan terakhir yang tercatat di project.</p>
+            <p>Pengumpulan terakhir yang tercatat di proyek.</p>
           </div>
           <Link href="/admin/submissions" className="admin-outline-action">Semua pengumpulan ↗</Link>
         </div>
@@ -254,7 +254,7 @@ export default function Overview() {
                       <td>{group?.class_name || "—"}</td>
                       <td>
                         <span className={"admin-status-pill " + (submittedState ? "done" : "draft")}>
-                          {submittedState ? "Terkirim" : "Draft"}
+                          {submittedState ? "Sudah dikirim" : "Draf"}
                         </span>
                       </td>
                       <td>{fmtDate(item.submitted_at || item.updated_at || item.started_at)}</td>
