@@ -16,8 +16,10 @@ Rincian: [docs/staging-setup.md](./staging-setup.md).
 
 - [x] Instalasi dependensi (`npm ci`) berhasil pada GitHub Actions.
 - [x] Pemeriksaan TypeScript (`npx tsc --noEmit`) lulus pada commit UI PBL terbaru yang diperiksa.
-- [x] Pemeriksaan invariants PBL dan keamanan lulus pada workflow sebelumnya.
-- [x] Audit dependensi produksi dijalankan pada GitHub Actions; audit sebelumnya melaporkan 0 kerentanan dependensi produksi.
+- [x] Pemeriksaan invariants PBL dan keamanan lulus pada run #23 untuk head SHA `261176eb9aafc986244baa0b606eabecebbc0c7b`.
+- [x] `npm audit --omit=dev` benar-benar dijalankan pada run #23, tetapi **gagal dengan exit code 1**: satu temuan kritis pada `next@16.4.0`; laporan menampilkan GHSA-2464-fhr4-w9xw, GHSA-p3m5-59mp-jv5r, dan GHSA-673q-mjm6-r5xr. Next.js menyatakan versi 16.4.1 sebagai versi perbaikan ([advisory image optimization](https://github.com/vercel/next.js/security/advisories/GHSA-2464-fhr4-w9xw), [advisory typed arrays](https://github.com/vercel/next.js/security/advisories/GHSA-673q-mjm6-r5xr), [advisory Server Actions](https://github.com/vercel/next.js/security/advisories/GHSA-p3m5-59mp-jv5r)).
+- [ ] Naikkan dependency `next` ke versi yang sudah dipatch (minimal 16.4.1), regenerasi `package-lock.json`, lalu jalankan audit ulang.
+- [x] Status keseluruhan run #23 `success` **tidak berarti audit bersih**: workflow lama memakai `continue-on-error: true`, sehingga exit code audit 1 tidak menggagalkan job. Workflow diperbaiki pada commit tinjauan ini agar audit menjadi blocking; run baru harus diperiksa terhadap SHA baru.
 - [x] RLS aktif pada 11 tabel aplikasi yang diperiksa.
 - [x] Query langsung mengonfirmasi tidak ada grant tabel untuk anon pada 11 tabel yang diperiksa.
 - [x] RPC siswa (termasuk `student_rate_limit`) tidak dapat dieksekusi anon/authenticated dan hanya dapat dijalankan `service_role`.
@@ -39,7 +41,16 @@ Rincian: [docs/staging-setup.md](./staging-setup.md).
 - Autosave dan submit sekarang menggunakan lock baris submission yang sama. Simpanan yang mendapatkan lock terlebih dahulu selesai sebelum submit memvalidasi; simpanan yang datang setelah submit tersimpan akan melihat status bukan `draft` dan ditolak.
 - File migrasi disimpan di `supabase/migrations/20261023010223_serialize_answer_saves_with_submission.sql`; salinan skrip P0 diselaraskan agar tidak lagi menimpa `submit_group()` dengan definisi lama.
 
-## Skenario regresi browser yang masih perlu dijalankan
+## Empat skenario utama yang belum diuji di browser
+
+Keempat skenario ini tetap **BELUM DIUJI** sampai ada Preview yang terbukti memakai staging. Source checks dan query database bukan bukti uji runtime.
+
+- [ ] **Submit segera setelah mengetik:** ketik atau ubah jawaban lalu tekan kirim secepatnya; nilai final di server harus sama dengan nilai terbaru.
+- [ ] **Koneksi putus saat autosave:** putuskan koneksi ketika penyimpanan tertunda, pulihkan koneksi, lalu pastikan antrean terkirim dan nilai terakhir tersimpan dengan benar.
+- [ ] **Save terlambat setelah submit:** tahan satu request save sampai submit berhasil, lalu lepaskan request; server harus menolak save terlambat dan jawaban submission yang sudah terkirim tidak berubah.
+- [ ] **Guru membuka kembali pengerjaan:** periksa dulu apakah aksi buka-kembali memang tersedia pada UI dan RPC saat ini. Jika ada, pastikan status/akses siswa kembali terbuka tanpa menghapus jawaban lama; jika tidak ada, catat sebagai fitur belum tersedia, bukan tes yang lulus.
+
+## Skenario regresi browser tambahan yang masih perlu dijalankan
 
 Tes di bawah belum dapat dinyatakan lulus dari CI atau query metadata saja:
 
@@ -61,6 +72,6 @@ Tes di bawah belum dapat dinyatakan lulus dari CI atau query metadata saja:
 
 ## Mengapa tes browser belum ditandai lulus
 
-Perbaikan P0 sudah diverifikasi pada definisi dan hak akses database, tetapi belum dibuktikan dengan uji browser/concurrency pada kelompok uji. Deployment Preview terbaru belum diverifikasi memakai commit terbaru dan pada pemeriksaan sebelumnya Vercel mencapai batas deployment harian paket Free. Selain itu, konfigurasi Preview sebelumnya menggunakan nilai environment Supabase yang sama dengan Production. Tes alur siswa yang menulis data di Preview belum aman sebelum Preview diarahkan ke database staging yang terpisah.
+Perbaikan P0 sudah diverifikasi pada definisi dan hak akses database, tetapi belum dibuktikan dengan uji browser/concurrency pada kelompok uji. Preview terbaru belum terbukti menggunakan SHA kandidat saat ini maupun database staging. Akses Vercel scope tim `uki8` menghasilkan HTTP 403, dan komentar Vercel sebelumnya melaporkan batas deployment harian paket Free. Tidak ada environment variable Vercel yang diubah. Jangan menjalankan tes yang menulis data melalui Preview sampai akses pulih, env Preview diarahkan ke staging, dan deployment SHA serta URL database terverifikasi.
 
 Jangan jalankan tes yang mengubah identitas, jawaban, kelompok, atau status submission pada kelompok nyata. Gunakan database staging dan kelompok uji setelah Preview diarahkan ke staging.
