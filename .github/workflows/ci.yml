@@ -44,7 +44,7 @@ jobs:
       - name: TypeScript check
         run: npx tsc --noEmit
 
-      - name: PBL validation and answer-helper unit tests
+      - name: PBL and admin copy/accessibility regression tests
         run: npm run test:unit
 
       - name: Patch whitespace check
