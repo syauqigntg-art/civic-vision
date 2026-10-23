@@ -53,7 +53,7 @@ BEGIN
     RETURN 'sudah terkirim';
   END IF;
 
-  IF pg_catalog.coalesce(v_group_name, '') = ''
+  IF COALESCE(v_group_name, '') = ''
      OR pg_catalog.coalesce(v_leader_name, '') = '' THEN
     RETURN 'identitas belum lengkap';
   END IF;
