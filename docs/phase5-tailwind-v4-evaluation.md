@@ -25,34 +25,44 @@ Reviewed: 2026-10-23 (Asia/Jakarta)
 - SHA `c114bd8c671603b0d325e623030f6459feaa2fe6` passed [Run #89](https://github.com/syauqigntg-art/civic-vision/actions/runs/39940082224).
 - SHA `424a07cb082c088b394adc2d33d690875cfadd3d` passed [Run #91](https://github.com/syauqigntg-art/civic-vision/actions/runs/39940231989).
 - SHA `434e665897636a02401d5d00b67bce03922877c9` passed [Run #93](https://github.com/syauqigntg-art/civic-vision/actions/runs/39940400099). The run completed successfully, including lockfile installation, TypeScript, regression tests, invariants, Next.js production build, and both dependency-reporting steps.
-- Each result applies only to its named SHA. After this documentation update, verify CI again on the exact current PR head.
+- [Run #94](https://github.com/syauqigntg-art/civic-vision/actions/runs/39941222968) (push) and [Run #95](https://github.com/syauqigntg-art/civic-vision/actions/runs/39941232720) (pull request) passed on exact head SHA `eb10faff2858bc5293b83eff8be6e1622b0dd520`, including lockfile installation, TypeScript, PBL/admin copy/accessibility regressions, patch whitespace, PBL/security invariants, Next.js build, and dependency reports.
+- Each result applies only to its named SHA. This release-readiness documentation update creates a newer docs-only commit, so confirm CI is green again on the resulting exact PR head.
 
 ## Vercel Ignored Build Step — cause now confirmed
 
-The user-provided Vercel build log shows that the deployment was cancelled because the Ignored Build Step command returned exit code `0`. The configured command runs `git diff --quiet` between `VERCEL_GIT_PREVIOUS_SHA` and `VERCEL_GIT_COMMIT_SHA`, while excluding `README.md`, `docs/**`, `supabase/**`, and `.github/**` from the comparison.
+The Vercel log supplied for this PR shows that a deployment was cancelled because the configured Ignored Build Step returned exit code `0`. The command runs `git diff --quiet` between `VERCEL_GIT_PREVIOUS_SHA` and `VERCEL_GIT_COMMIT_SHA`, excluding `README.md`, `docs/**`, `supabase/**`, and `.github/**`.
 
-For the documented commit `434e665`, the latest changes were documentation-only. Since the command found no relevant code changes after exclusions, `git diff --quiet` returned `0`, and the configured ignored-build logic correctly returned `0` to skip deployment. Vercel documents that exit code `0` skips the build while exit code `1` continues with a deployment: https://vercel.com/kb/guide/how-do-i-use-the-ignored-build-step-field-on-vercel
+The latest previously recorded PR head, `eb10faff2858bc5293b83eff8be6e1622b0dd520`, contains documentation-only changes. Those changes are excluded by the command, so the deployment was intentionally skipped. The current bot comment labels the deployment **Ignored**:
+- Deployment detail: https://vercel.com/uki8/civic-vision/3xH6quX3bBjJNP1cuostB8c8HmjR
+- Existing candidate deployment: https://vercel.com/uki8/civic-vision/3fbeCgQr8BaiJ552xNgQGEJQvxUz
 
-**Interpretation:** This particular status is an intentional Ignored Build Step outcome, not a failed Next.js build. It does not prove that the CSS/application build failed. It also does not prove a new deployment was produced for commit `434e665`.
+An Ignored result for a docs-only commit is not a failed application build, but neither does it prove that a new deployment was produced for that commit. Do not treat a generic Vercel `success` status as proof of a fresh Preview.
 
-The latest Vercel bot comment at the time of this review labels the associated deployment as **Ignored**:
-- Deployment detail: https://vercel.com/uki8/civic-vision/diVYyZCzku1SVpTRZGszxKcGNAJi
-- Preview alias: https://civic-vision-git-phase5-release-readiness-tests-uki8.vercel.app
+## Manual smoke-test report — 2026-10-23
 
-A previous candidate deployment is associated with status link https://vercel.com/uki8/civic-vision/3fbeCgQr8BaiJ552xNgQGEJQvxUz on SHA `f3e052ede3f2bcc4d752b7d49ab8fd19504e707c`. Before using it for visual regression, open its deployment details and confirm the source SHA and target are correct. The application files were not changed by later documentation-only commits, so this deployment may be suitable for testing the Tailwind CSS migration, but it must not be described as a deployment of the newer documentation SHA.
+The user reported that all six smoke-test items passed on the site they opened:
 
-## Preview and visual/browser validation — still incomplete
+| Check | Reported result |
+|---|---|
+| Beranda dan navigasi | PASS |
+| Tampilan mobile | PASS |
+| Pemutar video | PASS |
+| Formulir SEE–THINK–CONNECT–ACT | PASS |
+| Penyimpanan jawaban | PASS |
+| Halaman admin | PASS |
 
-The previous Vercel API inspection returned HTTP 403 for team scope `uki8`, and the available browser/testing method could not open the Preview. Although the ignore reason for commit `434e665` is now explained by the log, a usable Preview deployment's source SHA and environment still need to be verified before results are recorded.
+This records **six user-reported manual PASS results**. The report does not itself include the exact source commit SHA or the target environment displayed in the deployment details, so those details must still be matched before attributing these results conclusively to the Tailwind v4 candidate. The mobile result is explicit; a separately labelled desktop viewport result was not included in the report.
 
-Remaining items:
-1. Verify a usable Preview deployment and confirm its source SHA and target environment. Prefer the existing successful candidate deployment only if its details confirm that it contains the Tailwind v4 application code.
-2. Run desktop and mobile visual tests: navigation, group identity, video/player, SEE/THINK/CONNECT/ACT forms, save/error states, submissions/results, admin login, video/group/question forms, tables, dialogs, and reduced-motion behavior.
-3. Test student/PBL and admin flows using staging credentials and non-production data.
-4. Confirm browser support requirements against Tailwind v4's stated floor of Safari 16.4+, Chrome 111+, and Firefox 128+: https://tailwindcss.com/docs/upgrade-guide
-5. Record an independent code review. No independent review submission was recorded at the latest PR check.
+## Preview and browser validation — remaining
 
-A static review did not establish a definite code blocker, but it does not replace runtime testing or independent review.
+The smoke-test report is positive progress, but these release-evidence items remain open:
+
+1. Confirm the tested deployment's source SHA and target environment. The existing candidate deployment is associated with SHA `f3e052ede3f2bcc4d752b7d49ab8fd19504e707c`; use it for this PR only if its Vercel details confirm that SHA and the Preview target.
+2. Record an explicit desktop viewport result alongside the reported mobile PASS, and confirm the broader student/PBL and admin flows were tested in a non-production environment with test data.
+3. Confirm the supported-browser floor with evidence for Tailwind v4's stated minimums: Safari 16.4+, Chrome 111+, and Firefox 128+: https://tailwindcss.com/docs/upgrade-guide. Passing in one browser does not establish all three.
+4. Obtain and record an independent code review. No independent review submission was present at the latest check.
+
+A static review and passing CI do not replace deployment identity verification, browser compatibility evidence, or independent review.
 
 ## Other technical references
 
@@ -63,6 +73,6 @@ A static review did not establish a definite code blocker, but it does not repla
 
 ## Decision
 
-**BLOCKED — keep PR #13 as Draft. Do not merge to `main`.**
+**BLOCKED — keep PR #13 as Draft. Do not merge to `main` yet.**
 
-Automated CI passed on SHA `434e665897636a02401d5d00b67bce03922877c9` in Run #93 before this documentation change. The cause of the latest Ignored deployment for `434e665` is now known: the command intentionally skips documentation-only commits. However, a usable Preview/source SHA must still be confirmed, desktop/mobile and functional browser tests must be recorded, browser support must be accepted, and an independent review remains outstanding. No Production, secrets, Supabase, or database changes were made during this validation.
+The user-reported smoke test passed all six listed checks. The remaining release gates are: matching the tested Preview to its source SHA/environment, explicit desktop and broader non-production-flow evidence, supported-browser compatibility evidence, and independent code review. The documentation-only commit does not require changing the Ignored Build Step or production configuration. No Production, secrets, Supabase, or database changes were made during this validation.
