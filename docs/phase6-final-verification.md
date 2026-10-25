@@ -109,8 +109,8 @@ Before merging PR #11:
 
 | Gate | Current assessment | Evidence needed to close |
 |---|---|---|
-| PR #11 documentation CI on exact new SHA | Pending new commit checks | New head SHA with all applicable required checks green |
-| PR #11 review/merge policy | Independent review absent in audit; branch protection not verified | Review and required policy confirmation; do not bypass |
+| PR #11 documentation CI on exact new SHA | **Failed on SHA `1d621ac4c927e73a5cb7f032d955e6361c3ddedb`** — [Run #101](https://github.com/syauqigntg-art/civic-vision/actions/runs/40196790125). TypeScript, 25 unit tests, whitespace, invariants and Next.js build passed; blocking `npm audit --omit=dev` failed on high-severity Zod advisory GHSA-mrhx-c7xc-m3w5 (`zod <4.6.6`). | Separate dependency remediation/review is needed; do not use `npm audit fix --force` under this documentation PR. Rerun required checks after the repository owner resolves the advisory in a scoped change. |
+| PR #11 review/merge policy | **No review submissions recorded**; branch protection / required-check policy not verified through available connector. GitHub PR metadata currently reports mergeable=true/false depending on refresh; verify current metadata immediately before any merge. | Independent review and confirmation that required checks/policies are satisfied; do not bypass |
 | PR #13 exact-source CI | Run #96 and #97 success on `0b31b0b...` | Recheck after base advances and PR #13 diff changes |
 | Vercel Preview exact SHA/target | Not conclusively matched to reported manual tests | Deployment record with exact SHA and Preview target |
 | Staging Supabase target | Not verified in this document | Safe project-reference evidence; no secret values |
