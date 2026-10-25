@@ -1,7 +1,7 @@
 # Phase 6 — Final Verification & Release Decision
 
-**Last verified:** 2026-10-25 (Asia/Jakarta)  
-**Application release decision:** **NO-GO for Production**  
+**Last verified:** 2026-10-25 (Asia/Jakarta)
+**Application release decision:** **NO-GO for Production**
 **Scope:** This document is a verification record and release-gate checklist. Merging this documentation PR is not approval to release the application.
 
 ## 1. Current repository snapshot
