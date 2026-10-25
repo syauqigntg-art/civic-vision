@@ -10,9 +10,9 @@ The following states were checked against GitHub on 2026-10-25.
 
 | Item | Current verified state | Evidence / meaning |
 |---|---|---|
-| PR #11 | Open, Draft; base `phase5/release-readiness-tests`; head `phase6/final-verification`; head SHA `f36bdd081e29831ef82169c55bdb67518855336c` at audit time | [PR #11](https://github.com/syauqigntg-art/civic-vision/pull/11) |
+| PR #11 | Open, Draft; base `phase5/release-readiness-tests`; head `phase6/final-verification`. The initial audit head was `f36bdd081e29831ef82169c55bdb67518855336c`; the subsequent whitespace-fix commit is `d2dd8933248178c4a149b58e35d074c3ee054b1f` | [PR #11](https://github.com/syauqigntg-art/civic-vision/pull/11). Re-fetch the live head SHA before any merge |
 | PR #11 changed files | One file: `docs/phase6-final-verification.md` | Documentation-only scope; confirm again after every commit |
-| PR #11 branch relationship | Five commits ahead and 19 behind base; compare state `diverged`; merge base `ae6b9039c2dec119352e0c6d6dbc0f4a7fff3a36` | [Compare branches](https://github.com/syauqigntg-art/civic-vision/compare/phase5/release-readiness-tests...phase6/final-verification). Do not force-push or rewrite history |
+| PR #11 branch relationship | At the post-whitespace-fix snapshot `d2dd8933248178c4a149b58e35d074c3ee054b1f`, compare was `diverged`, seven commits ahead and 19 behind base; merge base `ae6b9039c2dec119352e0c6d6dbc0f4a7fff3a36` | [Compare branches](https://github.com/syauqigntg-art/civic-vision/compare/phase5/release-readiness-tests...phase6/final-verification). This follow-up documentation commit changes the head again; re-fetch comparison before merge. Do not force-push or rewrite history |
 | PR #9 | Closed, not merged; closed as superseded by PR #12 | [PR #9](https://github.com/syauqigntg-art/civic-vision/pull/9). Its closure is not a release approval |
 | PR #10 | Merged on 2026-10-23 into `phase5/release-readiness-tests`; merge commit `f3e052ede3f2bcc4d752b7d49ab8fd19504e707c` | [PR #10](https://github.com/syauqigntg-art/civic-vision/pull/10). This Tailwind v4 experiment does not approve Production |
 | PR #13 | Open and Draft; base `main`; head `phase5/release-readiness-tests`; current head SHA `a1be7f1310cbf5dc8988f22d035b28c6724381d8`; currently 7 changed files | [PR #13](https://github.com/syauqigntg-art/civic-vision/pull/13). This snapshot predates any future merge of PR #11 and must be refreshed afterwards |
@@ -21,12 +21,14 @@ The following states were checked against GitHub on 2026-10-25.
 | Repository rulesets | GitHub repository rulesets endpoint returned an empty list | This does not prove that classic branch protection or required checks are absent |
 | Classic branch protection / required checks | Not verified; the available connector did not provide a successful protection-rule read | Do not claim branch-protection policy was checked. Confirm rules and required checks in GitHub before merge |
 
-### CI and deployment evidence on PR #11's current SHA at audit time
+### CI and deployment evidence ledger
 
-- GitHub Actions [Run #102](https://github.com/syauqigntg-art/civic-vision/actions/runs/40196926027) was triggered for exact head SHA `f36bdd081e29831ef82169c55bdb67518855336c`. At the most recent inspection, the workflow run was still marked `in_progress`, while its only listed job had completed with **failure**.
-- The completed job passed dependency installation, TypeScript, the PBL/answer-helper unit tests, patch-whitespace check, regression invariants, and the Next.js production build. The blocking `npm audit --omit=dev` step failed due to a high-severity Zod advisory, GHSA-mrhx-c7xc-m3w5, affecting `zod <4.6.6`. See [Run #102](https://github.com/syauqigntg-art/civic-vision/actions/runs/40196926027).
-- GitHub's combined commit status showed Vercel **success** with target [deployment Bbo87C8V3yZbRE3pXkhGLHzkDQWe](https://vercel.com/uki8/civic-vision/Bbo87C8V3yZbRE3pXkhGLHzkDQWe), and the PR's Vercel bot comment labeled it **Ready / Preview**. This deployment signal is distinct from GitHub Actions and does not, by itself, prove the test report below was exercised against this deployment, its exact source SHA, or a verified staging backend.
-- Earlier workflow runs and CI results for other SHAs are historical evidence only. They do not satisfy checks required for a new commit.
+The following results are tied to their exact SHAs. The documentation branch has moved since these runs; check the latest PR head and checks again before any merge.
+
+- [Run #102](https://github.com/syauqigntg-art/civic-vision/actions/runs/40196926027), SHA `f36bdd081e29831ef82169c55bdb67518855336c`: TypeScript, 25 unit tests, whitespace, regression invariants and Next.js production build passed; blocking `npm audit --omit=dev` failed due to high-severity Zod advisory GHSA-mrhx-c7xc-m3w5 affecting `zod <4.6.6`.
+- [Run #103](https://github.com/syauqigntg-art/civic-vision/actions/runs/40197107250), SHA `72d0040120e1d60083fca8ec119f31865a3b8553`: failed `git diff --check` due to trailing whitespace on two metadata lines. This documentation issue was fixed in commit [`d2dd893`](https://github.com/syauqigntg-art/civic-vision/commit/d2dd8933248178c4a149b58e35d074c3ee054b1f).
+- [Run #104](https://github.com/syauqigntg-art/civic-vision/actions/runs/40197164501), SHA `d2dd8933248178c4a149b58e35d074c3ee054b1f`: dependency installation, TypeScript, 25 unit tests, whitespace check, regression invariants and Next.js production build passed; blocking `npm audit --omit=dev` again failed on the same Zod advisory. Thus the docs whitespace issue is corrected but CI is **not green**.
+- GitHub's combined commit status for SHA `d2dd893...` reported Vercel **pending** with target [deployment AzbpMrESc56MtRkxFYrQxGGVMcYu](https://vercel.com/uki8/civic-vision/AzbpMrESc56MtRkxFYrQxGGVMcYu) at the last check. This is distinct from the GitHub Actions failure. A Vercel status, including Ready/Preview or Ignored, cannot substitute for CI, browser verification, or staging transaction evidence.
 - Do not run `npm audit fix --force` or change application dependencies as part of this documentation-only PR. Address the Zod advisory through a separately scoped, reviewed change and rerun checks.
 
 ## 2. User-reported manual smoke tests
@@ -104,7 +106,7 @@ At the current audit snapshot, PR #13's file list still contains seven files and
 
 | Gate | Current assessment | Evidence needed to close |
 |---|---|---|
-| PR #11 automated checks on current SHA | **Blocked/failed at audit time:** Run #102 for `f36bdd081e29831ef82169c55bdb67518855336c` failed its production dependency audit due to the Zod advisory; the workflow aggregate still reported `in_progress` at the latest check | Resolve advisory through a separate reviewed dependency change; rerun checks on the resulting candidate SHA |
+| PR #11 automated checks | **Not green at the last completed run:** Run #104 on `d2dd8933248178c4a149b58e35d074c3ee054b1f` passed install, TypeScript, 25 unit tests, whitespace, invariants and build, but failed `npm audit --omit=dev` on the Zod advisory. Run #103's whitespace failure was fixed in this SHA | Resolve the advisory through a separate reviewed dependency change; rerun checks on the resulting candidate SHA and check the latest head after this documentation commit |
 | PR #11 review and merge policy | No review submissions or threads; classic branch protection/required checks could not be confirmed through the available read | Obtain independent review and verify all required checks/rules directly in GitHub; do not bypass |
 | PR #13 exact-source CI | CI results previously recorded on older SHA `0b31b0babb6d37811dc259b6ba71fb74e233665b` are historical only; current head is `a1be7f1310cbf5dc8988f22d035b28c6724381d8` | Recheck CI on current head and after any base/diff changes |
 | Vercel Preview identity | A Ready/Preview deployment signal exists, but it has not been conclusively matched to the source SHA and environment used for the reported manual tests | Deployment ID/URL, exact source SHA, Preview target, backend target and test timestamp |
