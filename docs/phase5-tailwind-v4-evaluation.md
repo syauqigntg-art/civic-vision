@@ -7,7 +7,7 @@ Reviewed: 2026-10-25 (Asia/Jakarta)
 - PR #13: https://github.com/syauqigntg-art/civic-vision/pull/13
 - Base branch: `main`; head branch: `phase5/release-readiness-tests`.
 - The application migration originally touched seven files: `app/globals.css`, `package.json`, `package-lock.json`, `postcss.config.mjs`, `tailwind.config.js`, deletion of `tailwind.config.ts`, and this evaluation document.
-- **Stacked-branch scope note (updated 2026-10-25):** PR #11 targets this PR's source branch, `phase5/release-readiness-tests`. PR #14 is now merged into that branch at `ecdae3385ce016ab02f798e92a01a55a834cd58d` to remediate Zod; this changed the dependency patch in `package.json` and `package-lock.json`, which are already part of PR #13's seven-file diff. PR #11 is not yet merged, and the current GitHub file list for PR #13 remains seven files; it still does not include `docs/phase6-final-verification.md`. If PR #11 later merges, re-fetch the file list and describe the actual scope. PR #13 must remain Open/Draft and must not be merged as part of PR #11 work.
+- **Stacked-branch scope note (updated 2026-10-25):** PR #14 is merged into this source branch at `ecdae3385ce016ab02f798e92a01a55a834cd58d` to remediate Zod. PR #11 has also merged into this branch at `87b01d8c7b39c244a8dc79fd5f20945adeada22a`, bringing `docs/phase6-final-verification.md` into PR #13's diff. The live GitHub changed-file endpoint now reports **eight files**: the seven original migration/evaluation files plus the inherited Phase 6 document. This added document is not part of the intended Tailwind application migration and the PR description must acknowledge it. PR #13 remains Open/Draft pending independent review and its remaining verification gates.
 
 ## Migration changes
 
@@ -66,8 +66,8 @@ The report did not itself identify the exact deployment SHA/target, test browser
 
 ## Release decision
 
-**BLOCKED — PR #13 stays Draft and must not be merged to `main` by the Phase 6 documentation task.**
+**BLOCKED — PR #13 stays Draft and must not be merged to `main` until the inherited documentation scope is accurately disclosed, required CI and merge-policy checks are verified, independent review is recorded, and applicable browser/staging/compatibility gates are closed or formally waived by an authorized owner.**
 
-The CI results and six user-reported manual smoke tests are positive but do not prove exact Preview identity, verified staging target, the complete browser matrix, persisted-row consistency, the Tailwind browser-floor decision, or an independent review. The Phase 6 file may be added to this PR's diff if PR #11 is merged into its source branch; disclose that scope expansion and update the actual file count after GitHub confirms the new diff.
+The CI results and six user-reported manual smoke tests are positive but do not prove exact Preview identity, verified staging target, the complete browser matrix, persisted-row consistency, the Tailwind browser-floor decision, or an independent review. The Phase 6 file is already included in this PR's live diff because PR #11 merged into the source branch. The live file count is eight. Automated validation and a Ready Preview status are positive evidence tied to the current head but do not close the browser/staging, compatibility, or independent-review gates.
 
 No application code, Production configuration, secrets, environment variables, Supabase configuration, or database was changed as part of these documentation edits.
