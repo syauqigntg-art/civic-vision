@@ -10,12 +10,12 @@ The following states were checked against GitHub on 2026-10-25.
 
 | Item | Current verified state | Evidence / meaning |
 |---|---|---|
-| PR #11 | Open / Draft; base `phase5/release-readiness-tests`; source branch `phase6/final-verification`. A non-force sync merge commit [`fa1707c`](https://github.com/syauqigntg-art/civic-vision/commit/fa1707c6811d27734a68cdb6a79b62bd58558a04) now places base `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086` as first parent and preserves prior head `40c6e600bd3255bae4c955e3843c01805d6addf6` as second parent | [PR #11](https://github.com/syauqigntg-art/civic-vision/pull/11). The source tree now inherits the Zod fix from base; the live head may advance when this audit record is committed, so re-fetch it before merge |
-| PR #11 changed files | One file: `docs/phase6-final-verification.md` | Documentation-only scope; confirm again after every commit |
+| PR #11 | **Merged** on 2026-10-25; merge commit [`87b01d8c7b39c244a8dc79fd5f20945adeada22a`](https://github.com/syauqigntg-art/civic-vision/commit/87b01d8c7b39c244a8dc79fd5f20945adeada22a) | [PR #11](https://github.com/syauqigntg-art/civic-vision/pull/11). This brought `docs/phase6-final-verification.md` onto `phase5/release-readiness-tests`; it does not approve the application for Production |
+| PR #11 changed files | One file: `docs/phase6-final-verification.md` | Documentation-only scope; confirmed in the merged PR metadata |
 | PR #11 branch relationship | Synchronized without force-push or history rewrite. At the sync point, compare showed `ahead` (13 commits ahead, 0 behind) with merge base equal to base `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086`; direct branch comparison contained only the added `docs/phase6-final-verification.md` | [Compare branches](https://github.com/syauqigntg-art/civic-vision/compare/phase5/release-readiness-tests...phase6/final-verification). Subsequent documentation commits can advance head; always verify the live compare before merge |
 | PR #9 | Closed, not merged; closed as superseded by PR #12 | [PR #9](https://github.com/syauqigntg-art/civic-vision/pull/9). Its closure is not a release approval |
 | PR #10 | Merged on 2026-10-23 into `phase5/release-readiness-tests`; merge commit `f3e052ede3f2bcc4d752b7d49ab8fd19504e707c` | [PR #10](https://github.com/syauqigntg-art/civic-vision/pull/10). This Tailwind v4 experiment does not approve Production |
-| PR #13 | Open / Draft; base `main`; source branch `phase5/release-readiness-tests`; current head at this snapshot `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086`; 7 changed files | [PR #13](https://github.com/syauqigntg-art/civic-vision/pull/13). The PR #11 document is not in PR #13's current diff; refresh its file list after PR #11 is eventually merged |
+| PR #13 | Open / Draft; base `main` SHA `428f80df5073b72f7ec23812712c8e7217052886`; source branch `phase5/release-readiness-tests`; head `87b01d8c7b39c244a8dc79fd5f20945adeada22a`; **8 changed files** | [PR #13](https://github.com/syauqigntg-art/civic-vision/pull/13). The merged PR #11 document `docs/phase6-final-verification.md` is now included in its diff; this is a stacked-branch documentation change, not part of the Tailwind application migration |
 | PR #11 reviews | No review submissions and no inline review threads recorded at audit time | [PR #11 reviews](https://github.com/syauqigntg-art/civic-vision/pulls/11). No independent approval may be inferred |
 | PR #13 reviews | No review submissions recorded at audit time | [PR #13 reviews](https://github.com/syauqigntg-art/civic-vision/pulls/13) |
 | Repository rulesets | GitHub repository rulesets endpoint returned an empty list | This does not prove that classic branch protection or required checks are absent |
@@ -34,7 +34,7 @@ The following results are tied to their exact SHAs. The documentation branch has
 
 ### PR #13 current-head CI and deployment snapshot
 
-- PR #13 head SHA at this snapshot: `a1be7f1310cbf5dc8988f22d035b28c6724381d8`, with seven changed files and the PR still open/Draft.
+- PR #13 head SHA at this snapshot: `87b01d8c7b39c244a8dc79fd5f20945adeada22a`, with eight changed files and the PR still open/Draft.
 - [Run #100](https://github.com/syauqigntg-art/civic-vision/actions/runs/40196705243) failed on this exact SHA at `npm audit --omit=dev` due to the same high-severity Zod advisory. Install, TypeScript, regression tests, whitespace, invariants and Next.js production build passed before the audit step failed.
 - GitHub's combined status for this SHA was Vercel **success**, linking to [deployment 5msyDUPjU715DP4yV2c8erWZubb6](https://vercel.com/uki8/civic-vision/5msyDUPjU715DP4yV2c8erWZubb6). The status alone does not prove the intended target environment, a matching Preview/staging backend, or browser smoke-test execution. PR #13 needs checks refreshed when its base/head changes, including any later effect from merging PR #11.
 
@@ -151,9 +151,9 @@ At the current audit snapshot, PR #13's file list still contains seven files and
 
 ## Current PR #11 decision after synchronization
 
-**PR #11 remains Open / Draft and is not merged.** Branch synchronization is complete, the live PR diff is one documentation file, and the head inherits Zod `4.6.7`. Run #119 passed on the prior head `d812f2daf6a2da801a4cf4e1c84cb98fe28f1c5a`; this documentation correction creates a new head and requires its own successful CI result. No independent review or review thread is recorded, and classic branch protection / required checks still need verification through authorized GitHub access.
+**PR #11 is merged**; its merge commit is `87b01d8c7b39c244a8dc79fd5f20945adeada22a`. That merge is documentation-only and is not Production approval. PR #13 now has eight changed files, its latest head `87b01d8c7b39c244a8dc79fd5f20945adeada22a` has successful Run #122 and a Vercel Preview success status, but there are no independent review submissions or review threads recorded. Classic branch protection / required checks remain unverified through the available authorized read.
 
-The documentation merge remains separate from application release approval. Production decision stays **NO-GO** until the required browser, Preview identity, staging data, compatibility, and review gates are evidenced.
+Application Production decision stays **NO-GO** until browser coverage, verified staging data, Tailwind browser compatibility, independent review, and merge-policy checks are evidenced.
 
 ## 8. Guardrails
 
