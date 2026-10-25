@@ -1,119 +1,145 @@
 # Phase 6 — Final Verification & Release Decision
 
-**Snapshot date:** 2026-10-23 (Asia/Jakarta)
-**Decision at snapshot:** **NO-GO for Production**
-**Scope:** Freeze and verify evidence; no merge, Production deploy, environment edits, migrations, or database writes.
+**Last verified:** 2026-10-25 (Asia/Jakarta)  
+**Decision:** **NO-GO for Production**  
+**Purpose:** Record current repository evidence and define release gates. This documentation PR is not Production-release approval.
 
-## 1. Candidate freeze (6A)
+## 1. Repository and PR snapshot
 
-These are the exact heads captured for this verification snapshot. A later commit on either PR changes the candidate; all evidence must then be checked against the new SHA before sign-off.
+Snapshot verified against GitHub on 2026-10-25:
 
-| Candidate | PR | Head SHA | Branch | CI evidence at this SHA | Vercel status |
-|---|---|---|---|---|---|
-| PBL behavior/recovery hardening | [#9](https://github.com/syauqigntg-art/civic-vision/pull/9) | `ae6b9039c2dec119352e0c6d6dbc0f4a7fff3a36` | `phase5/release-readiness-tests` | [Run #64 push](https://github.com/syauqigntg-art/civic-vision/actions/runs/39899186075) and [Run #65 pull request](https://github.com/syauqigntg-art/civic-vision/actions/runs/39899190331): success; 25 Node-level tests reported passing on this candidate | **Failure** — Free-plan build-rate-limit link |
-| Tailwind v4 dependency experiment | [#10](https://github.com/syauqigntg-art/civic-vision/pull/10) | `5300fe0d165dfda9fa6397f998920bb42cd2be98` | `phase5/tailwind-v4-remediation` | [Run #63 push](https://github.com/syauqigntg-art/civic-vision/actions/runs/39899133116) and [Run #66 pull request](https://github.com/syauqigntg-art/civic-vision/actions/runs/39899328502): success; Run #66 validates the combined PR candidate with 25 tests | **Failure** — Free-plan build-rate-limit link |
-
-The reported Vercel context currently points to `https://vercel.com/uki8?upgradeToPro=build-rate-limit` on both candidate SHAs. A successful GitHub Actions build is not proof that Vercel Preview deployed either SHA.
-
-**Separation rule:** PR #9 is the non-Tailwind-v4 behavior-hardening candidate. PR #10 is a separate Tailwind v4 dependency-remediation experiment stacked on PR #9. Do not merge either candidate during this phase. Do not regard PR #10's clean dependency audit as evidence of visual equivalence or supported student-device compatibility.
-
-## 2. Preview access and visual/browser gate (6B)
-
-### Access/deployment evidence required
-
-- [ ] Obtain official authorized access to the Vercel team/project scope.
-- [ ] Capture a Vercel deployment record that shows **Ready**, the exact candidate SHA, Preview target, deployment URL, and build logs.
-- [ ] Verify the Preview environment's `NEXT_PUBLIC_SUPABASE_URL` resolves to the intended **staging** Supabase project. Record the project reference/host only; never copy keys or secrets into this report.
-- [ ] Confirm browser-delivered JavaScript does not expose `SUPABASE_SERVICE_ROLE_KEY`; confirm privileged operations remain server-side.
-- [ ] Confirm the active database for all write tests is staging and that test records are synthetic.
-- [ ] Record the date, browser/version, viewport, tested route, result, and screenshot/console/network evidence for each test.
-
-**Current state:** **BLOCKED.** The connector could not list an authorized Vercel team and the project read returned HTTP 403 for scope `uki8`. No authorized team-access approval action was available through this connection. Do not bypass the access gate or substitute Production as a test target.
-
-### Browser test matrix
-
-Run against the deployed Preview URL only after the above evidence is collected. Use clean sessions and synthetic test identities.
-
-| ID | Surface / scenario | Expected acceptance evidence | State |
-|---|---|---|---|
-| V-01 | Desktop layout at 1440×900 | No overlapping/cut-off controls; primary and secondary navigation usable; no unexpected horizontal overflow | Blocked |
-| V-02 | Mobile layout at 390×844 and 360×800 | Inputs/buttons fit viewport; readable feedback; keyboard does not hide the active input/action | Blocked |
-| V-03 | Tablet layout at 768×1024 | Responsive layout and navigation remain usable | Blocked |
-| V-04 | PBL identity form | Required-field validation is clear; save success/failure is understandable; duplicate taps do not create conflicting state | Blocked |
-| V-05 | Case/assignment list | Valid code loads list; missing/invalid code and server/network errors are distinct and actionable; retry runs in place | Blocked |
-| V-06 | Analysis/question form | Existing submitted server answer is authoritative; unsent local draft is preserved when appropriate; retry reloads successfully | Blocked |
-| V-07 | Video player | Play/pause, loading, playback error and retry work; controls remain operable on small screens | Blocked |
-| V-08 | Navigation and recovery | Back/forward and refresh behave predictably; recoverable failures do not silently erase a draft | Blocked |
-| V-09 | Admin routes | Unauthenticated student cannot access admin-only actions; authorized admin can use required controls; no staging secrets are exposed | Blocked |
-| V-10 | Accessibility basics | Keyboard-only traversal, visible focus, associated labels, legible error messages, and sensible focus after validation | Blocked |
-| V-11 | Browser console/network | No uncaught runtime exception or unexpected 4xx/5xx in a valid flow; no request to Production Supabase | Blocked |
-
-For each failure, retain a minimal reproduction, sanitized console/network details and screenshot. Redact tokens, cookies, student identifiers and personal data.
-
-## 3. Autosave, submit and database consistency (6C)
-
-**Precondition:** Vercel Preview SHA and staging Supabase target have both been verified. Do not execute these write tests before that precondition. Use isolated synthetic records; delete/clean up only those staging records if a cleanup procedure is approved.
-
-| ID | Synthetic test sequence | Pass condition / evidence | State |
-|---|---|---|---|
-| C-01 | Enter an answer, wait for autosave success, refresh/reopen | The exact synthetic answer is present after reload in the staging record; UI state matches stored value | Blocked |
-| C-02 | Disconnect network during save, edit draft, reconnect and retry | A visible error appears while offline; retry succeeds after reconnect; latest intended draft persists | Blocked |
-| C-03 | Start a save, then submit before the save settles | Submit response and final staging row agree; a late older save cannot overwrite the submitted answer | Blocked |
-| C-04 | Trigger two saves in quick succession with different values | Final persisted value follows documented ordering/authority rule; no stale value overwrites the latest intended state | Blocked |
-| C-05 | Tap identity save twice rapidly | Only one in-flight identity save is created by the single-flight controller; persisted identity is consistent | Blocked |
-| C-06 | Submit twice rapidly / replay the same submit request | No duplicate submission rows or unexpected side effects; the operation is safely rejected or idempotent as designed | Blocked |
-| C-07 | Simulate an API error then retry without changing the draft | Failure is surfaced; retry succeeds without losing data or duplicating a successful write | Blocked |
-
-Evidence must include (1) sanitized request/response status and sequence/timing, (2) staging row(s) queried after completion, (3) whether duplicates or stale writes exist, and (4) the exact deployed SHA. UI toast/status alone is insufficient. If the existing data model does not support safe idempotency or authoritative submission, record a defect and keep the release **No-Go** rather than assuming a pass.
-
-## 4. Tailwind v4 compatibility decision (6D)
-
-Tailwind v4's official upgrade guide lists minimum browser versions of Safari 16.4+, Chrome 111+, and Firefox 128+ ([official upgrade guide](https://tailwindcss.com/docs/upgrade-guide)). This is a user-device compatibility requirement, not a conclusion from the dependency audit.
-
-- [ ] Establish the minimum browser/OS versions in the target student environment (including managed school devices and mobile browsers).
-- [ ] If those minimum versions cannot be guaranteed, **do not accept PR #10 as-is** without a tested compatibility alternative.
-- [ ] If the supported range is accepted, run V-01 through V-11 on the Tailwind v4 candidate and compare key layouts/states with the non-v4 baseline.
-- [ ] Verify navigation, forms, dialogs, video, focus states, admin pages, and error/retry states, not only the landing page.
-- [ ] Document the decision maker, accepted browser floor, test devices, visual defects, and any accepted risk.
-
-**Current state:** **NOT DECIDED.** Run #63/#66 demonstrate successful CI/build/audit for the Tailwind v4 candidate, but do not establish real-browser visual parity or device coverage.
-
-## 5. Release decision gate (6E)
-
-Production remains **NO-GO** until all mandatory gates below have evidence tied to the exact candidate SHA. A risk exception must explicitly name the risk, scope, owner/approver, mitigation, and expiry; an unverified Preview/database target is not an acceptable implicit exception.
-
-| Gate | Current assessment | Required to change state |
+| Item | Verified state | Evidence / interpretation |
 |---|---|---|
-| Exact candidate + matching CI | **Pass for snapshot** | Recheck if either PR head changes |
-| PR #9 behavioral/unit tests | **Pass in Node/CI** | Does not replace real-browser testing |
-| Tailwind v4 build/dependency audit | **Pass in CI** | Does not prove visual or browser compatibility |
-| Vercel Preview and exact deployed SHA | **Blocked** | Authorized access + Ready deployment for exact candidate |
-| Preview-to-staging Supabase target | **Unverified / blocked** | Safe evidence of staging target; no secrets in artifacts |
-| Browser visual/functional matrix | **Not run** | Record V-01 through V-11 results |
-| Autosave/submit concurrency against DB | **Not run** | Record C-01 through C-07 and verify persisted staging rows |
-| Tailwind v4 browser-floor acceptance | **Pending decision** | Approved supported device/browser range + visual test results |
-| PR review/merge | **Not authorized** | Only after required evidence and an explicit review decision |
-| Production deployment | **Not approved** | New explicit release decision after all required gates pass |
+| PR #11 | Open, Draft; base `phase5/release-readiness-tests`; head `phase6/final-verification`; head SHA `78076bd8f9497c8b409e6465c8e0f7df52bd9119` before this documentation update | [PR #11](https://github.com/syauqigntg-art/civic-vision/pull/11) |
+| PR #11 diff before this update | Documentation only: `docs/phase6-final-verification.md` | The branch had two commits ahead and 18 commits behind base at the time compared; refs are diverged. Do not rewrite history or force-push. Recheck GitHub mergeability and exact diff after the new commit. |
+| PR #9 | Closed without merge; source branch `phase5/release-readiness-tests`; recorded candidate head `ae6b9039c2dec119352e0c6d6dbc0f4a7fff3a36` | [PR #9](https://github.com/syauqigntg-art/civic-vision/pull/9). Its closure is not a merge and does not itself prove release readiness. |
+| PR #10 | Merged into `phase5/release-readiness-tests` on 2026-10-23; merge commit `f3e052ede3f2bcc4d752b7d49ab8fd19504e707c` | [PR #10](https://github.com/syauqigntg-art/civic-vision/pull/10). This was the Tailwind v4 remediation experiment; it is not approval for Production. |
+| PR #13 | Open, Draft, base `main`, head `phase5/release-readiness-tests`, current recorded head `0b31b0babb6d37811dc259b6ba71fb74e233665b` | [PR #13](https://github.com/syauqigntg-art/civic-vision/pull/13); [Run #96](https://github.com/syauqigntg-art/civic-vision/actions/runs/39942579677) and [Run #97](https://github.com/syauqigntg-art/civic-vision/actions/runs/39942585051) are reported successful on this SHA. Re-check after any base/head change. |
+| PR #11 review submissions | None recorded at the time of audit | [Review API](https://github.com/syauqigntg-art/civic-vision/pulls/11). No independent review may be inferred. |
+| GitHub combined status for PR #11's prior head | Only Vercel failure status was returned, linking to the Free-plan build-rate-limit URL | This is not a substitute for workflow checks on the new commit. |
+| Branch protection / required checks | Not verified through the available repository connector | Do not claim protection rules or required-check policy were inspected. Confirm in GitHub before merge. |
+
+### Evidence boundaries
+
+- Successful GitHub Actions runs only establish the automated tasks recorded in those workflow runs on their exact SHA.
+- Vercel status **Ignored** means a configured ignored-build step skipped that deployment; it is neither a failed application build nor proof of a fresh, tested deployment.
+- A Vercel **Ready** deployment proves a deployment completed for its own source SHA and target. It does not prove every UI flow works.
+- Browser smoke tests and database-backed staging tests are separate evidence categories; they cannot be inferred from CI alone.
+
+## 2. Manual smoke-test report (user-reported)
+
+The user reported the following six manual smoke tests as **PASS**. These are recorded as user-reported results, not tests independently executed by the agent:
+
+| Check | Result reported by user |
+|---|---|
+| Beranda dan navigasi | PASS — user-reported |
+| Tampilan mobile | PASS — user-reported |
+| Pemutar video | PASS — user-reported |
+| Formulir SEE–THINK–CONNECT–ACT | PASS — user-reported |
+| Penyimpanan jawaban | PASS — user-reported |
+| Halaman admin | PASS — user-reported |
+
+The report did not itself record the exact deployment source SHA, target environment, browser/version, desktop viewport, console/network evidence, or persisted staging-row evidence. Therefore these results must not be attributed to a specific candidate deployment until the deployment identity and test environment are matched.
+
+A Vercel bot comment on PR #11 previously displayed a **Ready / Preview** deployment for the branch URL `civic-vision-git-phase6-final-verification-uki8.vercel.app`. A later deployment attempt reported the Free-plan deployment quota (`api-deployments-free-per-day`). Neither bot status independently establishes that the six reported manual tests used the current PR #13 SHA or a verified staging Supabase project.
+
+## 3. Preview identity and browser verification gate (6B)
+
+Before treating any browser smoke test as release evidence, record the Vercel deployment ID, URL, source SHA, target (Preview), build state/logs, test timestamp, browser/version, and viewport. Verify the Preview environment points to the intended staging Supabase project; record only its project reference/host, never secrets. Ensure no service-role secret is delivered to browser code.
+
+| ID | Surface / scenario | Required evidence | Current state |
+|---|---|---|---|
+| V-01 | Desktop layout at 1440×900 | Explicit result and screenshot/notes for layout, controls, navigation, overflow | Open — no explicit desktop result in the recorded report |
+| V-02 | Mobile at 390×844 and 360×800 | Result per viewport; keyboard and input behavior | User-reported mobile PASS; detailed per-viewport evidence not recorded |
+| V-03 | Tablet at 768×1024 | Responsive layout and usable navigation | Open |
+| V-04 | Identity form | Validation and save success/failure; duplicate interactions | Open / evidence not recorded |
+| V-05 | Case/assignment list | Valid, invalid, network-error and retry paths | Open / evidence not recorded |
+| V-06 | Analysis/question form | Submitted server answer precedence, draft retention, retry | Open / evidence not recorded |
+| V-07 | Video player | Playback, loading/error/retry and small-screen controls | User-reported general smoke PASS; detailed evidence not recorded |
+| V-08 | Navigation and recovery | Back/forward/refresh and draft recovery | User-reported home/navigation PASS; detailed recovery evidence not recorded |
+| V-09 | Admin routes | Student authorization boundary and required admin controls | User-reported admin-page PASS; authorization coverage not documented |
+| V-10 | Accessibility basics | Keyboard traversal, focus, labels, validation feedback | Open |
+| V-11 | Browser console/network | No uncaught errors or unexpected 4xx/5xx in valid flows; no Production DB writes | Open |
+
+**State:** not all browser/release evidence gates are closed. A general mobile PASS is not a desktop/tablet/browser compatibility matrix.
+
+## 4. Autosave, submit and staging data consistency gate (6C)
+
+Do not run write tests until the deployment SHA and staging Supabase target are verified. Use synthetic identities and test records only. Never run these tests against Production.
+
+| ID | Test | Pass evidence | State |
+|---|---|---|---|
+| C-01 | Autosave, refresh/reopen | Exact synthetic answer persists in a verified staging row | Not evidenced here |
+| C-02 | Offline save, reconnect and retry | Visible error, safe retry, latest draft persists | Not evidenced here |
+| C-03 | Submit before an outstanding save settles | Server response and final staging row agree; late older save cannot overwrite submit | Not evidenced here |
+| C-04 | Two rapid saves with different values | Final persisted value follows the intended ordering rule | Not evidenced here |
+| C-05 | Duplicate identity-save taps | Single-flight behavior and consistent persisted identity | Not evidenced here |
+| C-06 | Duplicate submit/replay | No duplicate rows or unintended side effects; safe rejection/idempotency | Not evidenced here |
+| C-07 | API error then retry | Error surfaced; retry does not lose draft or duplicate successful writes | Not evidenced here |
+
+Required evidence: sanitized request/response order and status, exact deployed SHA, query of staging row(s), and proof that no duplicate or stale-write condition occurred. UI toast/status alone is insufficient.
+
+## 5. Tailwind v4 compatibility decision (6D)
+
+PR #10 is already merged into the Phase 5 release-readiness branch; PR #13 remains the separate Tailwind v4 PR targeting `main`. The Tailwind v4 migration changes the CSS toolchain and requires a separate compatibility decision. The previously recorded minimum browser floor is Safari 16.4+, Chrome 111+, and Firefox 128+ ([Tailwind upgrade guide](https://tailwindcss.com/docs/upgrade-guide)).
+
+- [ ] Confirm the minimum browser/OS versions used by target students, including managed school devices and mobile browsers.
+- [ ] Record the decision maker and accepted browser floor.
+- [ ] Test supported browsers on the intended Tailwind v4 candidate; compare forms, navigation, video, focus states, admin, loading/errors and responsive states against baseline.
+- [ ] Record test devices, defects, and any accepted risks.
+- [ ] Obtain an independent code review for PR #13.
+
+The manual six-item smoke report and successful CI do not, by themselves, establish support for all listed browser versions or visual parity. PR #13 must remain Draft unless its own required gates are satisfied and its owner explicitly changes that decision.
+
+## 6. PR #13 scope interaction
+
+PR #11 targets `phase5/release-readiness-tests`, which is the source branch of PR #13. Merging PR #11 can therefore add `docs/phase6-final-verification.md` to PR #13's diff.
+
+Before merging PR #11:
+1. Re-check PR #13's head/base SHA and exact changed-file list.
+2. Update PR #13's description and this evaluation document to disclose the extra Phase 6 documentation file if it is present in the actual diff.
+3. Do not describe PR #13 as seven files if its diff now contains eight or more.
+4. Keep PR #13 open and Draft; do not merge PR #13 as part of this task.
+5. Do not edit application code, Vercel Production configuration, secrets, environment variables, Supabase configuration, or databases for this documentation task.
+6. Do not force-push or rewrite branch history to hide the stacked-branch effect.
+
+## 7. Release decision gates (6E)
+
+**Production decision: NO-GO.** A documentation merge is not a release approval.
+
+| Gate | Current assessment | Evidence needed to close |
+|---|---|---|
+| PR #11 documentation CI on exact new SHA | Pending new commit checks | New head SHA with all applicable required checks green |
+| PR #11 review/merge policy | Independent review absent in audit; branch protection not verified | Review and required policy confirmation; do not bypass |
+| PR #13 exact-source CI | Run #96 and #97 success on `0b31b0b...` | Recheck after base advances and PR #13 diff changes |
+| Vercel Preview exact SHA/target | Not conclusively matched to reported manual tests | Deployment record with exact SHA and Preview target |
+| Staging Supabase target | Not verified in this document | Safe project-reference evidence; no secret values |
+| Browser visual/functional matrix | Partially user-reported; broader evidence open | V-01–V-11 evidence |
+| Autosave/submit concurrency with database | Not evidenced here | C-01–C-07 with synthetic staging-row evidence |
+| Tailwind v4 browser-floor decision | Pending documented approval | Accepted device/browser range, compatibility tests and approver |
+| Independent review of PR #13 | None recorded at latest audit | Review submission from an independent reviewer |
+| Production deployment | Not approved | Separate explicit GO after all mandatory release gates pass |
 
 ### Phase 6 sign-off record
 
 - Candidate SHA tested:
-- Preview deployment URL / deployment ID:
+- Vercel Preview URL / deployment ID / source SHA:
 - Verified staging project reference:
-- Browser/OS and viewport matrix:
-- Results and evidence links for V-01–V-11:
-- Results and staging row evidence for C-01–C-07:
-- Tailwind v4 compatibility decision / approver:
-- Residual risks and explicit acceptances:
+- Browser / OS / version / viewport matrix:
+- Results and evidence links V-01–V-11:
+- Staging-row evidence C-01–C-07:
+- Tailwind v4 compatibility decision and approver:
+- Independent reviewer and review link:
+- Residual risks / accepted exceptions / expiry:
 - Final decision: **NO-GO / GO**
 - Decision maker and date:
 
-**Non-negotiable guardrails:** keep PRs #6–#10 Draft and unmerged during this phase; no Production deploy; no Production database writes; no environment-variable edits; no migrations or `supabase db push` from this verification work.
+## 8. Guardrails
 
-## Evidence boundaries
-
-- GitHub Actions result: automated CI tests, static/type checks, build and audit results from the logged workflow run.
-- Vercel Ready deployment: proves a deployment was completed for a specific SHA; it does not itself prove every user flow works.
-- Browser tests: prove rendered and interactive behavior for the tested browser/device/viewport only.
-- Staging database evidence: proves the tested synthetic writes and ordering for that run; redact sensitive values.
-- User/device compatibility decision: establishes whether the tested/browser support floor is acceptable for the target student population.
+- This PR changes documentation only.
+- Do not merge PR #13 or deploy Production as part of Phase 6 documentation.
+- Do not change secrets, environment variables, database configuration, or Supabase configuration.
+- Do not run migrations, `supabase db push`, or write tests against Production.
+- Do not disable a global Ignored Build Step merely to make a Vercel status appear green.
+- Do not relabel blocked/pending evidence as PASS.
+- Do not bypass required review or branch rules.
