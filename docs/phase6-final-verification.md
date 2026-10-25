@@ -1,7 +1,7 @@
 # Phase 6 — Final Verification & Release Decision
 
-**Last verified:** 2026-10-25 (Asia/Jakarta)  
-**Decision:** **NO-GO for Production**  
+**Last verified:** 2026-10-25 (Asia/Jakarta)
+**Decision:** **NO-GO for Production**
 **Purpose:** Record current repository evidence and define release gates. This documentation PR is not Production-release approval.
 
 ## 1. Repository and PR snapshot
