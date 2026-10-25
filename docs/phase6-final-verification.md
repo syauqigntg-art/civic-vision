@@ -10,12 +10,12 @@ The following states were checked against GitHub on 2026-10-25.
 
 | Item | Current verified state | Evidence / meaning |
 |---|---|---|
-| PR #11 | Open, Draft; base `phase5/release-readiness-tests`; head `phase6/final-verification`. Current head SHA `94e2e976828385adfa4547679cd005cc3f58cff4`; base now includes PR #14 merge commit `ecdae3385ce016ab02f798e92a01a55a834cd58d` | [PR #11](https://github.com/syauqigntg-art/civic-vision/pull/11). Head still needs a safe non-force merge-base sync before its green CI can validate the inherited Zod fix |
+| PR #11 | Open / Draft; base `phase5/release-readiness-tests`; source branch `phase6/final-verification`. A non-force sync merge commit [`fa1707c`](https://github.com/syauqigntg-art/civic-vision/commit/fa1707c6811d27734a68cdb6a79b62bd58558a04) now places base `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086` as first parent and preserves prior head `40c6e600bd3255bae4c955e3843c01805d6addf6` as second parent | [PR #11](https://github.com/syauqigntg-art/civic-vision/pull/11). The source tree now inherits the Zod fix from base; the live head may advance when this audit record is committed, so re-fetch it before merge |
 | PR #11 changed files | One file: `docs/phase6-final-verification.md` | Documentation-only scope; confirm again after every commit |
-| PR #11 branch relationship | Immediately before the latest CI-evidence update, compare was `diverged`, nine commits ahead and 19 behind base; merge base `ae6b9039c2dec119352e0c6d6dbc0f4a7fff3a36` | [Compare branches](https://github.com/syauqigntg-art/civic-vision/compare/phase5/release-readiness-tests...phase6/final-verification). This update adds a further documentation commit; re-fetch comparison before merge. Do not force-push or rewrite history |
+| PR #11 branch relationship | Synchronized without force-push or history rewrite. At the sync point, compare showed `ahead` (13 commits ahead, 0 behind) with merge base equal to base `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086`; direct branch comparison contained only the added `docs/phase6-final-verification.md` | [Compare branches](https://github.com/syauqigntg-art/civic-vision/compare/phase5/release-readiness-tests...phase6/final-verification). Subsequent documentation commits can advance head; always verify the live compare before merge |
 | PR #9 | Closed, not merged; closed as superseded by PR #12 | [PR #9](https://github.com/syauqigntg-art/civic-vision/pull/9). Its closure is not a release approval |
 | PR #10 | Merged on 2026-10-23 into `phase5/release-readiness-tests`; merge commit `f3e052ede3f2bcc4d752b7d49ab8fd19504e707c` | [PR #10](https://github.com/syauqigntg-art/civic-vision/pull/10). This Tailwind v4 experiment does not approve Production |
-| PR #13 | Open and Draft; base `main`; head `phase5/release-readiness-tests`; current head SHA `a1be7f1310cbf5dc8988f22d035b28c6724381d8`; currently 7 changed files | [PR #13](https://github.com/syauqigntg-art/civic-vision/pull/13). This snapshot predates any future merge of PR #11 and must be refreshed afterwards |
+| PR #13 | Open / Draft; base `main`; source branch `phase5/release-readiness-tests`; current head at this snapshot `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086`; 7 changed files | [PR #13](https://github.com/syauqigntg-art/civic-vision/pull/13). The PR #11 document is not in PR #13's current diff; refresh its file list after PR #11 is eventually merged |
 | PR #11 reviews | No review submissions and no inline review threads recorded at audit time | [PR #11 reviews](https://github.com/syauqigntg-art/civic-vision/pulls/11). No independent approval may be inferred |
 | PR #13 reviews | No review submissions recorded at audit time | [PR #13 reviews](https://github.com/syauqigntg-art/civic-vision/pulls/13) |
 | Repository rulesets | GitHub repository rulesets endpoint returned an empty list | This does not prove that classic branch protection or required checks are absent |
@@ -40,12 +40,14 @@ The following results are tied to their exact SHAs. The documentation branch has
 
 - Do not run `npm audit fix --force` or change application dependencies as part of this documentation-only PR. Address the Zod advisory through a separately scoped, reviewed change and rerun checks.
 
-## Sync after PR #14 merge — 2026-10-25
-- PR #14 is now confirmed **merged** into `phase5/release-readiness-tests`; merge commit: [`ecdae3385ce016ab02f798e92a01a55a834cd58d`](https://github.com/syauqigntg-art/civic-vision/commit/ecdae3385ce016ab02f798e92a01a55a834cd58d). The base `package.json` now declares `zod: ^4.6.7`; PR #14's successful CI is [Run #111](https://github.com/syauqigntg-art/civic-vision/actions/runs/40198080947), SHA `a96d77bdde63be4a72fb240192a6e93712f42532`, where both production and full dependency audit steps reported 0 vulnerabilities.
-- Attempted to fast-forward `phase6/final-verification` with `force=false` and an expected head SHA. GitHub rejected the ref update because the branches have diverged: PR #11 head contains 10 commits not in base and base contains 22 commits not in head. **No branch ref was moved and no history was rewritten.**
-- The available GitHub connector exposes no “update branch”/merge-base operation for an open PR. The GitHub `update_ref` call rejected the non-fast-forward update; creating an artificial two-parent merge commit through Git data alone without locally resolving/checking the 22 base commits could introduce conflicts or alter the diff, so it was not attempted.
-- Current PR #11 remains Open/Draft at head `94e2e976828385adfa4547679cd005cc3f58cff4`, base commit `ecdae3385ce016ab02f798e92a01a55a834cd58d`, and currently lists only `docs/phase6-final-verification.md`. Its current head has not inherited the Zod fix; [Run #114](https://github.com/syauqigntg-art/civic-vision/actions/runs/40199121526) is green on the documentation-only head, but is not evidence for the fixed dependency because `package.json` at head still says `^3.25.76`.
-- To finish safely, a repository maintainer must use GitHub's authorized **Update branch**/merge-base workflow or a local Git checkout to merge `phase5/release-readiness-tests` into `phase6/final-verification` (no rebase/force-push), resolve any conflicts while keeping the change set documentation-only, push the new merge commit, then wait for CI on that exact SHA. The connector cannot safely perform the divergent branch merge itself.
+## Sync after PR #14 merge — completed 2026-10-25
+
+- PR #14 is merged into `phase5/release-readiness-tests` at [`ecdae3385ce016ab02f798e92a01a55a834cd58d`](https://github.com/syauqigntg-art/civic-vision/commit/ecdae3385ce016ab02f798e92a01a55a834cd58d). Base declares `zod: ^4.6.7`; the lockfile resolves `node_modules/zod` to `4.6.7`.
+- A non-force sync merge commit was created at [`fa1707c6811d27734a68cdb6a79b62bd58558a04`](https://github.com/syauqigntg-art/civic-vision/commit/fa1707c6811d27734a68cdb6a79b62bd58558a04). Its first parent is the then-current base `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086`; its second parent is prior PR #11 head `40c6e600bd3255bae4c955e3843c01805d6addf6`. `update_ref` succeeded with `force=false` and expected old head SHA, so no force-push or history rewrite occurred.
+- The resulting source tree inherits the latest base files and adds the previously missing `docs/phase6-final-verification.md` from the PR #11 branch. Direct compare of current branch refs returned `ahead` (13 ahead, 0 behind) and only that one added documentation file.
+- GitHub's PR metadata initially retained the old base snapshot and reported eight files. Refreshing PR #11 against the same base branch via the GitHub pull-request update API refreshed the base SHA to `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086`; current PR file-list, diff, and patch endpoints now all report exactly one file: `docs/phase6-final-verification.md`.
+- [Run #118](https://github.com/syauqigntg-art/civic-vision/actions/runs/40199610018) **succeeded** on sync commit `fa1707c6811d27734a68cdb6a79b62bd58558a04`, including dependency install, TypeScript, unit tests, whitespace, regression invariants, Next.js build, production dependency audit, and full dependency audit reporting. Directly fetched files at the synchronized head confirm `package.json` declares `zod: ^4.6.7` and the lockfile resolves `4.6.7`. This audit-record update creates a new head; verify CI again on that exact final head before merge.
+- Remaining blockers: no independent review submissions or review threads are recorded for PR #11, and classic branch protection/required checks remain unverified because the authorized read returned HTTP 403. Keep PR #11 Draft until a human reviewer and authorized merge-policy verification complete.
 
 ## 2. User-reported manual smoke tests
 
@@ -122,9 +124,9 @@ At the current audit snapshot, PR #13's file list still contains seven files and
 
 | Gate | Current assessment | Evidence needed to close |
 |---|---|---|
-| PR #11 automated checks | **Not green at the latest recorded run:** Run #106 on `a7ca5d8e5dc35a6f1edf70ee25c2ef594945d07e` passed install, TypeScript, 25 unit tests, whitespace, invariants and build, but failed `npm audit --omit=dev` on the Zod advisory. The earlier whitespace failure was fixed | Resolve the advisory through a separate reviewed dependency change; rerun checks on the resulting candidate SHA and check the latest head after this documentation commit |
+| PR #11 automated checks | **Run #118 passed on the synchronized merge commit** `fa1707c6811d27734a68cdb6a79b62bd58558a04`, after the branch inherited Zod `4.6.7`. The present documentation audit update creates a newer head; verify its exact CI result before merge | Final-head CI must pass; verify the current head SHA and the blocking audit step at the time of merge |
 | PR #11 review and merge policy | No review submissions or threads; classic branch protection/required checks could not be confirmed through the available read | Obtain independent review and verify all required checks/rules directly in GitHub; do not bypass |
-| PR #13 exact-source CI | Run #100 on current head `a1be7f1310cbf5dc8988f22d035b28c6724381d8` failed the Zod production dependency audit; other earlier steps passed | Resolve advisory in a separate reviewed dependency change; rerun CI when source/base changes |
+| PR #13 exact-source CI | [Run #117](https://github.com/syauqigntg-art/civic-vision/actions/runs/40199245836) succeeded on source branch head `9dfc8dbceb089d23b2ba4a7c1813b21b1c9f5086`, after PR #14's dependency remediation reached the base. PR #13 remains Draft; check a new run after any further source/base change | Reconfirm checks on the latest PR #13 head; passing CI does not close the Preview, browser, staging, compatibility, or review gates |
 | Vercel Preview identity | A Ready/Preview deployment signal exists, but it has not been conclusively matched to the source SHA and environment used for the reported manual tests | Deployment ID/URL, exact source SHA, Preview target, backend target and test timestamp |
 | Staging Supabase target | Not verified | Safe project-reference/host evidence; no secret values |
 | Browser visual/functional matrix | Partly user-reported; the broader V-01–V-11 evidence remains open | Complete and retain V-01–V-11 evidence |
@@ -146,6 +148,12 @@ At the current audit snapshot, PR #13's file list still contains seven files and
 - Residual risks / accepted exceptions / expiry:
 - Final application release decision: **NO-GO / GO**
 - Decision maker and date:
+
+## Current PR #11 decision after synchronization
+
+**PR #11 remains Open / Draft and is not merged.** Branch synchronization is complete, the live PR diff is back to one documentation file, and the synchronized tree inherits Zod `4.6.7`. Run #118 passed on the synchronization commit. This document update itself creates a newer head; verify its own workflow result before changing the PR out of Draft. No independent review or review thread is recorded, and classic branch protection / required checks still need verification through authorized GitHub access.
+
+The documentation merge remains separate from application release approval. Production decision stays **NO-GO** until the required browser, Preview identity, staging data, compatibility, and review gates are evidenced.
 
 ## 8. Guardrails
 
