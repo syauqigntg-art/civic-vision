@@ -17,7 +17,7 @@
     "react-dom": "^19.3.0",
     "server-only": "^0.0.1",
     "write-excel-file": "^2.3.10",
-    "zod": "^3.25.76"
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@types/node": "^26.6.4",
