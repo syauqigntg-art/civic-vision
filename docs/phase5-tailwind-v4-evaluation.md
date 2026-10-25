@@ -7,7 +7,7 @@ Reviewed: 2026-10-25 (Asia/Jakarta)
 - PR #13: https://github.com/syauqigntg-art/civic-vision/pull/13
 - Base branch: `main`; head branch: `phase5/release-readiness-tests`.
 - The application migration originally touched seven files: `app/globals.css`, `package.json`, `package-lock.json`, `postcss.config.mjs`, `tailwind.config.js`, deletion of `tailwind.config.ts`, and this evaluation document.
-- **Stacked-branch scope note (2026-10-25):** PR #11 targets this PR's source branch, `phase5/release-readiness-tests`. If PR #11 merges, `docs/phase6-final-verification.md` becomes part of PR #13's diff against `main`. After that base update, do not describe PR #13 as seven changed files; re-fetch GitHub's changed-file list and document the actual count. Before PR #11 merge, GitHub currently lists seven files in PR #13. PR #13 remains Draft and must not be merged as part of PR #11 work.
+- **Stacked-branch scope note (updated 2026-10-25):** PR #11 targets this PR's source branch, `phase5/release-readiness-tests`. PR #14 is now merged into that branch at `ecdae3385ce016ab02f798e92a01a55a834cd58d` to remediate Zod; this changed the dependency patch in `package.json` and `package-lock.json`, which are already part of PR #13's seven-file diff. PR #11 is not yet merged, and the current GitHub file list for PR #13 remains seven files; it still does not include `docs/phase6-final-verification.md`. If PR #11 later merges, re-fetch the file list and describe the actual scope. PR #13 must remain Open/Draft and must not be merged as part of PR #11 work.
 
 ## Migration changes
 
