@@ -40,6 +40,13 @@ The following results are tied to their exact SHAs. The documentation branch has
 
 - Do not run `npm audit fix --force` or change application dependencies as part of this documentation-only PR. Address the Zod advisory through a separately scoped, reviewed change and rerun checks.
 
+## Sync after PR #14 merge — 2026-10-25
+- PR #14 is now confirmed **merged** into `phase5/release-readiness-tests`; merge commit: [`ecdae3385ce016ab02f798e92a01a55a834cd58d`](https://github.com/syauqigntg-art/civic-vision/commit/ecdae3385ce016ab02f798e92a01a55a834cd58d). The base `package.json` now declares `zod: ^4.6.7`; PR #14's successful CI is [Run #111](https://github.com/syauqigntg-art/civic-vision/actions/runs/40198080947), SHA `a96d77bdde63be4a72fb240192a6e93712f42532`, where both production and full dependency audit steps reported 0 vulnerabilities.
+- Attempted to fast-forward `phase6/final-verification` with `force=false` and an expected head SHA. GitHub rejected the ref update because the branches have diverged: PR #11 head contains 10 commits not in base and base contains 22 commits not in head. **No branch ref was moved and no history was rewritten.**
+- The available GitHub connector exposes no “update branch”/merge-base operation for an open PR. Creating an artificial two-parent merge commit through Git data alone without locally merging/checking the 22 base commits could inadvertently alter PR #11's diff or introduce conflicts; therefore it was not attempted.
+- Current PR #11 remains Open/Draft at head `37cc88dc6864ecbb54e5d3258755975ffe451490`, base commit `ecdae3385ce016ab02f798e92a01a55a834cd58d`, and currently lists only `docs/phase6-final-verification.md`. Its current head has not inherited the Zod fix; CI Run #107 is still the failed baseline evidence.
+- To finish safely, a repository maintainer must use GitHub's authorized **Update branch**/merge-base workflow or a local Git checkout to merge `phase5/release-readiness-tests` into `phase6/final-verification` (no rebase/force-push), resolve any conflicts while keeping the change set documentation-only, push the new merge commit, then wait for CI on that exact SHA. The connector cannot safely perform the divergent branch merge itself.
+
 ## 2. User-reported manual smoke tests
 
 The user reported the following six manual smoke tests as **PASS**. These are user-reported results, not tests executed or independently reproduced by the agent.
