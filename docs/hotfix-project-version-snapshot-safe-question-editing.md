@@ -61,11 +61,11 @@ Do not apply migrations to Production until a named operational approver accepts
 - [x] Read-only Production schema, function signatures, ledger, and data-integrity preflight inspected.
 - [x] Read-only Staging schema and ledger inspected.
 - [x] Synthetic SQL regression source added; it is designed to end with `ROLLBACK`.
-- [ ] CI and Preview pass on the exact final PR head.
-- [ ] Apply hotfix migration to verified Staging and execute the SQL regression there.
-- [ ] Full browser E2E on Staging for version dashboard, question editor, teacher historical results/exports, and student flow; verify synthetic fixture cleanup.
-- [ ] Independent review of the migration and Security Advisor implications.
+- [ ] CI and Preview pass on the exact final PR head (pending PR creation / final head).
+- [x] Applied `allow_versioned_question_edits` to verified Staging; Supabase ledger recorded version `20261026112425`. The SQL regression returned the explicit PASS sentinel for snapshot-safe edits, v1/v2 validation, stale CAS, soft-delete, non-admin denial, and fixture rollback.
+- [ ] Full browser E2E on Staging for version dashboard, question editor, teacher historical results/exports, and student flow; verify synthetic fixture cleanup. Not run in this step.
+- [ ] Independent review of the migration and Security Advisor implications. Staging Security Advisor still reports the two existing authenticated-callable SECURITY DEFINER version RPC warnings and the pre-existing `api_rate_limits` RLS-without-policy INFO; no independent acceptance recorded.
 - [ ] Production backup, migration order, compatibility, operational window, and recovery plan approved.
 - [ ] Production migration/deployment. **Not executed.**
 
-**Decision: NO-GO for Production deployment until all gates above have evidence and explicit approval.**
+Post-test cleanup query returned zero synthetic projects, Auth users, groups, submissions, answers, and versions. A read-only function/grant check confirmed `admin_save_question` and `admin_delete_question` remain SECURITY INVOKER, `anon` cannot execute either, and `authenticated` can execute them through the existing admin checks. The Staging migration is applied and the SQL regression passed; this does not establish browser E2E or Production readiness.\n\n**Decision: NO-GO for Production deployment until all gates above have evidence and explicit approval.**
