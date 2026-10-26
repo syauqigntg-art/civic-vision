@@ -2,7 +2,7 @@
 
 Last checked: 2026-10-26 (Asia/Jakarta)
 
-This evidence log is being maintained during the PR #20 CAS follow-up. See the PR head and linked Actions run for the exact final candidate; CI must be green after the last code/documentation change.
+SQL/security, v1/v2, late-autosave/archive, and concurrent-publication integration checks were rerun against branch code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`. CI run #180 and Vercel were successful at that code candidate. A following evidence-documentation-only commit triggers a final CI/Preview check; browser writes remain blocked because the branch-specific Staging service-role secret is not yet available to set privately.
 
 ## Candidate and target
 
@@ -54,15 +54,32 @@ The CAS follow-up also sets `submissions.project_id NOT NULL` after a guard chec
 
 ## SQL v1/v2 integration scenario
 
-A separate single-transaction test ran against the same Staging DB and rolled back all test-only changes:
+Repeatable source: `supabase/p1-versioning-v1-v2-integration-test.sql`.
 
-1. Group A's synthetic legacy submission was confirmed pinned to v1 with its old answer.
-2. The source question text was changed in working data and a valid v2 snapshot was saved/published through the RPC.
-3. The v1 snapshot still contained `Synthetic legacy question`; v2 contained `Synthetic V2 question`.
-4. A newly started Group B submission created via `begin_submission` was pinned to v2, while Group A stayed pinned to v1.
-5. After rollback, Group B and its user fixture were absent, the project pointer returned to v1, the answer remained unchanged, and live question text was restored.
+Executed again from branch code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0` against Staging; result sentinel:
 
-This verifies DB-level pinning in a transaction; it does not replace browser E2E.
+`PASS: V1/V2 integration completed; Group A remained on v1, Group B used v2, late autosave was rejected, historical snapshots survived archive, all fixtures will roll back`
+
+Observed checks:
+1. Group A started on v1 and saved `group-a-answer-v1`.
+2. Working content changed to “Question text v2”; server validation and CAS publication succeeded for v2.
+3. Group A remained pinned to v1 and kept its answer. Group B started after publication and was pinned to v2.
+4. The immutable v1 snapshot retained “Question text v1” and v2 retained “Question text v2”.
+5. Group A submission finalized with status `submitted`; a subsequent `save_answer` returned `false`, and the final answer did not change.
+6. Physical DELETEs of the published question/video were rejected by their guards; archiving the working rows was allowed without changing snapshot pins.
+
+A read-only post-run query confirmed zero test projects, temporary users, Group B fixtures, and zero broken submission pins. All integration changes were rolled back. This is DB-level evidence, not browser E2E.
+
+## Concurrent publication race
+
+A separate two-session Staging test used the same valid draft ID and exact `updated_at` observed before either request. Both independent SQL calls ran in parallel:
+
+- Attempt A: **PASS**, publication returned the v2 draft ID.
+- Attempt B: **EXPECTED REJECTION**, `project_version_draft_not_found` after it waited for the project lock and observed the draft was already published.
+- Post-race database: exactly two published versions for the synthetic project (v1 and v2), zero drafts, active version number 2, and active pointer matched the published v2 row.
+- Cleanup deleted the test project, its versions, video, question, and temporary admin. A verification query returned zero remaining fixture/project/version/user rows and confirmed the pointer guard and version immutability triggers were enabled again.
+
+This verifies database serialization/CAS under two concurrent publish RPC calls. It does not replace the required browser-level concurrency scenario.
 
 ## Preview environment and secret safety
 
@@ -71,9 +88,9 @@ This verifies DB-level pinning in a transaction; it does not replace browser E2E
 - Branch-specific `NEXT_PUBLIC_SUPABASE_ANON_KEY` was compared with the legacy anon key returned for the same Supabase Staging project; it matched. No key value is recorded here.
 - Branch-specific `SUPABASE_SERVICE_ROLE_KEY` is intentionally a fail-closed placeholder, not a working credential. The platform's environment-variable API did not reveal the existing sensitive value, and the Staging service-role secret was not available through the Supabase connector. This prevents the Preview branch from inheriting the shared cross-environment key. Replace the placeholder directly in Vercel with the Staging project's service-role/secret key; never paste it into chat, source, logs, HTML or any `NEXT_PUBLIC_*` variable.
 - Code check: `lib/supabase/admin.ts` imports `server-only` and reads `SUPABASE_SERVICE_ROLE_KEY` only in server-side code. No client-side environment prefix is used.
-- Deployment `https://civic-vision-jua31xt9u-uki8.vercel.app` is READY from source SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`, the SQL-test candidate.
-- The most recent doc candidate deployment `https://civic-vision-n4rvqgxmn-uki8.vercel.app` is also READY from SHA `d4a341d71c7a78cfb33dd21fb77323b3d798567d`. Read-only HTTP smoke checks on that deployment: `GET /` = 200; `GET /admin/versions` = 200. `GET /api/student-content` on the earlier same-source candidate returned 405 as expected for a POST-only route. No student write request was sent.
-- Eleven initial client JavaScript chunks linked by the home/admin HTML were fetched (one needed a retry). None contained the `SUPABASE_SERVICE_ROLE_KEY` identifier or fail-closed placeholder string. This is a useful initial-bundle check, not a complete dynamic-chunk/network scan; the full browser check remains pending.
+- Latest code-candidate deployment `https://civic-vision-4vr6rixl1-uki8.vercel.app` is READY from SHA `d74e6afd03b707f1ceaa458f8bb974aa950072e0`: https://vercel.com/uki8/civic-vision/HiL3cFjdvjWH3U78KdJzwbLS3zur
+- Read-only HTTP smoke checks on that deployment: `GET /` = 200; `GET /admin/versions` = 200; `GET /api/student-content` = 405 as expected for a POST-only route. No application write requests were sent.
+- Static initial-bundle check fetched all 11 JavaScript files linked directly from home/admin HTML; all returned HTTP 200. No fetched chunk contained `SUPABASE_SERVICE_ROLE_KEY`, the fail-closed placeholder, an `sb_secret_...` pattern, or a JWT-like string associated with `service_role`. No `sourceMappingURL` references were found in the scanned initial chunks. This is not an interactive browser/network test and cannot rule out route-specific dynamic chunks; those remain pending.
 
 **Environment gate remains BLOCKED.** The URL and anon key are verified, but the runtime service-role key is not yet a Staging key. Do not run application write tests until the placeholder is privately replaced and a fresh deployment is verified. A complete browser bundle/network leakage scan remains part of that browser gate.
 
@@ -89,11 +106,12 @@ This verifies DB-level pinning in a transaction; it does not replace browser E2E
 - [x] Invalid-backfill failure rolled back without partial schema.
 - [x] Baseline v1 and legacy submission backfill verified.
 - [x] SQL security test executed after the CAS follow-up; includes valid/invalid publish and stale validated-draft rejection; fixtures rolled back.
-- [x] DB-level Group A v1 / Group B v2 scenario passed; changes rolled back.
+- [x] Repeatable SQL v1/v2 integration test passed on code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`: Group A v1, Group B v2, historical prompts, late autosave rejection, and archive guards. Fixtures rolled back.
+- [x] Two simultaneous publication RPC calls against one CAS draft produced one successful publish and one safe rejection; exactly v2 was active, no draft remained, fixture rows were removed, and triggers were re-enabled.
 - [x] Preview URL and anon key branch-scoped to Staging.
 - [x] Read-only Preview HTTP smoke checks succeeded.
 - [x] CI run #166 passed on SQL candidate SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40297962828
-- [x] CI run #170 passed on the pre-CAS candidate SHA `8d312f257d19f0c1488c898567d8a51cb92570b5`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40300571081. The CAS migration, UI, invariant, and evidence updates followed this run; a new CI run must pass on the final head.
+- [x] CI run #180 passed on code candidate SHA `d74e6afd03b707f1ceaa458f8bb974aa950072e0`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40303978999. Vercel check is green for the same SHA. This evidence-documentation update triggers a final CI/Preview run on the resulting head.
 - [ ] Staging service-role key privately configured for this Preview branch, then runtime/key-ref verified.
 - [ ] Full browser bundle/network check confirms no secret leaked.
 - [ ] Independent SQL review submitted by a reviewer other than the PR author.
