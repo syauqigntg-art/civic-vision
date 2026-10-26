@@ -10,7 +10,7 @@ export default function Submissions() {
   const { P, gs, vs, gv, gm, subs, ans, pvs, loading, error } = useAdmin(["P", "gs", "vs", "gv", "gm", "subs", "ans", "pvs"]);
   const readOnly = P?.is_active === false; const [fl, setFl] = useState({ g: "", v: "", s: "", c: "", from: "", to: "" }); const [sel, setSel] = useState("");
   const set = (k: string, v: string) => setFl({ ...fl, [k]: v });
-  const rows = gs.map(g => { const s = subOf(g, subs); const vid = s?.video_id || gv.find(x => x.group_id === g.id)?.video_id; const pv = pvs.find((item: any) => item.id === s?.project_version_id); const historicalVideo = (pv?.content?.videos || []).find((item: any) => item.id === vid); return { g, s, v: s ? historicalVideo : vs.find(x => x.id === vid), pv, status: s ? (s.status ?? "") : "belum mulai", date: (s?.submitted_at || s?.updated_at || "").slice(0, 10) }; })
+  const rows = gs.map(g => { const s = subOf(g, subs); const vid = s?.video_id || gv.find(x => x.group_id === g.id)?.video_id; const pv = pvs.find((item: any) => item.id === s?.project_version_id); const historicalVideo = (pv?.content?.videos || []).find((item: any) => item.id === vid); return { g, s, v: s ? historicalVideo : vs.find(x => x.id === vid), pv, snapshotMissing: Boolean(s && (!pv || !Array.isArray(pv.content?.questions) || (vid && !historicalVideo))), status: s ? (s.status ?? "") : "belum mulai", date: (s?.submitted_at || s?.updated_at || "").slice(0, 10) }; })
     .filter(r => (!fl.g || r.g.id === fl.g) && (!fl.v || r.v?.id === fl.v) && (!fl.s || r.status === fl.s) && (!fl.c || r.g.class_name === fl.c) && (!fl.from || (r.date && r.date >= fl.from)) && (!fl.to || (r.date && r.date <= fl.to)));
   const qsFor = (submission?: any) => {
     if (!submission?.project_version_id) return [];
@@ -18,9 +18,13 @@ export default function Submissions() {
     if (!Array.isArray(snapshot)) return [];
     return snapshot.filter((q: any) => q.is_active !== false || ans.some(a => a.submission_id === submission.id && a.question_id === q.id));
   };
-  const exportRows = () => [["Kelompok", "Versi LKPD", "Video", "Pertanyaan", "Jawaban"], ...rows.filter(r => r.s).flatMap(r => qsFor(r.s).map(q => [`Kelompok ${two(r.g.group_number)}${r.g.group_name ? " — " + r.g.group_name : ""}`, r.pv ? `v${r.pv.version_number}` : "Versi tidak tercatat", r.v?.title || "", q.question_text, show(q, rawOf(ans, r.s.id, q.id)).replace(/\n/g, " | ")]))];
+  const exportRows = () => [["Kelompok", "Versi LKPD", "Video", "Pertanyaan", "Jawaban"], ...rows.filter(r => r.s).flatMap(r => {
+    const groupLabel = `Kelompok ${two(r.g.group_number)}${r.g.group_name ? " — " + r.g.group_name : ""}`;
+    if (r.snapshotMissing) return [[groupLabel, "Snapshot tidak tersedia", "", "Hasil historis tidak dapat ditafsirkan tanpa snapshot", ""]];
+    return qsFor(r.s).map(q => [groupLabel, r.pv ? `v${r.pv.version_number}` : "Snapshot tidak tersedia", r.v?.title || "", q.question_text, show(q, rawOf(ans, r.s.id, q.id)).replace(/\n/g, " | ")]);
+  })];
   const cur = rows.find(r => r.g.id === sel);
-  if (cur) { const { g, s, v, pv } = cur; const list = qsFor(s); const cats = [...new Set(list.map(q => q.category))]; const snapshotMissing = Boolean(s && (!pv || !Array.isArray(pv.content?.questions)));
+  if (cur) { const { g, s, v, pv } = cur; const list = qsFor(s); const cats = [...new Set(list.map(q => q.category))]; const snapshotMissing = cur.snapshotMissing;
     return (<section className="glass"><button className="btn g" onClick={() => setSel("")}>← Semua hasil</button><h2 style={{ marginTop: 14 }}>Kelompok {two(g.group_number)} — {v?.title || "Video belum ditentukan"}</h2>
       <p>Status: <b style={{ color: "#fff" }}>{statusLabel(s?.status, Boolean(s))}</b>{cur.date && ` · ${cur.date}`} · Versi LKPD: <b style={{ color: "#fff" }}>{pv ? `v${pv.version_number}` : "Belum tercatat"}</b></p>
       <div className="qrow"><b>Identitas kelompok</b><p style={{ margin: "6px 0 0" }}>{g.group_name || "—"} · Kelas {g.class_name || "—"} · Ketua: {g.leader_name || "—"}<br />Anggota: {gm.filter(m => m.group_id === g.id).map(m => m.name).join(", ") || "—"}</p></div>
@@ -60,7 +64,7 @@ export default function Submissions() {
             window.alert("Terjadi kesalahan saat membuka kembali pengerjaan. Periksa akses admin dan coba lagi.");
           }
         }} disabled={readOnly}>Buka kembali</button></>}</td></tr>)}</tbody></table></div>
-    {rows.some(r => r.s && (!r.pv || !Array.isArray(r.pv.content?.questions))) && <p role="alert" className="warn">Sebagian submission tidak memiliki snapshot yang dapat dibaca. Hasil historis yang tidak lengkap tidak akan ditafsirkan memakai materi terkini.</p>}\n    {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
+    {rows.some(r => r.snapshotMissing) && <p role="alert" className="warn">Sebagian submission tidak memiliki snapshot yang dapat dibaca. Hasil historis yang tidak lengkap tidak akan ditafsirkan memakai materi terkini.</p>}\n    {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
     <div className="row"><button className="btn" onClick={() => saveBlob(`hasil-civic-vision-${stamp()}.csv`, new Blob([toCsv(exportRows())], { type: "text/csv;charset=utf-8" }))}>Unduh CSV</button><button className="btn" onClick={() => toXlsx(exportRows(), `hasil-civic-vision-${stamp()}.xlsx`)}>Unduh Excel</button></div>
     <p style={{ fontSize: 13 }}>Unduhan mengikuti filter yang aktif dan hanya membaca data, tidak mengubah jawaban asli.</p></section>);
 }
