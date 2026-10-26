@@ -188,7 +188,7 @@ CREATE POLICY "admin manage project versions"
   USING ((SELECT private.is_admin()))
   WITH CHECK ((SELECT private.is_admin()));
 
-REVOKE ALL ON TABLE public.project_versions FROM PUBLIC, anon;
+REVOKE ALL ON TABLE public.project_versions FROM PUBLIC, anon, authenticated;
 -- Browser/admin sessions can read versions, but writes must go through the
 -- validated SECURITY DEFINER RPCs below. Table-level writes would allow an
 -- administrator to forge a published row without server validation.
