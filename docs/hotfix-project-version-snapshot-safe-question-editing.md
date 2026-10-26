@@ -61,9 +61,9 @@ Do not apply migrations to Production until a named operational approver accepts
 - [x] Read-only Production schema, function signatures, ledger, and data-integrity preflight inspected.
 - [x] Read-only Staging schema and ledger inspected.
 - [x] Synthetic SQL regression source added; it is designed to end with `ROLLBACK`.
-- [ ] CI and Preview pass on the exact final PR head (pending PR creation / final head).
+- [x] CI run #196 passed on code candidate `79b11948196d7074fd3b41f3d10458781567c631` (TypeScript, unit tests, whitespace, security/source invariants, production build, and dependency audit steps all succeeded). This status-documentation commit requires a fresh exact-head CI check.\n- [ ] Vercel Preview READY on the exact final PR head; currently blocked by the Vercel build-rate limit (`upgradeToPro=build-rate-limit`).
 - [x] Applied `allow_versioned_question_edits` to verified Staging; Supabase ledger recorded version `20261026112425`. The SQL regression returned the explicit PASS sentinel for snapshot-safe edits, v1/v2 validation, stale CAS, soft-delete, non-admin denial, and fixture rollback.
-- [ ] Full browser E2E on Staging for version dashboard, question editor, teacher historical results/exports, and student flow; verify synthetic fixture cleanup. Not run in this step.
+- [ ] Full browser E2E on Staging for version dashboard, question editor, teacher historical results/exports, and student flow; verify synthetic fixture cleanup. Not run: the current head has no READY Preview due to the Vercel build-rate limit, and interactive browser automation is unavailable in this execution.
 - [ ] Independent review of the migration and Security Advisor implications. Staging Security Advisor still reports the two existing authenticated-callable SECURITY DEFINER version RPC warnings and the pre-existing `api_rate_limits` RLS-without-policy INFO; no independent acceptance recorded.
 - [ ] Production backup, migration order, compatibility, operational window, and recovery plan approved.
 - [ ] Production migration/deployment. **Not executed.**
