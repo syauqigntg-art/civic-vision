@@ -63,8 +63,12 @@ export default function Video() {
         const assignedIds = Array.isArray(groupResult.data.video_ids)
           ? groupResult.data.video_ids
           : [];
-        if (!assignedIds.includes(id)) {
-          setMsg("Video ini tidak ditugaskan kepada kelompok kalian.");
+        const pinnedVideoId = groupResult.data.submission?.video_id;
+        const allowedForGroup = pinnedVideoId
+          ? pinnedVideoId === id
+          : assignedIds.includes(id);
+        if (!allowedForGroup) {
+          setMsg("Video ini tidak ditugaskan kepada kelompok kalian atau bukan video dari pengerjaan yang sudah dimulai.");
           setSt("none");
           return;
         }
