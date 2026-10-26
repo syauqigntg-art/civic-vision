@@ -83,6 +83,7 @@ assert.match(submitGroupMigration, /SET status = 'submitted'[\s\S]*?WHERE id = v
 
 const versioningMigration = read("../supabase/migrations/20261026090535_add_project_content_versioning.sql");
 const versioningCasMigration = read("../supabase/migrations/20261026093943_version_publish_compare_and_swap.sql");
+const versioningSecurityTest = read("../supabase/p1-versioning-security-test.sql");
 const versionManager = read("../app/admin/versions/page.tsx");
 const submissionResults = read("../app/admin/submissions/page.tsx");
 const studentResults = read("../app/lkpd/hasil/page.tsx");
@@ -115,7 +116,6 @@ assert.match(versioningCasMigration, /admin_publish_project_version\(uuid,uuid,t
 assert.match(versioningSecurityTest, /stale validated draft publication rejected/, "SQL integration test attempts to publish a stale validated draft");
 assert.match(versionManager, /p_expected_updated_at: latestDraft\.updated_at/, "Admin UI sends the draft timestamp it checked to the publish RPC");
 assert.match(versionManager, /project_version_validation_stale/, "Admin UI reports a stale-draft CAS rejection and asks for revalidation");
-const versioningSecurityTest = read("../supabase/p1-versioning-security-test.sql");
 assert.match(versioningSecurityTest, /direct published INSERT was accepted/, "SQL negative test attempts to forge a published version");
 assert.match(versioningSecurityTest, /direct project_versions UPDATE was accepted/, "SQL negative test attempts direct version mutation");
 assert.match(versioningSecurityTest, /direct active_version_id change was accepted/, "SQL negative test attempts direct active-pointer mutation");
