@@ -62,3 +62,20 @@ Jangan jalankan tes tulis pada Preview sampai pemilik tim memberi akses resmi, k
 ## Rujukan pedagogis
 
 Skenario teknis dan keamanan dalam dokumen ini tidak menggantikan penilaian aktivitas belajar. Untuk memeriksa apakah siswa benar-benar mengorientasi masalah, mengorganisasi belajar, menyelidiki bukti, menyajikan solusi, berefleksi, dan merevisi setelah umpan balik, gunakan [checklist pedagogis kanonis A.1–A.7](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26). Jangan mengubah status checklist tersebut berdasarkan source invariant atau tes keamanan saja.
+
+## P0 regression-invariant hardening — 2026-10-26
+
+The PR `#18` change adds source-level checks to `scripts/check-pbl-invariants.mjs` for the two autosave/submit serialization migrations:
+
+- `supabase/migrations/20261023010223_serialize_answer_saves_with_submission.sql`
+- `supabase/migrations/20261023030000_serialize_submit_group_with_answer_saves.sql`
+
+The checks require both RPCs to use `SECURITY DEFINER` with an empty `search_path`, lock the same submission row scoped by group and project, restrict EXECUTE to `service_role`, reject autosave unless the submission is still a draft, and transition only draft submissions to submitted. This closes a source-regression coverage gap; it does **not** establish database race-safety by itself.
+
+- Source commit tested: `b5b393bc5f08b0d1b292f02b78b00e613b22ec35`.
+- [GitHub Actions CI run #136](https://github.com/syauqigntg-art/civic-vision/actions/runs/40256246749): PASS on that exact source commit. `npm ci`, TypeScript, unit tests, `git diff --check`, PBL/security source invariants, Next.js production build, production dependency audit, and full dependency audit reporting all succeeded.
+- [Vercel status](https://vercel.com/uki8/civic-vision/9e5dLuAfUcbTpnLAQkDXjUkGGd73): success status only; not treated as browser/staging evidence.
+- Browser verification, staging-backed autosave/submit concurrency tests, and backup/restore exercise: still NOT TESTED / BLOCKED pending verification of the Preview deployment's exact SHA and staging target.
+- Production, database schema, migration history, secrets, and environment variables were not changed. No Production writes, `supabase db push`, or deployment were performed.
+
+Keep the release decision **NO-GO** until the required runtime and operational evidence is collected on the same candidate SHA.
