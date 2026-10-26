@@ -71,6 +71,8 @@ Pull request ke `main` dan push ke `main` menjalankan GitHub Actions untuk memas
 
 ## 10. PBL editor, security audit, and regression checklist
 
+**Checklist pedagogis kanonis:** gunakan [docs/phase3-learning-ux-audit.md — A.1–A.7](docs/phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26) untuk validasi lima tahap PBL, status bukti, dan kesenjangan. Empat label UI SEE/THINK/CONNECT/ACT tidak otomatis berarti lima tahap PBL lengkap. README ini menjelaskan fitur teknis dan tidak menggantikan hasil audit pedagogis atau uji browser/staging.
+
 - The teacher question editor saves question content and answer options through one transactional RPC. If a question already has answers, changes to its meaning (text, phase, type, placeholder, description, or options) are rejected; create a new question and deactivate the old one to preserve interpretation of historical answers.
 - Reordering and deleting questions use server-side guarded RPCs. A question that has answers is deactivated, not physically deleted.
 - Teacher question previews and PBL phase guidance use SEE (observe and define the problem), THINK (analyze causes/evidence/impact), CONNECT (connect the case to relevant concepts/values), and ACT (design an action and success criteria).
