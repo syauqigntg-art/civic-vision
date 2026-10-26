@@ -25,7 +25,7 @@ Prioritas: **P0** keamanan/integritas yang menghalangi penggunaan aman; **P1** k
 | B.2 Sekolah/kelas/periode | Tersedia, perlu penyempurnaan | P1 | Pertahankan kelompok/penugasan dan isolasi proyek; putuskan apakah sekolah, kelas formal, mata pelajaran, dan tahun ajaran menjadi entitas. |
 | B.3 Pemeliharaan sistem | Tersedia, perlu penyempurnaan | P0 | Pertahankan CI, SQL audit, dokumentasi staging; lengkapi health/monitoring dan bukti backup-restore. |
 | C.1 Identitas proyek | Tersedia, perlu penyempurnaan | P1 | Pertahankan CRUD dasar dan arsip; lengkapi editor metadata dan keluaran/tujuan pembelajaran. |
-| C.2 Draft, publikasi, versi | Belum ditemukan | P1 | Rancang model versi immutable, draft, validasi, publikasi, rollback, dan tautan submission ke versi. |
+| C.2 Draft, publikasi, versi | Implementasi pada branch, belum diverifikasi | P1 | Tinjau PR versioning; jalankan migration dan uji staging/browser sebelum menyatakan selesai. Versi rubrik/penilaian tetap pekerjaan terpisah. |
 | D.1 Konfigurasi tahapan PBL | Tersedia, perlu penyempurnaan | P0 | Jangan menyamakan empat label SEE/THINK/CONNECT/ACT dengan lima tahap PBL; rancang konfigurasi yang divalidasi. |
 | D.2 A.1 Validitas masalah | Tersedia, perlu penyempurnaan | P1 | Audit konten kasus/prompt aktif dengan rubrik pedagogis dan bukti respons. |
 | D.3 A.2 Orientasi masalah | Tersedia, perlu penyempurnaan | P1 | Tambahkan hasil belajar, ruang lingkup, pemisahan fakta/dugaan, dan uji pemahaman. |
@@ -87,11 +87,11 @@ Setiap status di bawah adalah hasil pemetaan source/dokumentasi, kecuali jika se
 **Kriteria penerimaan:** proyek dapat dibuat, diedit, diarsipkan/dipulihkan dengan konfirmasi; siswa tidak melihat perubahan draft yang belum diterbitkan.
 
 #### C.2 Draft, publikasi, dan versi konten
-**Status: Belum ditemukan — P1.**
-**Bukti source:** proyek memiliki `is_active` dan timestamp; pertanyaan memiliki timestamp serta pengamanan perubahan semantik ketika jawaban sudah ada melalui RPC editor. Tidak ditemukan model versi proyek/publikasi immutable pada skema yang diperiksa.
-**Kesenjangan:** draft versus versi aktif, validasi sebelum publish, version ID pada submission/answer, riwayat perubahan, perbandingan versi, dan rollback.
-**Tindak lanjut:** desain versioned project/LKPD/rubric sebelum menambah fitur penilaian; simpan submission terhadap versi tetap, bukan hanya konten terkini.
-**Kriteria penerimaan:** publish membuat versi baru; draft tidak mengubah versi aktif; jawaban lama tetap bisa ditafsirkan dengan versi yang digunakan; rollback tidak mengubah sejarah.
+**Status: Implementasi pada branch, belum diverifikasi — P1.**
+**Bukti baseline audit:** source pada baseline audit belum memiliki model versi immutable. Pada branch `feature/project-lkpd-versioning`, migration dan alur admin baru telah disiapkan: snapshot `project_versions`, pointer `projects.active_version_id`, pin `submissions.project_version_id`, baseline versi untuk proyek lama, editor draft–pratinjau–validasi–publish, dan pemuatan konten siswa dari snapshot yang dipin. PR dan migration tersebut belum diterapkan pada database dan belum terverifikasi melalui browser/staging.
+**Kesenjangan:** migration perlu ditinjau dan dijalankan pada staging, lalu diuji untuk proyek pra-migrasi, dua versi berturutan, submission lama dan baru, konten yang diarsipkan, serta pembacaan hasil/ekspor. Diff/rollback UI belum menjadi bagian implementasi ini. Model versi rubrik/penilaian belum dibuat.
+**Tindak lanjut:** tinjau [desain dan panduan versi proyek/LKPD](project-versioning.md); jangan menerapkan migration ke Production sebelum uji staging dan review independen.
+**Kriteria penerimaan:** publish membuat versi immutable; draft tidak mengubah versi aktif; setiap submission tetap terikat ke versi yang dipakai; jawaban lama tetap dapat dibaca menggunakan snapshot historis; rollback atau perubahan aktif tidak mengubah sejarah.
 
 ### D. Pengaturan model pembelajaran PBL
 
@@ -155,7 +155,7 @@ Setiap status di bawah adalah hasil pemetaan source/dokumentasi, kecuali jika se
 #### E.1 Editor LKPD
 **Status: Tersedia, perlu penyempurnaan — P1.**
 **Bukti:** `app/admin/questions/page.tsx`, `supabase/schema.sql`, migrasi `20261022152719_secure_admin_helper_and_transactional_question_editor.sql`, `20261022153005_add_safe_question_deletion_rpc.sql`, `20261022153051_add_transactional_question_order_and_delete.sql`. Editor mendukung tipe jawaban, phase empat label, required/active, opsi, urutan, preview; perubahan semantik pertanyaan yang sudah dijawab dibatasi dan penghapusan dapat menonaktifkan pertanyaan.
-**Gap:** versi LKPD/publikasi/draft dan validasi kelengkapan keseluruhan sebelum publish belum ditemukan. Perilaku browser untuk seluruh jalur belum terverifikasi pada exact SHA.
+**Gap:** pada branch `feature/project-lkpd-versioning`, alur versi draft/validasi/publikasi disiapkan dan halaman admin hasil menampilkan nomor versi; implementasi ini belum ada pada baseline `main` dan belum dibuktikan pada browser/staging. Model rubrik tetap belum tersedia.
 **Tindak lanjut:** pertahankan proteksi historis; tambahkan validasi dan version pinning sebelum mengembangkan rubrik.
 **Kriteria penerimaan:** perubahan pertanyaan tidak mengubah makna jawaban lama; publish menghasilkan versi yang dapat ditelusuri; tes CRUD, opsi, ordering, dan pertanyaan terjawab dijalankan.
 
@@ -232,7 +232,7 @@ Setiap status di bawah adalah hasil pemetaan source/dokumentasi, kecuali jika se
 ## 4. Urutan implementasi yang direkomendasikan
 
 1. **P0 — keamanan dan operasi:** verifikasi target staging, migrasi, backup/restore, dan akses antarkelompok; catat SHA/deployment. Jangan menulis ke Production.
-2. **P0 — fondasi model data:** rancang versioning proyek/LKPD dan relasi submission ke versi sebelum membuat rubrik atau revisi.
+2. **P1 — versioning proyek/LKPD:** tinjau PR `feature/project-lkpd-versioning`, lakukan migration dan integrasi test pada staging; lanjutkan ke rubric versioning sesudah pinning submission terbukti.
 3. **P0 — PBL inti:** implementasikan A.3 organisasi belajar dan A.4 pengelolaan bukti dengan authorization serta save/reload/isolation tests.
 4. **P1 — tahap lanjutan:** produk/presentasi A.5, refleksi A.6, feedback/revisi A.7.
 5. **P1 — konten yang dapat dipelihara:** editor konfigurasi tahapan, draft–validasi–publish, pustaka template.

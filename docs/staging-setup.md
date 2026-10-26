@@ -1,6 +1,6 @@
 # CIVIC VISION — Staging Setup
 
-Last checked: 2026-10-23 (Asia/Jakarta)
+Last checked: 2026-10-26 (Asia/Jakarta)
 
 ## Staging project
 
@@ -21,6 +21,9 @@ Last checked: 2026-10-23 (Asia/Jakarta)
 5. Public-read lockdown from `supabase/p0-lock-public-reads.sql`.
 6. The five existing database hardening/editor migrations, `20261023010223_serialize_answer_saves_with_submission.sql`, and `20261023030000_serialize_submit_group_with_answer_saves.sql`.
 7. Staging-specific hardening for the `auth.users` trigger function `public.handle_new_user()`: empty search path and no EXECUTE grant to `anon` or `authenticated`.
+8. `20261026090535_add_project_content_versioning`: project/LKPD snapshots, immutable published baseline, submission version pinning, guarded publication RPCs, and backfill.
+9. `20261026091333_add_project_version_fk_indexes`: supporting indexes for the new version-related foreign keys.
+10. `20261026093943_version_publish_compare_and_swap`: `submissions.project_id NOT NULL`, publication compare-and-swap using the exact `updated_at` timestamp checked by the admin UI, and pointer-guard owner lookup updated to the three-argument RPC.
 
 The staging migration history was populated through the Supabase migration API. Its generated staging versions do not match every pre-existing filename timestamp under `supabase/migrations`. This was not a data clone or a Production migration. **Do not run `supabase db push` against this staging project until migration history is reconciled with repository versions**; the current environment was bootstrapped for isolated runtime testing.
 
@@ -33,35 +36,46 @@ The staging migration history was populated through the Supabase migration API. 
 - `save_answer()` uses `search_path = ''`, writes `answers.project_id`, checks project scope and locks the submission row using `FOR UPDATE`. Only `service_role` can execute it.
 - Admin editor RPCs deny `anon` and check admin authorization internally.
 - Storage bucket `videos` is private, with a 50 MiB limit and explicit allowed MIME types.
-- Security Advisor currently reports only the informational finding about `api_rate_limits` having no RLS policy.
+- At initial Staging bootstrap, the only Advisor item was the informational `api_rate_limits` RLS-without-policy notice. The current Advisor results after PR #20 also include two WARN findings for authenticated-callable `SECURITY DEFINER` versioning RPCs; see the readiness section below.
 - Counts verified as zero for `users`, `projects`, `groups`, `submissions`, `answers`, and `api_rate_limits`.
 
-## Current readiness and audit findings (2026-10-23)
+## Current readiness and audit findings (2026-10-26)
 
-- Staging database setup is complete and isolated; this does **not** mean frontend runtime tests have passed.
-- Vercel bot has since reported a deployment as **Ready** at [deployment details](https://vercel.com/uki8/civic-vision/FTLim96iQz21YVCEU21ZpWhw3sar) for alias [Preview URL](https://civic-vision-git-optimize-platform-hardening-2026-10-22-uki8.vercel.app). However, Vercel API tools still return HTTP 403 for scope `uki8`, and this connection cannot verify its exact source SHA or Preview environment values. Treat the reported Ready state as provisional for test preparation, not proof that it points at staging. Earlier attempts hit the free daily deployment limit. No Vercel environment variables were changed.
-- GitHub Actions run #23 on old head SHA `261176eb9aafc986244baa0b606eabecebbc0c7b` passed only because `continue-on-error: true` hid the failing audit. The workflow no longer has that exception. `package.json` requests `next@^16.4.1`; the lockfile selects `next@16.4.2`. Run #39 on head SHA `915a03100efd2b42cdf4cb60ab4d78d7fc0587c3` passed `npm ci`, TypeScript, source invariants, `git diff --check`, `npm run build`, and `npm audit --omit=dev` with 0 production dependency vulnerabilities. The install output still summarized 7 advisories across the full tree (2 moderate, 5 high); the full-tree audit has not been completed, so this does not mean all development/transitive dependencies are clean.
-- PR #6 remains Draft and unmerged. CI and database metadata checks are not browser/runtime tests.
+- Supabase Staging is `civic-vision-staging`, ref `bneqqkvhehrlcjhvvyvv`, URL `https://bneqqkvhehrlcjhvvyvv.supabase.co`. No Production migration or write test was run.
+- PR #20 has applied these versioning migrations to this Staging target: `20261026090535 add_project_content_versioning`, `20261026091333 add_project_version_fk_indexes`, and `20261026093943 version_publish_compare_and_swap`. These recorded names match their source filenames. The CAS follow-up sets `submissions.project_id NOT NULL` after a guard check, removes the old two-argument publication RPC, and requires the `updated_at` timestamp observed at validation; a stale timestamp is rejected with `project_version_validation_stale`.
+- One synthetic legacy project/submission/answer was used to verify backfill: 1 baseline v1, 1 pinned submission, 1 unchanged answer, 0 submissions missing a version. A deliberately invalid submission caused the migration's transaction to fail with `project_version_backfill_failed`; the invalid row was then removed and the valid backfill completed.
+- On code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`, `supabase/p1-versioning-security-test.sql` was rerun with an explicit PASS sentinel. It verifies grants, admin/non-admin/anon RPC behavior, immutable published snapshots, valid/invalid publication, and rejection of a stale draft after a working-question edit.
+- On the same code candidate, `supabase/p1-versioning-v1-v2-integration-test.sql` returned PASS: Group A remained on v1, Group B used v2, historical question prompts stayed intact, post-submit autosave was rejected without changing the final answer, physical deletion of referenced video/question was denied, and archiving did not change snapshot pins.
+- A separate two-session race test issued two concurrent publication RPC calls with the same draft ID and validated timestamp. One succeeded; the other was safely rejected with `project_version_draft_not_found`. The project ended with two published versions, no draft, and an active pointer to v2. The temporary project, versions, content, and admin were removed in a cleanup transaction; post-cleanup verification showed zero remaining test rows and both integrity triggers enabled.
+- Supabase privilege checks confirmed: `anon` has no privileges on `project_versions`; `authenticated` and `service_role` have SELECT only; table RLS is enabled; the draft-save RPC and three-argument compare-and-swap publication RPC are SECURITY DEFINER; the old two-argument publish RPC is absent; the active-version guard trigger exists. Read-only checks confirm `submissions.project_id` and `project_version_id` are both NOT NULL and no submissions lack either relationship.
+- Security Advisor still flags the two authenticated-callable SECURITY DEFINER admin RPCs. Their body checks `private.is_admin()` and the non-admin/no-UID cases passed in the SQL test, but an independent reviewer must explicitly accept or require changes. Advisor also reports the pre-existing informational RLS-without-policy notice on `api_rate_limits`.
+- Performance Advisor no longer reports missing covering indexes for the new foreign keys. It reports the new indexes as unused because the staging database is tiny; do not remove them solely on that signal without workload review.
+- Preview URL and anon key have branch-specific overrides for `feature/project-lkpd-versioning-sync` and have been compared with the Staging project (host/ref and legacy anon key match). To prevent accidental use of the shared cross-environment secret, branch-specific `SUPABASE_SERVICE_ROLE_KEY` is currently a fail-closed placeholder. It is **not** a working staging key.
+- Latest code-candidate Preview deployment `https://civic-vision-4vr6rixl1-uki8.vercel.app` is READY from SHA `d74e6afd03b707f1ceaa458f8bb974aa950072e0`; Vercel check and CI run #180 succeeded on that SHA. Read-only GET smoke checks for `/` and `/admin/versions` returned HTTP 200; `GET /api/student-content` returned expected 405 because the route is POST-only. No application write request was sent.
+- Static initial-bundle scan fetched all 11 JavaScript files linked from the home/admin HTML; all returned 200, with no service-role environment name, fail-closed placeholder, `sb_secret_` pattern, or service-role-associated JWT-like string. No `sourceMappingURL` references were found. This was a static initial bundle scan, not a full browser runtime/network scan of route-specific dynamic chunks.
+- `lib/supabase/admin.ts` imports `server-only` and reads `SUPABASE_SERVICE_ROLE_KEY` in server-side code. However, the branch-scoped variable remains a fail-closed placeholder; full runtime key pairing and browser E2E remain blocked.
 
-## Four required browser scenarios — all NOT TESTED
+## Four required browser scenarios — NOT TESTED
 
-Run only after Preview is confirmed to use this staging project and its deployment commit SHA is confirmed:
+Do not start application write tests until the branch-specific service key is privately replaced in Vercel with the matching Staging credential and a new deployment has been built from the exact candidate SHA.
 
-- [ ] **Type an answer and submit immediately:** final stored value must equal the latest typed value.
-- [ ] **Disconnect during autosave and reconnect:** pending values retry; latest answer is stored correctly after connection returns.
-- [ ] **Release a delayed save after submission:** server rejects the late save and the submitted answer remains unchanged.
-- [ ] **Teacher reopens a submission, if this capability exists:** first verify a real UI action/RPC exists; if present, ensure existing answers remain and the student can continue. If absent, record the feature as not implemented rather than marking the scenario passed.
+- [ ] Type an answer and submit immediately; the final stored value equals the latest typed value.
+- [ ] Disconnect during autosave and reconnect; pending values retry and the latest answer is stored correctly.
+- [ ] Release a delayed save after submission; the server rejects the late save and the submitted answer remains unchanged.
+- [ ] Teacher reopens a submission, if this capability exists; first verify the real UI action/RPC exists, otherwise record as not implemented.
 
 ## Remaining before browser tests
 
-- [ ] Restore authorized access to Vercel team scope `uki8` for this connection; current tools return HTTP 403 and cannot list accessible teams.
-- [ ] Set Preview-only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to staging values. Do not alter Production targets.
-- [ ] Create or confirm a fresh Preview deployment from the latest PR commit and verify runtime points to staging without printing secret values.
-- [ ] Create test-only admin/group/video/question fixtures in staging and execute the four scenarios above.
-
-Do not run student write-flow tests in the current Preview until the environment is proven to use this staging project. Do not copy real student data or secrets into source control.
+- [ ] In Vercel Project → Settings → Environment Variables, replace the branch-only `SUPABASE_SERVICE_ROLE_KEY` placeholder for Preview branch `feature/project-lkpd-versioning-sync` with the secret/service-role credential from Supabase project ref `bneqqkvhehrlcjhvvyvv`. Do not paste the secret into chat, logs, source, or `NEXT_PUBLIC_*`; do not change Production targets.
+- [ ] Create a fresh Preview deployment and verify the URL/ref, anon key/ref, and server-side key/ref are all the same Staging project without printing any key. Confirm service-role secret is absent from HTML/JS/browser response.
+- [ ] Obtain a genuine independent SQL review on PR #20 covering grants/default privileges, SECURITY DEFINER, `private.is_admin()`, pointer trigger, row locking/concurrent publication, and backfill failure/rollback.
+- [ ] Prepare a test-only administrator login plus synthetic teacher/student/group/video/question fixtures in Staging. Do not import real student data.
+- [ ] Run and record teacher/student browser E2E on the same exact source SHA: old/new group version pinning, history/results, CSV/Excel exports, video/question archive, stale draft after validation, simultaneous publication, and delayed autosave after submit.
+- [ ] Re-run CI on the documentation-updated final head (CI #180 passed on the preceding code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`).
+- [ ] Merge stays NO-GO until the Staging service-role secret, independent review, and interactive browser gates are evidenced.
 
 ## Migration history reconciliation
+
 
 The migration API assigned staging-specific version identifiers at apply time. These IDs intentionally do not equal the original repository filename timestamps, so do **not** use `supabase db push` against this project until the CLI ledger is separately rebuilt and verified. To account for the complete current staging ledger, the records read from Supabase map as follows:
 
@@ -80,8 +94,21 @@ The migration API assigned staging-specific version identifiers at apply time. T
 | `20261023011518` | `serialize_answer_saves_with_submission` | `supabase/migrations/20261023010223_serialize_answer_saves_with_submission.sql` |
 | `20261023011552` | `staging_harden_auth_user_trigger` | Staging-only hardening of `public.handle_new_user()`; do not blindly replay against Production |
 | `20261023023649` | `serialize_submit_group_with_answer_saves` | `supabase/migrations/20261023030000_serialize_submit_group_with_answer_saves.sql` |
+| `20261026090535` | `add_project_content_versioning` | `supabase/migrations/20261026090535_add_project_content_versioning.sql` |
+| `20261026091333` | `add_project_version_fk_indexes` | `supabase/migrations/20261026091333_add_project_version_fk_indexes.sql` |
+| `20261026093943` | `version_publish_compare_and_swap` | `supabase/migrations/20261026093943_version_publish_compare_and_swap.sql` |
 
 The mapping above reconciles the **recorded migration names to their intended source/origin** without rewriting provider-generated version IDs. New staging changes are to be applied through the controlled Supabase migration API, then the returned migration version and live function definition must be recorded below. This does not authorize `db push`.
+
+The mapping above reconciles the **recorded migration names to their intended source/origin** without rewriting provider-generated version IDs. New staging changes are to be applied through the controlled Supabase migration API, then the returned migration version and live function definition must be recorded below. This does not authorize `db push`.
+
+## PR #20 CAS follow-up — 2026-10-26
+
+- The stale-publish guard was applied to Staging as ledger version `20261026093943`.
+- Read-only PostgreSQL checks confirmed `submissions.project_id` and `project_version_id` are both `NOT NULL`, no submissions lack either reference, the old two-argument publish RPC is absent, and the CAS three-argument RPC is present/executable by `authenticated` but not `anon`.
+- The security/CAS suite and v1/v2 integration script returned PASS on code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`, with fixture rollback verified. Concurrent publication was tested with two simultaneous sessions: one publish succeeded, the second was rejected, active pointer remained consistent, and cleanup removed the test project/admin while re-enabling triggers.
+- Supabase Security Advisor continues to flag the two authenticated-callable `SECURITY DEFINER` admin RPCs. The bodies check `private.is_admin()`; denial tests passed, but an independent reviewer must explicitly accept the design or request changes.
+- Browser E2E remains blocked because the branch-specific Preview `SUPABASE_SERVICE_ROLE_KEY` is a fail-closed placeholder. Replace it privately in Vercel with a secret from this Staging project, redeploy the final SHA, then run/record browser tests. Do not use the shared cross-environment key or run Preview write tests before this.
 
 ## P0 submission/autosave audit
 
