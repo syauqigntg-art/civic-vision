@@ -144,3 +144,39 @@ This section records checks performed after the prior Staging integration eviden
 - [ ] Recheck CI and Preview on the final head after any further code or documentation update.
 
 **Decision: NO-GO.** The remaining environment, interactive browser E2E, and independent-review gates are mandatory. Do not merge while any of them remains blocked or not run.
+
+
+## Final execution refresh — 2026-10-26 (Asia/Jakarta)
+
+### Current head and change scope
+
+- Head verified before this documentation refresh: `44e24822707b880a207d8bb944a6c13739fac338`.
+- Commit `44e24822707b880a207d8bb944a6c13739fac338` changes only `docs/pr20-staging-verification.md`; commit `bbe290894b59f171a4ac730e5ff93b9b78ac0b86` also changes only `docs/pr20-staging-verification.md`. The Staging SQL security/CAS, v1/v2, and concurrent-publication tests were last executed on code candidate `ded990a25ec154cd469a75fd667a33a12cfc26a1`. No application code or migration changed in these two later documentation-only commits.
+- CI #185 is confirmed `success` on SHA `44e24822707b880a207d8bb944a6c13739fac338`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40310215028
+- Vercel check is `success`, and deployment is `READY`, on the same SHA: https://vercel.com/uki8/civic-vision/7wJijteo2hxE2A6G39DNsRkRh4Ef
+- Current branch-scoped Preview environment metadata was inspected without decrypting secrets. `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` entries are scoped to Preview and the target branch; the existing record comments identify the Staging project ref `bneqqkvhehrlcjhvvyvv`. The `SUPABASE_SERVICE_ROLE_KEY` entry is still an empty fail-closed secret. It was not read, exposed, or changed.
+- No independent GitHub review submissions or inline review threads are present.
+- No interactive browser/E2E execution, browser network trace, or fixture cleanup was performed because the server credential gate is still blocked. The prior 11-chunk static scan is not evidence of full dynamic-chunk/network safety for the current final deployment.
+
+### Current release gate matrix
+
+| Gate | Status | Evidence / blocker |
+| --- | --- | --- |
+| SQL migration, security/CAS, v1/v2 pinning, concurrent publish | PASS (historical Staging run) | Last executed on `ded990a25ec154cd469a75fd667a33a12cfc26a1`; fixtures rolled back per recorded SQL evidence |
+| Commit scope since SQL test candidate | PASS | Commits `bbe2908` and `44e2482` change verification documentation only |
+| CI | PASS | Run #185 on `44e2482`; new documentation refresh requires CI on its resulting head |
+| Vercel Preview | PASS | READY on `44e2482`; new documentation refresh requires deployment/check on its resulting head |
+| Staging URL and anon-key scope | PASS (metadata/evidence) | Branch-scoped Preview entries identify Staging ref `bneqqkvhehrlcjhvvyvv`; no key values recorded |
+| Staging service-role key | BLOCKED | Empty fail-closed secret entry; project owner must set the Staging key privately in Vercel |
+| Full client/dynamic-chunk/network secret scan | NOT RUN | Prior static 11-chunk scan is limited; must inspect final deployment and browser network |
+| Interactive browser E2E | NOT RUN / BLOCKED | Must wait until the Staging server credential is configured and verified |
+| Independent SQL review | BLOCKED | Zero review submissions and zero inline review threads; do not fabricate a review |
+| Security Advisor warnings | BLOCKED pending independent decision | Reviewers must explicitly accept or require changes for both SECURITY DEFINER admin RPC warnings and confirm the pre-existing `api_rate_limits` INFO/grants |
+| Synthetic fixture cleanup | PASS for recorded SQL fixtures; NOT RUN for browser fixtures | SQL test transactions rolled back and cleanup queries were recorded; no browser fixtures were created |
+| Production impact plan | NOT RUN | Must review merge-triggered deployment and migration ordering separately; no Production migration, secret update, or rollout performed |
+
+### Manual action required to unblock
+
+The authorized Vercel project owner must open the `civic-vision` project, select Environment Variables, locate `SUPABASE_SERVICE_ROLE_KEY` for Preview + branch `feature/project-lkpd-versioning-sync`, and replace the empty fail-closed value with the service-role/secret key belonging to Staging project ref `bneqqkvhehrlcjhvvyvv`. Keep it server-only, do not use Production credentials, and never place it in a `NEXT_PUBLIC_*` variable. Redeploy after saving and verify the runtime target without printing any key. Until then, do not run application writes or E2E.
+
+**Decision: NO-GO.** CI #185 and Vercel were successful on `44e2482`, but the credential, full browser/network, independent-review, and Production-impact gates remain blocked or not run. This documentation refresh itself will create a new head and therefore needs its own CI and Vercel checks. Do not merge automatically.
