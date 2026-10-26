@@ -325,6 +325,7 @@ DECLARE
   v_version_id uuid;
   v_active_version_id uuid;
   v_next_number integer;
+  v_existing_content jsonb;
 BEGIN
   IF NOT COALESCE((SELECT private.is_admin()), false) THEN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'admin_required';
@@ -347,19 +348,23 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'project_content_not_found';
   END IF;
 
-  SELECT pv.id INTO v_version_id
+  SELECT pv.id, pv.content INTO v_version_id, v_existing_content
   FROM public.project_versions AS pv
   WHERE pv.project_id = p_project_id
     AND pv.status = 'draft'
   FOR UPDATE;
 
   IF v_version_id IS NOT NULL THEN
-    UPDATE public.project_versions
-    SET content = v_content,
-        updated_at = now()
-    WHERE id = v_version_id
-      AND project_id = p_project_id
-      AND status = 'draft';
+    -- Avoid changing updated_at when the snapshot is byte-for-byte equivalent.
+    -- The admin UI uses that timestamp to detect edits made after validation.
+    IF v_existing_content IS DISTINCT FROM v_content THEN
+      UPDATE public.project_versions
+      SET content = v_content,
+          updated_at = now()
+      WHERE id = v_version_id
+        AND project_id = p_project_id
+        AND status = 'draft';
+    END IF;
     RETURN v_version_id;
   END IF;
 
