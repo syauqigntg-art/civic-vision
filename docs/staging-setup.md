@@ -36,7 +36,7 @@ The staging migration history was populated through the Supabase migration API. 
 - `save_answer()` uses `search_path = ''`, writes `answers.project_id`, checks project scope and locks the submission row using `FOR UPDATE`. Only `service_role` can execute it.
 - Admin editor RPCs deny `anon` and check admin authorization internally.
 - Storage bucket `videos` is private, with a 50 MiB limit and explicit allowed MIME types.
-- Security Advisor currently reports only the informational finding about `api_rate_limits` having no RLS policy.
+- At initial Staging bootstrap, the only Advisor item was the informational `api_rate_limits` RLS-without-policy notice. The current Advisor results after PR #20 also include two WARN findings for authenticated-callable `SECURITY DEFINER` versioning RPCs; see the readiness section below.
 - Counts verified as zero for `users`, `projects`, `groups`, `submissions`, `answers`, and `api_rate_limits`.
 
 ## Current readiness and audit findings (2026-10-26)
@@ -44,13 +44,16 @@ The staging migration history was populated through the Supabase migration API. 
 - Supabase Staging is `civic-vision-staging`, ref `bneqqkvhehrlcjhvvyvv`, URL `https://bneqqkvhehrlcjhvvyvv.supabase.co`. No Production migration or write test was run.
 - PR #20 has applied these versioning migrations to this Staging target: `20261026090535 add_project_content_versioning`, `20261026091333 add_project_version_fk_indexes`, and `20261026093943 version_publish_compare_and_swap`. These recorded names match their source filenames. The CAS follow-up sets `submissions.project_id NOT NULL` after a guard check, removes the old two-argument publication RPC, and requires the `updated_at` timestamp observed at validation; a stale timestamp is rejected with `project_version_validation_stale`.
 - One synthetic legacy project/submission/answer was used to verify backfill: 1 baseline v1, 1 pinned submission, 1 unchanged answer, 0 submissions missing a version. A deliberately invalid submission caused the migration's transaction to fail with `project_version_backfill_failed`; the invalid row was then removed and the valid backfill completed.
-- The expanded `supabase/p1-versioning-security-test.sql` completed with an explicit PASS sentinel after the CAS migration. It verifies grants, admin/non-admin/anon RPC behavior, immutable published snapshots, valid/invalid publication, and stale publication after a working-question edit. All temporary users and test records were rolled back. The separate v1/v2 SQL scenario verified old Group A remains on v1 and a newly started Group B pins to v2; the transaction was rolled back to preserve the reusable baseline fixture.
+- On code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`, `supabase/p1-versioning-security-test.sql` was rerun with an explicit PASS sentinel. It verifies grants, admin/non-admin/anon RPC behavior, immutable published snapshots, valid/invalid publication, and rejection of a stale draft after a working-question edit.
+- On the same code candidate, `supabase/p1-versioning-v1-v2-integration-test.sql` returned PASS: Group A remained on v1, Group B used v2, historical question prompts stayed intact, post-submit autosave was rejected without changing the final answer, physical deletion of referenced video/question was denied, and archiving did not change snapshot pins.
+- A separate two-session race test issued two concurrent publication RPC calls with the same draft ID and validated timestamp. One succeeded; the other was safely rejected with `project_version_draft_not_found`. The project ended with two published versions, no draft, and an active pointer to v2. The temporary project, versions, content, and admin were removed in a cleanup transaction; post-cleanup verification showed zero remaining test rows and both integrity triggers enabled.
 - Supabase privilege checks confirmed: `anon` has no privileges on `project_versions`; `authenticated` and `service_role` have SELECT only; table RLS is enabled; the draft-save RPC and three-argument compare-and-swap publication RPC are SECURITY DEFINER; the old two-argument publish RPC is absent; the active-version guard trigger exists. Read-only checks confirm `submissions.project_id` and `project_version_id` are both NOT NULL and no submissions lack either relationship.
 - Security Advisor still flags the two authenticated-callable SECURITY DEFINER admin RPCs. Their body checks `private.is_admin()` and the non-admin/no-UID cases passed in the SQL test, but an independent reviewer must explicitly accept or require changes. Advisor also reports the pre-existing informational RLS-without-policy notice on `api_rate_limits`.
 - Performance Advisor no longer reports missing covering indexes for the new foreign keys. It reports the new indexes as unused because the staging database is tiny; do not remove them solely on that signal without workload review.
 - Preview URL and anon key have branch-specific overrides for `feature/project-lkpd-versioning-sync` and have been compared with the Staging project (host/ref and legacy anon key match). To prevent accidental use of the shared cross-environment secret, branch-specific `SUPABASE_SERVICE_ROLE_KEY` is currently a fail-closed placeholder. It is **not** a working staging key.
-- Fresh Preview deployment `https://civic-vision-jua31xt9u-uki8.vercel.app` is READY from SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`. Read-only GET smoke checks for `/` and `/admin/versions` returned HTTP 200. `GET /api/student-content` returned 405, consistent with its POST-only route. These are smoke checks, not interactive browser E2E.
-- `lib/supabase/admin.ts` imports `server-only` and reads `SUPABASE_SERVICE_ROLE_KEY` in server-side code. The variable is not prefixed `NEXT_PUBLIC_`. A full browser network/bundle test remains part of E2E verification.
+- Latest code-candidate Preview deployment `https://civic-vision-4vr6rixl1-uki8.vercel.app` is READY from SHA `d74e6afd03b707f1ceaa458f8bb974aa950072e0`; Vercel check and CI run #180 succeeded on that SHA. Read-only GET smoke checks for `/` and `/admin/versions` returned HTTP 200; `GET /api/student-content` returned expected 405 because the route is POST-only. No application write request was sent.
+- Static initial-bundle scan fetched all 11 JavaScript files linked from the home/admin HTML; all returned 200, with no service-role environment name, fail-closed placeholder, `sb_secret_` pattern, or service-role-associated JWT-like string. No `sourceMappingURL` references were found. This was a static initial bundle scan, not a full browser runtime/network scan of route-specific dynamic chunks.
+- `lib/supabase/admin.ts` imports `server-only` and reads `SUPABASE_SERVICE_ROLE_KEY` in server-side code. However, the branch-scoped variable remains a fail-closed placeholder; full runtime key pairing and browser E2E remain blocked.
 
 ## Four required browser scenarios — NOT TESTED
 
@@ -68,7 +71,8 @@ Do not start application write tests until the branch-specific service key is pr
 - [ ] Obtain a genuine independent SQL review on PR #20 covering grants/default privileges, SECURITY DEFINER, `private.is_admin()`, pointer trigger, row locking/concurrent publication, and backfill failure/rollback.
 - [ ] Prepare a test-only administrator login plus synthetic teacher/student/group/video/question fixtures in Staging. Do not import real student data.
 - [ ] Run and record teacher/student browser E2E on the same exact source SHA: old/new group version pinning, history/results, CSV/Excel exports, video/question archive, stale draft after validation, simultaneous publication, and delayed autosave after submit.
-- [ ] Re-run CI on the final head. Merge stays NO-GO until the review, environment, and browser gates are all evidenced.
+- [ ] Re-run CI on the documentation-updated final head (CI #180 passed on the preceding code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`).
+- [ ] Merge stays NO-GO until the Staging service-role secret, independent review, and interactive browser gates are evidenced.
 
 ## Migration history reconciliation
 
@@ -101,10 +105,10 @@ The mapping above reconciles the **recorded migration names to their intended so
 ## PR #20 CAS follow-up — 2026-10-26
 
 - The stale-publish guard was applied to Staging as ledger version `20261026093943`.
-- A read-only PostgreSQL query confirmed `submissions.project_id IS NOT NULL`, `submissions.project_version_id IS NOT NULL`, zero submissions missing either reference, the old two-argument publish RPC absent, and the three-argument CAS RPC present/executable by `authenticated` but not `anon`.
-- `supabase/p1-versioning-security-test.sql` was rerun after this migration and returned an explicit PASS sentinel, including the stale-draft race test. Temporary auth/user/group fixtures were rolled back; no Production database was touched.
-- Supabase Security Advisor continues to flag the intentionally authenticated-callable `SECURITY DEFINER` admin RPCs. The body checks `private.is_admin()`; this must still be explicitly accepted or changed by an independent reviewer.
-- Browser E2E is still blocked because the branch-specific Preview `SUPABASE_SERVICE_ROLE_KEY` is a fail-closed placeholder. Replace it privately in Vercel with a secret from this same Staging project, redeploy exact final SHA, then run/record browser tests. Do not use the shared cross-environment key or run Preview write tests before this.
+- Read-only PostgreSQL checks confirmed `submissions.project_id` and `project_version_id` are both `NOT NULL`, no submissions lack either reference, the old two-argument publish RPC is absent, and the CAS three-argument RPC is present/executable by `authenticated` but not `anon`.
+- The security/CAS suite and v1/v2 integration script returned PASS on code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`, with fixture rollback verified. Concurrent publication was tested with two simultaneous sessions: one publish succeeded, the second was rejected, active pointer remained consistent, and cleanup removed the test project/admin while re-enabling triggers.
+- Supabase Security Advisor continues to flag the two authenticated-callable `SECURITY DEFINER` admin RPCs. The bodies check `private.is_admin()`; denial tests passed, but an independent reviewer must explicitly accept the design or request changes.
+- Browser E2E remains blocked because the branch-specific Preview `SUPABASE_SERVICE_ROLE_KEY` is a fail-closed placeholder. Replace it privately in Vercel with a secret from this Staging project, redeploy the final SHA, then run/record browser tests. Do not use the shared cross-environment key or run Preview write tests before this.
 
 ## P0 submission/autosave audit
 
