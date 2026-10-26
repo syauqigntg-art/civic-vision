@@ -481,22 +481,76 @@ AS $function$
 DECLARE
   v_group_id uuid;
   v_project_id uuid;
+  v_active_version_id uuid;
   v_version_id uuid;
-  v_content jsonb;
+  v_version_content jsonb;
+  v_pinned_video_id uuid;
+  v_pinned_version_id uuid;
+  v_submission_status text;
 BEGIN
-  SELECT g.id, g.project_id, p.active_version_id, pv.content
-    INTO v_group_id, v_project_id, v_version_id, v_content
+  -- Serialize new starts with publication by locking the project row first.
+  SELECT g.id, g.project_id, p.active_version_id
+    INTO v_group_id, v_project_id, v_active_version_id
   FROM public.groups AS g
   JOIN public.projects AS p
     ON p.id = g.project_id
    AND p.is_active IS TRUE
-  JOIN public.project_versions AS pv
-    ON pv.id = p.active_version_id
-   AND pv.project_id = p.id
-   AND pv.status = 'published'
-  WHERE g.access_code = pg_catalog.upper(pg_catalog.btrim(code));
+  WHERE g.access_code = pg_catalog.upper(pg_catalog.btrim(code))
+  FOR UPDATE OF p;
 
-  IF v_group_id IS NULL OR v_version_id IS NULL THEN
+  IF v_group_id IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'project_version_not_published';
+  END IF;
+
+  -- Once a group has a submission, it stays pinned to both its version and
+  -- selected video. Continue that exact snapshot even if later admin edits
+  -- remove the live assignment or publish a newer version.
+  SELECT s.video_id, s.project_version_id, s.status
+    INTO v_pinned_video_id, v_pinned_version_id, v_submission_status
+  FROM public.submissions AS s
+  WHERE s.group_id = v_group_id
+    AND s.project_id = v_project_id
+  FOR UPDATE;
+
+  IF FOUND THEN
+    IF v_pinned_video_id IS DISTINCT FROM vid THEN
+      RAISE EXCEPTION USING
+        ERRCODE = '22023',
+        MESSAGE = 'submission_video_already_pinned';
+    END IF;
+
+    SELECT pv.content INTO v_version_content
+    FROM public.project_versions AS pv
+    WHERE pv.id = v_pinned_version_id
+      AND pv.project_id = v_project_id
+      AND pv.status = 'published';
+
+    IF NOT FOUND OR NOT EXISTS (
+      SELECT 1
+      FROM pg_catalog.jsonb_array_elements(v_version_content->'videos') AS video(value)
+      WHERE video.value->>'id' = v_pinned_video_id::text
+        AND COALESCE((video.value->>'is_active')::boolean, false)
+    ) THEN
+      RAISE EXCEPTION USING
+        ERRCODE = '22023',
+        MESSAGE = 'pinned_submission_version_unavailable';
+    END IF;
+
+    RETURN;
+  END IF;
+
+  IF v_active_version_id IS NULL THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'project_version_not_published';
+  END IF;
+
+  SELECT pv.id, pv.content
+    INTO v_version_id, v_version_content
+  FROM public.project_versions AS pv
+  WHERE pv.id = v_active_version_id
+    AND pv.project_id = v_project_id
+    AND pv.status = 'published';
+
+  IF v_version_id IS NULL THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'project_version_not_published';
   END IF;
 
@@ -508,7 +562,7 @@ BEGIN
       AND gv.video_id = vid
   ) OR NOT EXISTS (
     SELECT 1
-    FROM pg_catalog.jsonb_array_elements(v_content->'videos') AS video(value)
+    FROM pg_catalog.jsonb_array_elements(v_version_content->'videos') AS video(value)
     WHERE video.value->>'id' = vid::text
       AND COALESCE((video.value->>'is_active')::boolean, false)
   ) THEN
@@ -516,20 +570,7 @@ BEGIN
   END IF;
 
   INSERT INTO public.submissions(project_id, group_id, video_id, project_version_id)
-  VALUES (v_project_id, v_group_id, vid, v_version_id)
-  ON CONFLICT (group_id) DO UPDATE
-  SET video_id = CASE
-    WHEN public.submissions.status = 'draft'
-     AND public.submissions.project_version_id = EXCLUDED.project_version_id
-    THEN EXCLUDED.video_id
-    ELSE public.submissions.video_id
-  END,
-  updated_at = CASE
-    WHEN public.submissions.status = 'draft'
-     AND public.submissions.project_version_id = EXCLUDED.project_version_id
-    THEN now()
-    ELSE public.submissions.updated_at
-  END;
+  VALUES (v_project_id, v_group_id, vid, v_version_id);
 END;
 $function$;
 
