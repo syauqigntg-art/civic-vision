@@ -92,7 +92,7 @@ export function versioningErrorMessage(error: unknown, operation: VersioningOper
     case "table_missing":
       return "Tabel project_versions tidak ditemukan pada database. Migration versioning belum lengkap; hentikan publikasi dan minta maintainer memeriksa schema.";
     case "table_schema_cache":
-      return "Tabel project_versions belum terlihat di PostgREST schema cache. Verifikasi keberadaan tabel dan sinkronkan schema cache sebelum mencoba lagi.";
+      return "PostgREST tidak menemukan tabel project_versions di schema cache. Ini bisa berarti tabel belum dibuat atau cache belum diperbarui; verifikasi katalog database untuk membedakannya sebelum mencoba lagi.";
     case "rpc_unavailable":
       return "RPC versioning tidak tersedia atau signature-nya tidak cocok dengan aplikasi. Cocokkan definisi RPC dengan migration dan periksa PostgREST schema cache.";
     case "schema_cache_mismatch":
