@@ -16,6 +16,8 @@ const analysisLoader = read("../lib/student/load-analysis-snapshot.ts");
 const helperMigration = read("../supabase/migrations/20261022152719_secure_admin_helper_and_transactional_question_editor.sql");
 const deletionMigration = read("../supabase/migrations/20261022153005_add_safe_question_deletion_rpc.sql");
 const orderMigration = read("../supabase/migrations/20261022153051_add_transactional_question_order_and_delete.sql");
+const answerSaveMigration = read("../supabase/migrations/20261023010223_serialize_answer_saves_with_submission.sql");
+const submitGroupMigration = read("../supabase/migrations/20261023030000_serialize_submit_group_with_answer_saves.sql");
 
 assert.match(student, /studentOp\.safeParse\(body\)/, "Student API validates operations");
 assert.match(student, /checkLimit\(\s*"student"/, "Student API uses a request limit");
@@ -56,4 +58,26 @@ assert.match(helperMigration, /DROP FUNCTION IF EXISTS public\.is_admin\(\)/, "O
 assert.match(helperMigration, /question_has_answers_create_new_version/, "SQL protects existing response meaning");
 assert.match(deletionMigration, /RETURN 'deactivated'/, "Answered questions are deactivated");
 assert.match(orderMigration, /invalid_question_order/, "Question order input is validated");
+
+// Source-level guardrails for the P0 autosave/submit serialization protocol.
+// These checks catch accidental migration edits; they do not replace a staging
+// database concurrency test against the exact deployed functions.
+assert.match(answerSaveMigration, /CREATE OR REPLACE FUNCTION public\.save_answer\(code text, qid uuid, val text\)/, "Autosave migration defines the expected RPC");
+assert.match(submitGroupMigration, /CREATE OR REPLACE FUNCTION public\.submit_group\(code text\)/, "Submit migration defines the expected RPC");
+for (const [name, sql] of [
+  ["save_answer", answerSaveMigration],
+  ["submit_group", submitGroupMigration],
+]) {
+  assert.match(sql, /SECURITY DEFINER/, `${name} runs with controlled database privileges`);
+  assert.match(sql, /SET search_path = ''/, `${name} uses an empty search_path`);
+  assert.match(
+    sql,
+    /FROM public\.submissions AS s[\s\S]*?WHERE s\.group_id = v_group_id\s+AND s\.project_id = v_project_id\s+FOR UPDATE;/,
+    `${name} locks the submission row for the same group and project`,
+  );
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\./, `${name} revokes default function execution`);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.[\s\S]*?TO service_role;/, `${name} grants execution only to the server role`);
+}
+assert.match(answerSaveMigration, /v_submission_status IS DISTINCT FROM 'draft'/, "Autosave rejects writes unless the submission remains a draft");
+assert.match(submitGroupMigration, /SET status = 'submitted'[\s\S]*?WHERE id = v_submission_id\s+AND status = 'draft'/, "Submit transitions only a draft submission");
 console.log("CIVIC VISION PBL/security source invariants: PASS");
