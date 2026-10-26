@@ -118,3 +118,29 @@ This verifies database serialization/CAS under two concurrent publish RPC calls.
 - [ ] Browser E2E on the same final source SHA: teacher/student flow, old/new snapshots, history/results, CSV/Excel, content archiving, stale drafts, concurrent publish, delayed autosave after submit.
 - [ ] Re-run CI on the final head after documentation/environment changes.
 - [ ] No merge until all remaining boxes above pass with recorded evidence.
+
+
+## Current-head release recheck — 2026-10-26 (Asia/Jakarta)
+
+This section records checks performed after the prior Staging integration evidence above. Do not reinterpret historical database test runs as having been re-executed on this documentation-only commit.
+
+- Current source head when this recheck was performed: `bbe290894b59f171a4ac730e5ff93b9b78ac0b86` (documentation-only commit). The SQL security/CAS, v1/v2, and two-session concurrency suites were last run on code candidate `ded990a25ec154cd469a75fd667a33a12cfc26a1`; no application code changed in the intervening documentation-only commit.
+- CI run #184 passed on the current head: https://github.com/syauqigntg-art/civic-vision/actions/runs/40307428815
+- Vercel Preview deployment for the current head is READY: https://vercel.com/uki8/civic-vision/Gdt5J6hBNtnMVAx1mG8Vi9qsjU6p
+- Read-only checks against that exact deployment returned `GET /` = 200, `GET /admin/versions` = 200, and `GET /api/student-content` = 405, as expected for a POST-only route. No write requests were sent.
+- Static client-asset inspection on the current deployment fetched 11 JavaScript chunks linked from the home and admin-version pages; all returned HTTP 200. Those inspected chunks contained no `SUPABASE_SERVICE_ROLE_KEY` name, fail-closed placeholder, `sb_secret_...` pattern, service-role claim, or `sourceMappingURL` reference. This is static asset inspection only, not a browser network trace; dynamic route/network coverage and interactive E2E remain outstanding.
+- Vercel branch-scoped environment metadata was inspected without decrypting values. `SUPABASE_SERVICE_ROLE_KEY` remains a blank fail-closed secret entry for `feature/project-lkpd-versioning-sync`. No key was read, printed, or changed. Therefore, no application write tests or browser E2E were run.
+- GitHub review submissions: none. Inline review threads: none. Independent SQL review and explicit Security Advisor decisions remain outstanding.
+
+## Final gate status after current-head recheck
+
+- [x] Current-head CI and Vercel Preview checks passed on the same SHA.
+- [x] Current-deployment read-only HTTP checks passed.
+- [x] Static scan of 11 directly linked JavaScript chunks found no obvious service-role secret indicators.
+- [ ] Configure the matching Staging service-role key privately in branch-scoped Vercel Preview, redeploy, and verify the runtime target without exposing secrets.
+- [ ] Complete the full browser/network scan, including dynamic chunks and network requests, on the newly deployed candidate.
+- [ ] Run the complete interactive teacher/student E2E matrix with synthetic fixtures, then verify cleanup.
+- [ ] Obtain an independent human SQL review against the final head, including an explicit accept/change decision for the Security Advisor warnings and the existing `api_rate_limits` INFO.
+- [ ] Recheck CI and Preview on the final head after any further code or documentation update.
+
+**Decision: NO-GO.** The remaining environment, interactive browser E2E, and independent-review gates are mandatory. Do not merge while any of them remains blocked or not run.
