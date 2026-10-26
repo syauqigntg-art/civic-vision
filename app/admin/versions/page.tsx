@@ -248,6 +248,7 @@ export default function ProjectVersionsPage() {
       const { data, error } = await sb.rpc("admin_publish_project_version", {
         p_project_id: projectId,
         p_version_id: draft.id,
+        p_expected_updated_at: latestDraft.updated_at,
       });
       if (error) throw error;
       if (data !== draft.id) {
@@ -260,7 +261,19 @@ export default function ProjectVersionsPage() {
       setShowPreview(false);
       setMessage(label + " berhasil diterbitkan. Submission yang sudah ada tidak dipindahkan ke versi baru.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Versi gagal diterbitkan.");
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : String((error as { message?: unknown } | null)?.message ?? error);
+      if (errorMessage.includes("project_version_validation_stale")) {
+        await loadVersions();
+        setValidation(null);
+        setValidatedVersionId("");
+        setShowPreview(true);
+        setErrorMessage("Draft berubah setelah validasi. Pratinjau dan validasi ulang sebelum menerbitkan.");
+      } else {
+        setErrorMessage(errorMessage || "Versi gagal diterbitkan.");
+      }
     } finally {
       setBusy(false);
     }
