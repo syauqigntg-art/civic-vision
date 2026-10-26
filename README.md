@@ -69,6 +69,10 @@ Hasil uji yang tepat untuk endpoint konten adalah tidak ada data video/pertanyaa
 Pull request ke `main` dan push ke `main` menjalankan GitHub Actions untuk memasang dependensi secara reproduktif (`npm ci`) dan memeriksa TypeScript (`npx tsc --noEmit`). Build aplikasi tetap diverifikasi melalui deployment Preview/Production Vercel; GitHub Actions tidak memerlukan atau menyimpan `SUPABASE_SERVICE_ROLE_KEY`.
 
 
+## 11. Pemetaan kebutuhan dan keberlanjutan sistem
+
+Gunakan [docs/system-sustainability-audit.md](docs/system-sustainability-audit.md) sebagai pemetaan lintas area untuk dashboard admin, pengelolaan proyek, konfigurasi PBL, LKPD, rubrik, keamanan, operasi, dan gerbang rilis. Status audit source dibedakan dari verifikasi browser/staging; keputusan Production tetap NO-GO sampai seluruh gerbang wajib memiliki bukti pada SHA kandidat yang sama.
+
 ## 10. PBL editor, security audit, and regression checklist
 
 **Checklist pedagogis kanonis:** gunakan [docs/phase3-learning-ux-audit.md — A.1–A.7](docs/phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26) untuk validasi lima tahap PBL, status bukti, dan kesenjangan. Empat label UI SEE/THINK/CONNECT/ACT tidak otomatis berarti lima tahap PBL lengkap. README ini menjelaskan fitur teknis dan tidak menggantikan hasil audit pedagogis atau uji browser/staging.
