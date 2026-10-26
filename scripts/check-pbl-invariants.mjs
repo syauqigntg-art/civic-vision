@@ -84,6 +84,7 @@ assert.match(submitGroupMigration, /SET status = 'submitted'[\s\S]*?WHERE id = v
 const versioningMigration = read("../supabase/migrations/20261026090535_add_project_content_versioning.sql");
 const versioningCasMigration = read("../supabase/migrations/20261026093943_version_publish_compare_and_swap.sql");
 const versioningSecurityTest = read("../supabase/p1-versioning-security-test.sql");
+const versioningV1V2Test = read("../supabase/p1-versioning-v1-v2-integration-test.sql");
 const versionManager = read("../app/admin/versions/page.tsx");
 const submissionResults = read("../app/admin/submissions/page.tsx");
 const studentResults = read("../app/lkpd/hasil/page.tsx");
@@ -114,6 +115,12 @@ assert.match(versioningCasMigration, /p_expected_updated_at timestamptz/, "Publi
 assert.match(versioningCasMigration, /updated_at = p_expected_updated_at/, "Publication uses compare-and-swap to ensure it publishes the validated snapshot");
 assert.match(versioningCasMigration, /admin_publish_project_version\(uuid,uuid,timestamptz\)/, "Pointer guard resolves the CAS-protected publication RPC signature");
 assert.match(versioningSecurityTest, /stale validated draft publication rejected/, "SQL integration test attempts to publish a stale validated draft");
+assert.match(versioningV1V2Test, /Group A stayed on v1/i, "Integration test confirms existing Group A submission stays pinned to v1");
+assert.match(versioningV1V2Test, /Group B used v2/i, "Integration test confirms new Group B submission pins to v2");
+assert.match(versioningV1V2Test, /late autosave was rejected/i, "Integration test verifies late autosave after submit is rejected");
+assert.match(versioningV1V2Test, /question_referenced_by_published_version_deactivate_instead/, "Integration test verifies published question cannot be physically deleted");
+assert.match(versioningV1V2Test, /video_referenced_by_published_version_deactivate_instead/, "Integration test verifies published video cannot be physically deleted");
+assert.match(versioningV1V2Test, /ROLLBACK;/, "V1/V2 integration test rolls all synthetic fixtures back");
 assert.match(versionManager, /p_expected_updated_at: latestDraft\.updated_at/, "Admin UI sends the draft timestamp it checked to the publish RPC");
 assert.match(versionManager, /project_version_validation_stale/, "Admin UI reports a stale-draft CAS rejection and asks for revalidation");
 assert.match(versioningSecurityTest, /direct published INSERT was accepted/, "SQL negative test attempts to forge a published version");
