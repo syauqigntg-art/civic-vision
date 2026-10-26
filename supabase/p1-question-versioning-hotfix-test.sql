@@ -1,5 +1,5 @@
 -- Staging-only regression test for snapshot-safe question edits.
--- Run after the versioning/CAS migrations and 20261026100000_allow_versioned_question_edits.sql.
+-- Run after the versioning/CAS migrations and 20261026112425_allow_versioned_question_edits.sql.
 -- All fixture rows, including temporary Auth identities and answers, are rolled back.
 BEGIN;
 
