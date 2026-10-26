@@ -14,6 +14,7 @@ import { studentContent } from "../lib/api/student-content.ts";
 import { createIdentitySaveController } from "../lib/utils/identity-save-controller.ts";
 import { loadStudentCaseList } from "../lib/student/load-case-list.ts";
 import { loadAnalysisSnapshot } from "../lib/student/load-analysis-snapshot.ts";
+import { classifyVersioningError, versioningErrorMessage } from "../lib/utils/versioning-error.ts";
 
 
 const makeQuestion = (overrides = {}) => ({
@@ -455,4 +456,19 @@ test("analysis loader recovers on retry and keeps pending draft values", async (
   assert.deepEqual(second.answers, { q1: "jawaban yang belum terkirim" });
   assert.equal(second.shouldFlushPending, true);
   assert.equal(attempts, 2);
+});
+
+
+test("versioning diagnostics distinguish missing tables, RPC/schema cache, permissions, project state, and network failures", () => {
+  assert.equal(classifyVersioningError({ code: "42P01", message: 'relation "public.project_versions" does not exist' }), "table_missing");
+  assert.equal(classifyVersioningError({ code: "PGRST205", message: "Could not find the table in the schema cache" }), "table_schema_cache");
+  assert.equal(classifyVersioningError({ code: "PGRST202", message: "Could not find the function in the schema cache" }), "rpc_unavailable");
+  assert.equal(classifyVersioningError({ code: "PGRST204", message: "column missing" }), "schema_cache_mismatch");
+  assert.equal(classifyVersioningError({ code: "42501", message: "permission denied" }), "permission");
+  assert.equal(classifyVersioningError({ message: "project_not_found" }), "project_not_found");
+  assert.equal(classifyVersioningError({ message: "project_archived" }), "project_archived");
+  assert.equal(classifyVersioningError(new TypeError("Failed to fetch")), "network");
+  const safe = versioningErrorMessage({ code: "PGRST202", message: "secret-like internal backend detail" }, "save");
+  assert.match(safe, /RPC versioning tidak tersedia/);
+  assert.doesNotMatch(safe, /secret-like internal backend detail/);
 });
