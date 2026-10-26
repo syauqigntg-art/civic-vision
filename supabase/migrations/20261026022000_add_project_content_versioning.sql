@@ -145,7 +145,7 @@ FROM public.projects AS p
 WHERE p.id = s.project_id
   AND s.project_version_id IS NULL;
 
-DO $
+DO $project_version_backfill_guard$
 BEGIN
   IF EXISTS (
     SELECT 1
@@ -161,7 +161,7 @@ BEGIN
       DETAIL = 'One or more legacy submissions could not be mapped to a project baseline version. Inspect project_id/project rows and retry; no data was changed because the migration is transactional.';
   END IF;
 END;
-$;
+$project_version_backfill_guard$;
 
 ALTER TABLE public.projects
   ADD CONSTRAINT projects_active_version_fk
