@@ -1,6 +1,6 @@
 -- Staging integration test for immutable project/LKPD version publication.
 -- Run in the Supabase STAGING SQL Editor as the database owner AFTER applying
--- migration 20261026022000_add_project_content_versioning.sql.
+-- migration 20261026090535_add_project_content_versioning.sql.
 -- All fixtures, including any temporary auth users, are rolled back at the end.
 BEGIN;
 

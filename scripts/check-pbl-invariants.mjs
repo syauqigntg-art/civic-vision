@@ -81,7 +81,7 @@ for (const [name, sql] of [
 assert.match(answerSaveMigration, /v_submission_status IS DISTINCT FROM 'draft'/, "Autosave rejects writes unless the submission remains a draft");
 assert.match(submitGroupMigration, /SET status = 'submitted'[\s\S]*?WHERE id = v_submission_id\s+AND status = 'draft'/, "Submit transitions only a draft submission");
 
-const versioningMigration = read("../supabase/migrations/20261026022000_add_project_content_versioning.sql");
+const versioningMigration = read("../supabase/migrations/20261026090535_add_project_content_versioning.sql");
 const versionManager = read("../app/admin/versions/page.tsx");
 const submissionResults = read("../app/admin/submissions/page.tsx");
 const studentResults = read("../app/lkpd/hasil/page.tsx");
