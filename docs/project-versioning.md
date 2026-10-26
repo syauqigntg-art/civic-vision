@@ -28,8 +28,8 @@ Migration membuat **versi terbit baseline v1** untuk setiap proyek yang sudah ad
 - Konten siswa dimuat dari snapshot versi yang dipin. Validasi akhir submission juga memeriksa pertanyaan wajib/aktif dan opsi berdasarkan snapshot tersebut, bukan tabel pertanyaan kerja terkini.
 - Penyimpanan jawaban dan finalisasi tetap mengunci baris submission yang sama. Penyimpanan ditolak bila submission sudah dikirim.
 - Penghapusan fisik video/pertanyaan yang direferensikan versi terbit dicegah. Video di UI admin diarahkan untuk diarsipkan, bukan menghapus file Storage yang mungkin dibutuhkan oleh snapshot lama.
-- Tabel versi memakai RLS admin, tetapi peran `authenticated` hanya mendapat hak baca langsung. `INSERT`/`UPDATE`/`DELETE` versi harus melewati RPC resmi; `admin_save_project_version_draft` dan `admin_publish_project_version` memakai `SECURITY DEFINER`, `search_path` kosong, serta pemeriksaan `private.is_admin()`.
-- Trigger `projects_active_version_publish_guard` menolak perubahan langsung pada `projects.active_version_id`, kecuali perubahan yang dijalankan sebagai pemilik RPC publikasi dan menunjuk snapshot terbit milik proyek yang sama. Ini menutup jalur tabel langsung tanpa mengambil hak metadata proyek dari editor admin.
+- Tabel versi memakai RLS admin, tetapi peran `authenticated` dan `service_role` hanya mendapat hak baca langsung. `INSERT`/`UPDATE`/`DELETE` versi harus melewati RPC resmi; `admin_save_project_version_draft` dan `admin_publish_project_version` memakai `SECURITY DEFINER`, `search_path` kosong, serta pemeriksaan `private.is_admin()`.
+- Trigger `projects_active_version_publish_guard` menolak perubahan langsung pada `projects.active_version_id`, termasuk dari peran `service_role`, kecuali perubahan yang dijalankan sebagai pemilik RPC publikasi dan menunjuk snapshot terbit milik proyek yang sama. Ini menutup jalur tabel langsung tanpa mengambil hak metadata proyek dari editor admin.
 
 Ini adalah jaminan desain/source. Jaminan runtime baru boleh dinyatakan lulus setelah migration dan tes integrasi diterapkan pada staging yang terverifikasi.
 
