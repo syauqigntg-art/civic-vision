@@ -79,3 +79,9 @@ The checks require both RPCs to use `SECURITY DEFINER` with an empty `search_pat
 - Production, database schema, migration history, secrets, and environment variables were not changed. No Production writes, `supabase db push`, or deployment were performed.
 
 Keep the release decision **NO-GO** until the required runtime and operational evidence is collected on the same candidate SHA.
+
+### Preview backend target verification — BLOCKED
+
+A read-only inspection of the Vercel project environment metadata on 2026-10-26 found that the project-level `NEXT_PUBLIC_SUPABASE_URL` is scoped to `production`, `preview`, and `development`, and its configured Supabase project reference does **not** match the documented isolated staging reference `bneqqkvhehrlcjhvvyvv`. No branch-specific Preview override was found for `fix/p0-sustainability-hardening`. Therefore, the current Preview cannot be treated as staging and no student write-flow/concurrency test was run against it.
+
+Required follow-up by the project owner: configure and verify Preview-only Supabase URL/keys for the isolated staging project without changing Production targets; then deploy a fresh Preview, verify its exact source SHA and backend target, and use synthetic fixtures only. This audit did not read or disclose service-role/anon key values and did not modify any Vercel environment variable.
