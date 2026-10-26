@@ -122,8 +122,8 @@ This is not an integration test of the Supabase RPC, browser, or concurrent tran
 
 ## Kanonis — checklist validasi pedagogis PBL (audit 2026-10-26)
 
-**Baseline yang diaudit:** `main` pada SHA `f470cb5b322bc76282c24610be3a10e6c4809d65`.  
-**Status dokumen:** Checklist ini menjadi sumber utama untuk cakupan pedagogis PBL. Audit ini memeriksa source code, seed, skema data, tes otomatis, dan catatan QA yang tersedia. Audit ini **bukan** bukti bahwa alur telah diuji pada browser atau staging.  
+**Baseline yang diaudit:** `main` pada SHA `f470cb5b322bc76282c24610be3a10e6c4809d65`.
+**Status dokumen:** Checklist ini menjadi sumber utama untuk cakupan pedagogis PBL. Audit ini memeriksa source code, seed, skema data, tes otomatis, dan catatan QA yang tersedia. Audit ini **bukan** bukti bahwa alur telah diuji pada browser atau staging.
 **Pembedaan penting:** UI saat ini mempunyai empat label kerja — SEE, THINK, CONNECT, ACT — bukan lima tahap PBL yang lengkap. Empat label tersebut tidak boleh dihitung sebagai bukti bahwa organisasi belajar, penyelidikan terstruktur, presentasi/evaluasi, atau revisi berdasarkan umpan balik telah tersedia.
 
 ### Status ringkas A.1–A.7
