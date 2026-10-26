@@ -324,6 +324,7 @@ export default function Questions() {
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Perubahan soal disimpan sebagai materi kerja dan masuk ke snapshot berikutnya setelah guru menyimpan, memvalidasi, lalu menerbitkan versi. Submission yang sudah berjalan tetap menggunakan snapshot yang dipin; jawaban historis tidak dihapus.</p>
       <div className="admin-section-head">
         <div>
           <h2>Daftar pertanyaan</h2>
