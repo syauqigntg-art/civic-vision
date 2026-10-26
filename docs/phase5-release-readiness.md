@@ -1,5 +1,7 @@
 # Tahap 5 — Baseline, behavior tests, and release-readiness ledger
 
+> **Historical release-readiness ledger:** CI results and open gaps below refer to the specific Phase 5 candidates recorded in this file. Do not infer current PBL completeness from these historical checks; use the [canonical pedagogical checklist](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26).
+
 Last reviewed: 2026-10-23 (Asia/Jakarta).
 
 ## Baseline and traceability
