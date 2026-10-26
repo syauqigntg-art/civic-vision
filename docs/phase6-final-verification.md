@@ -1,5 +1,7 @@
 # Phase 6 — Final Verification & Release Decision
 
+> **Historical snapshot warning (added 2026-10-26):** the repository snapshot and PR state recorded below were captured on 2026-10-25 and are stale relative to current `main` at `f470cb5b322bc76282c24610be3a10e6c4809d65`. PR #13 has since been merged into `main` on 2026-10-25. Preserve the historical evidence ledger as a record of what was known then; do not use its old PR state as current. For current pedagogical status, use the [canonical PBL checklist](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26).
+
 **Last verified:** 2026-10-25 (Asia/Jakarta)
 **Application release decision:** **NO-GO for Production**
 **Scope:** This document is a verification record and release-gate checklist. Merging this documentation PR is not approval to release the application.
