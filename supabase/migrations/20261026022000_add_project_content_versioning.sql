@@ -80,7 +80,7 @@ AS $function$
           'video_url', v.video_url,
           'thumbnail_url', v.thumbnail_url,
           'duration', v.duration,
-          'is_active', v.is_active
+          'is_active', COALESCE(v.is_active, true)
         ) ORDER BY v.number, v.id
       )
       FROM public.videos AS v
@@ -97,10 +97,10 @@ AS $function$
           'question_type', q.question_type,
           'placeholder', q.placeholder,
           'phase', q.phase,
-          'is_required', q.is_required,
+          'is_required', COALESCE(q.is_required, true),
           'min_items', q.min_items,
           'display_order', q.display_order,
-          'is_active', q.is_active,
+          'is_active', COALESCE(q.is_active, true),
           'question_options', COALESCE((
             SELECT jsonb_agg(
               jsonb_build_object(
@@ -186,7 +186,10 @@ BEGIN
       ERRCODE = '22023',
       MESSAGE = 'published_project_version_is_immutable';
   END IF;
-  RETURN CASE WHEN TG_OP = 'DELETE' THEN OLD ELSE NEW END;
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  END IF;
+  RETURN NEW;
 END;
 $function$;
 
@@ -798,5 +801,117 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.submit_group(text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.submit_group(text) TO service_role;
+
+
+
+-- A row referenced by any published snapshot must remain available for old
+-- drafts, answers, media URLs and teacher review. Remove/deactivate it instead.
+CREATE OR REPLACE FUNCTION private.prevent_published_content_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+BEGIN
+  IF TG_TABLE_NAME = 'questions' AND EXISTS (
+    SELECT 1
+    FROM public.project_versions AS pv
+    CROSS JOIN LATERAL pg_catalog.jsonb_array_elements(pv.content->'questions') AS item(value)
+    WHERE pv.project_id = OLD.project_id
+      AND pv.status = 'published'
+      AND item.value->>'id' = OLD.id::text
+  ) THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '22023',
+      MESSAGE = 'question_referenced_by_published_version_deactivate_instead';
+  END IF;
+
+  IF TG_TABLE_NAME = 'videos' AND EXISTS (
+    SELECT 1
+    FROM public.project_versions AS pv
+    CROSS JOIN LATERAL pg_catalog.jsonb_array_elements(pv.content->'videos') AS item(value)
+    WHERE pv.project_id = OLD.project_id
+      AND pv.status = 'published'
+      AND item.value->>'id' = OLD.id::text
+  ) THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '22023',
+      MESSAGE = 'video_referenced_by_published_version_deactivate_instead';
+  END IF;
+
+  RETURN OLD;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS questions_published_version_delete_guard ON public.questions;
+CREATE TRIGGER questions_published_version_delete_guard
+  BEFORE DELETE ON public.questions
+  FOR EACH ROW
+  EXECUTE FUNCTION private.prevent_published_content_delete();
+
+DROP TRIGGER IF EXISTS videos_published_version_delete_guard ON public.videos;
+CREATE TRIGGER videos_published_version_delete_guard
+  BEFORE DELETE ON public.videos
+  FOR EACH ROW
+  EXECUTE FUNCTION private.prevent_published_content_delete();
+
+REVOKE ALL ON FUNCTION private.prevent_published_content_delete() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.prevent_published_content_delete() TO authenticated, service_role;
+
+CREATE OR REPLACE FUNCTION public.admin_delete_question(p_id uuid, p_project_id uuid)
+RETURNS text
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_project_active boolean;
+BEGIN
+  IF NOT COALESCE((SELECT private.is_admin()), false) THEN
+    RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'admin_required';
+  END IF;
+
+  SELECT p.is_active INTO v_project_active
+  FROM public.projects AS p
+  WHERE p.id = p_project_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'project_not_found';
+  END IF;
+  IF v_project_active IS FALSE THEN
+    RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'project_archived';
+  END IF;
+
+  PERFORM 1
+  FROM public.questions AS q
+  WHERE q.id = p_id
+    AND q.project_id = p_project_id
+  FOR UPDATE;
+  IF NOT FOUND THEN
+    RETURN 'not_found';
+  END IF;
+
+  IF EXISTS (SELECT 1 FROM public.answers AS a WHERE a.question_id = p_id)
+     OR EXISTS (
+       SELECT 1
+       FROM public.project_versions AS pv
+       CROSS JOIN LATERAL pg_catalog.jsonb_array_elements(pv.content->'questions') AS item(value)
+       WHERE pv.project_id = p_project_id
+         AND pv.status = 'published'
+         AND item.value->>'id' = p_id::text
+     ) THEN
+    UPDATE public.questions
+    SET is_active = false, updated_at = now()
+    WHERE id = p_id AND project_id = p_project_id;
+    RETURN 'deactivated';
+  END IF;
+
+  DELETE FROM public.questions
+  WHERE id = p_id AND project_id = p_project_id;
+  RETURN 'deleted';
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION public.admin_delete_question(uuid, uuid) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.admin_delete_question(uuid, uuid) TO authenticated;
 
 COMMIT;
