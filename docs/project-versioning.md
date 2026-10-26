@@ -1,6 +1,6 @@
 # Versi Proyek dan LKPD — Desain dan Panduan Rilis
 
-**Status:** implementasi pada branch; migration belum diterapkan pada Supabase staging maupun Production.  
+**Status:** implementasi pada branch; migration belum diterapkan pada Supabase staging maupun Production.
 **Tujuan:** memisahkan materi kerja guru dari snapshot konten yang dipakai siswa, agar publikasi baru tidak mengubah tafsir pekerjaan yang sudah berjalan.
 
 ## Alur kerja guru
