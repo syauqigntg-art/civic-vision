@@ -98,6 +98,8 @@ assert.match(versioningMigration, /published_project_version_is_immutable/, "Pub
 assert.match(versioningMigration, /admin_save_project_version_draft/, "Database exposes draft snapshot workflow");
 assert.match(versioningMigration, /admin_validate_project_version/, "Database exposes server-side version validation");
 assert.match(versioningMigration, /admin_publish_project_version/, "Database exposes server-side publication");
+assert.match(versioningMigration, /v_existing_content IS DISTINCT FROM v_content/, "Draft timestamps change only when the snapshot content changes");
+assert.match(versionManager, /latestDraft\.updated_at !== draft\.updated_at/, "Publication requires revalidation when the working snapshot changed");
 assert.match(versioningMigration, /INSERT INTO public\.submissions\(project_id, group_id, video_id, project_version_id\)/, "New submissions pin the active version");
 assert.match(versioningMigration, /FOR UPDATE OF s/, "Versioned save/submit functions lock the submission row");
 assert.match(versioningMigration, /jsonb_array_elements\(v_version_content->'questions'\)/, "Submit validation uses the submission's content snapshot");
