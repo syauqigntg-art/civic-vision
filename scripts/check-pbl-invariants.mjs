@@ -98,7 +98,7 @@ assert.match(versioningMigration, /published_project_version_is_immutable/, "Pub
 assert.match(versioningMigration, /admin_save_project_version_draft/, "Database exposes draft snapshot workflow");
 assert.match(versioningMigration, /admin_validate_project_version/, "Database exposes server-side version validation");
 assert.match(versioningMigration, /admin_publish_project_version/, "Database exposes server-side publication");
-assert.match(versioningMigration, /REVOKE ALL ON TABLE public\.project_versions FROM PUBLIC, anon, authenticated;[\s\S]*?GRANT SELECT ON TABLE public\.project_versions TO authenticated;[\s\S]*?GRANT SELECT ON TABLE public\.project_versions TO service_role;/, "Direct version table writes are revoked from authenticated sessions");
+assert.match(versioningMigration, /REVOKE ALL ON TABLE public\.project_versions FROM PUBLIC, anon, authenticated, service_role;[\s\S]*?GRANT SELECT ON TABLE public\.project_versions TO authenticated;[\s\S]*?GRANT SELECT ON TABLE public\.project_versions TO service_role;/, "Direct version table writes are revoked from authenticated sessions");
 assert.doesNotMatch(versioningMigration, /GRANT SELECT, INSERT, UPDATE ON TABLE public\.project_versions TO authenticated/, "Authenticated sessions cannot directly create or mutate version rows");
 const draftRpcDefinition = versioningMigration.split("CREATE OR REPLACE FUNCTION public.admin_save_project_version_draft(p_project_id uuid)")[1]?.split("$function$;")[0] ?? "";
 const publishRpcDefinition = versioningMigration.split("CREATE OR REPLACE FUNCTION public.admin_publish_project_version(")[1]?.split("$function$;")[0] ?? "";
