@@ -53,6 +53,13 @@ BEGIN
     RAISE EXCEPTION 'TEST SETUP FAILED: temporary admin/student identity could not be prepared';
   END IF;
 
+  IF (SELECT is_nullable FROM information_schema.columns
+      WHERE table_schema = 'public'
+        AND table_name = 'submissions'
+        AND column_name = 'project_id') IS DISTINCT FROM 'NO' THEN
+    RAISE EXCEPTION 'FAIL: submissions.project_id must be NOT NULL to enforce the composite version foreign key';
+  END IF;
+
   IF has_table_privilege('authenticated', 'public.project_versions', 'INSERT') THEN
     RAISE EXCEPTION 'FAIL: authenticated still has direct INSERT on project_versions';
   END IF;
@@ -78,11 +85,11 @@ BEGIN
     RAISE EXCEPTION 'FAIL: service_role still has direct write privileges on project_versions';
   END IF;
   IF NOT has_function_privilege('authenticated', 'public.admin_save_project_version_draft(uuid)', 'EXECUTE')
-     OR NOT has_function_privilege('authenticated', 'public.admin_publish_project_version(uuid,uuid)', 'EXECUTE') THEN
+     OR NOT has_function_privilege('authenticated', 'public.admin_publish_project_version(uuid,uuid,timestamptz)', 'EXECUTE') THEN
     RAISE EXCEPTION 'FAIL: official draft/publish RPC is not executable by authenticated';
   END IF;
   IF has_function_privilege('anon', 'public.admin_save_project_version_draft(uuid)', 'EXECUTE')
-     OR has_function_privilege('anon', 'public.admin_publish_project_version(uuid,uuid)', 'EXECUTE') THEN
+     OR has_function_privilege('anon', 'public.admin_publish_project_version(uuid,uuid,timestamptz)', 'EXECUTE') THEN
     RAISE EXCEPTION 'FAIL: anon must not be able to execute administrative versioning RPCs';
   END IF;
   IF NOT (
@@ -92,7 +99,7 @@ BEGIN
   ) OR NOT (
     SELECT p.prosecdef
     FROM pg_catalog.pg_proc AS p
-    WHERE p.oid = 'public.admin_publish_project_version(uuid,uuid)'::regprocedure
+    WHERE p.oid = 'public.admin_publish_project_version(uuid,uuid,timestamptz)'::regprocedure
   ) THEN
     RAISE EXCEPTION 'FAIL: draft/publish RPC must be SECURITY DEFINER after direct table writes are revoked';
   END IF;
@@ -211,7 +218,7 @@ BEGIN
   END;
 
   BEGIN
-    PERFORM public.admin_publish_project_version(v_project_id, v_version_id);
+    PERFORM public.admin_publish_project_version(v_project_id, v_version_id, now());
     RAISE EXCEPTION 'TEST FAILED: anon admin_publish RPC invocation was accepted';
   EXCEPTION WHEN insufficient_privilege THEN NULL;
   END;
@@ -271,7 +278,7 @@ BEGIN
   END;
 
   BEGIN
-    PERFORM public.admin_publish_project_version(v_project_id, v_version_id);
+    PERFORM public.admin_publish_project_version(v_project_id, v_version_id, now());
     RAISE EXCEPTION 'TEST FAILED: non-admin publish RPC was accepted';
   EXCEPTION WHEN insufficient_privilege THEN
     GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
@@ -302,7 +309,7 @@ BEGIN
   END;
 
   BEGIN
-    PERFORM public.admin_publish_project_version(v_project_id, v_version_id);
+    PERFORM public.admin_publish_project_version(v_project_id, v_version_id, now());
     RAISE EXCEPTION 'TEST FAILED: request without an authenticated UID could publish';
   EXCEPTION WHEN insufficient_privilege THEN
     GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
@@ -327,6 +334,10 @@ DECLARE
   v_active_id uuid;
   v_v1_content jsonb;
   v_v2_status text;
+  v_expected_updated_at timestamptz;
+  v_cas_draft_id uuid;
+  v_initial_cas_updated_at timestamptz;
+  v_refreshed_cas_updated_at timestamptz;
   v_message text;
 BEGIN
   SELECT content INTO v_v1_content
@@ -339,7 +350,13 @@ BEGIN
   IF v_draft_id IS NULL THEN
     RAISE EXCEPTION 'TEST FAILED: official draft-save RPC returned no draft id';
   END IF;
-  PERFORM public.admin_publish_project_version(v_project_id, v_draft_id);
+  SELECT updated_at INTO v_expected_updated_at
+  FROM public.project_versions
+  WHERE id = v_draft_id AND project_id = v_project_id AND status = 'draft';
+  IF v_expected_updated_at IS NULL THEN
+    RAISE EXCEPTION 'TEST FAILED: draft updated_at for publication CAS is null';
+  END IF;
+  PERFORM public.admin_publish_project_version(v_project_id, v_draft_id, v_expected_updated_at);
 
   SELECT active_version_id INTO v_active_id
   FROM public.projects WHERE id = v_project_id;
@@ -353,9 +370,51 @@ BEGIN
     RAISE EXCEPTION 'TEST FAILED: publishing v2 changed the stored v1 snapshot';
   END IF;
 
+  -- Compare-and-swap publication must reject a draft that changes after validation.
+  v_cas_draft_id := public.admin_save_project_version_draft(v_project_id);
+  SELECT updated_at INTO v_initial_cas_updated_at
+  FROM public.project_versions
+  WHERE id = v_cas_draft_id AND project_id = v_project_id AND status = 'draft';
+
+  UPDATE public.questions
+  SET question_text = 'Synthetic CAS changed after validation'
+  WHERE id = current_setting('versioning_test.question_id')::uuid
+    AND project_id = v_project_id;
+  IF NOT FOUND THEN
+    RAISE EXCEPTION 'TEST FAILED: could not edit question for CAS stale-draft test';
+  END IF;
+
+  v_cas_draft_id := public.admin_save_project_version_draft(v_project_id);
+  SELECT updated_at INTO v_refreshed_cas_updated_at
+  FROM public.project_versions
+  WHERE id = v_cas_draft_id AND project_id = v_project_id AND status = 'draft';
+
+  IF v_refreshed_cas_updated_at IS NOT DISTINCT FROM v_initial_cas_updated_at THEN
+    RAISE EXCEPTION 'TEST FAILED: changed draft did not receive a new updated_at timestamp';
+  END IF;
+
+  BEGIN
+    PERFORM public.admin_publish_project_version(v_project_id, v_cas_draft_id, v_initial_cas_updated_at);
+    RAISE EXCEPTION 'TEST FAILED: stale validated draft was published';
+  EXCEPTION WHEN SQLSTATE '40001' THEN
+    GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
+    IF v_message <> 'project_version_validation_stale' THEN
+      RAISE EXCEPTION 'TEST FAILED: stale draft rejected for unexpected reason: %', v_message;
+    END IF;
+  END;
+
+  SELECT active_version_id INTO v_active_id
+  FROM public.projects
+  WHERE id = v_project_id;
+  IF v_active_id IS DISTINCT FROM v_draft_id THEN
+    RAISE EXCEPTION 'TEST FAILED: stale publication attempt changed the active version pointer';
+  END IF;
+
+  RAISE NOTICE 'PASS: stale validated draft publication rejected by compare-and-swap; active version unchanged.';
+
   -- A version from another project cannot be published under this project ID.
   BEGIN
-    PERFORM public.admin_publish_project_version(v_project_id, v_other_version_id);
+    PERFORM public.admin_publish_project_version(v_project_id, v_other_version_id, now());
     RAISE EXCEPTION 'TEST FAILED: cross-project version publication was accepted';
   EXCEPTION WHEN SQLSTATE '22023' THEN
     GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
@@ -376,6 +435,7 @@ DECLARE
   v_project_id uuid;
   v_original_active_version uuid;
   v_draft_id uuid;
+  v_expected_updated_at timestamptz;
   v_message text;
 BEGIN
   SELECT id, active_version_id
@@ -461,9 +521,12 @@ BEGIN
   IF v_draft_id IS NULL THEN
     RAISE EXCEPTION 'TEST FAILED: official draft-save RPC returned no draft id';
   END IF;
+  SELECT updated_at INTO v_expected_updated_at
+  FROM public.project_versions
+  WHERE id = v_draft_id AND project_id = v_project_id AND status = 'draft';
 
   BEGIN
-    PERFORM public.admin_publish_project_version(v_project_id, v_draft_id);
+    PERFORM public.admin_publish_project_version(v_project_id, v_draft_id, v_expected_updated_at);
     RAISE EXCEPTION 'TEST FAILED: invalid draft publication was accepted';
   EXCEPTION WHEN SQLSTATE '22023' THEN
     GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
@@ -531,7 +594,7 @@ BEGIN
   SELECT pg_catalog.pg_get_userbyid(p.proowner)
   INTO v_publish_owner
   FROM pg_catalog.pg_proc AS p
-  WHERE p.oid = 'public.admin_publish_project_version(uuid,uuid)'::regprocedure;
+  WHERE p.oid = 'public.admin_publish_project_version(uuid,uuid,timestamptz)'::regprocedure;
 
   IF current_user IS DISTINCT FROM v_publish_owner THEN
     RAISE NOTICE 'SKIP: direct owner-only draft-pointer check; current SQL role differs from publish RPC owner.';
