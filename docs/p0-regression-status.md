@@ -85,3 +85,24 @@ Keep the release decision **NO-GO** until the required runtime and operational e
 A read-only inspection of the Vercel project environment metadata on 2026-10-26 found that the project-level `NEXT_PUBLIC_SUPABASE_URL` is scoped to `production`, `preview`, and `development`, and its configured Supabase project reference does **not** match the documented isolated staging reference `bneqqkvhehrlcjhvvyvv`. No branch-specific Preview override was found for `fix/p0-sustainability-hardening`. Therefore, the current Preview cannot be treated as staging and no student write-flow/concurrency test was run against it.
 
 Required follow-up by the project owner: configure and verify Preview-only Supabase URL/keys for the isolated staging project without changing Production targets; then deploy a fresh Preview, verify its exact source SHA and backend target, and use synthetic fixtures only. This audit did not read or disclose service-role/anon key values and did not modify any Vercel environment variable.
+
+## Staging verification update — 2026-10-26
+
+### Confirmed facts
+- Pull request #18 was merged into `main` at `a2f5d1d11e49667f3f0cccca3f85b5b4b71b8494`. GitHub Actions run #138 passed on pre-merge head `11a68bb38c9a503b7b5d734f6081edd23ed8b10f`; it is not being represented as a separately run CI result on the merge commit.
+- Supabase project `civic-vision-staging`, ref `bneqqkvhehrlcjhvvyvv`, is `ACTIVE_HEALTHY`. The migration ledger lists 13 expected staging entries, including the two autosave/submit serialization migrations.
+- A read-only table inspection confirmed RLS is enabled on all 11 public application tables and showed zero rows in the inspected tables, which is consistent with the recorded empty staging environment. The Security Advisor reports one informational notice: RLS is enabled on `public.api_rate_limits` without policies. This is intentional only while client-role privileges stay revoked; privilege posture still needs to be validated for the exact runtime candidate.
+- Preview-only, branch-specific values were created for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` for branch `fix/p0-sustainability-hardening`. They target only the Preview environment; the project-wide variables, including Production target configuration, were not edited. No service-role key was created as a Preview override.
+
+### Current deployment verification
+- The latest inspected deployment for branch `fix/p0-sustainability-hardening` is still `READY` for source SHA `11a68bb38c9a503b7b5d734f6081edd23ed8b10f`, which predates the environment override. No newer deployment containing the Preview-only overrides was available in the deployment list at the time of this check.
+- A separate `main` deployment for merge SHA `a2f5d1d11e49667f3f0cccca3f85b5b4b71b8494` is `READY` and target `production`. This is recorded as a status observation only; no manual Production deployment/promotion was triggered by this task.
+- Until a fresh branch Preview is created after the override and its runtime target is verified without disclosing secret values, browser write/concurrency tests remain **BLOCKED**. This entry does not claim the Preview has already picked up the new variables.
+
+### Remaining required runtime evidence
+1. Create/obtain a fresh Preview deployment from the same source SHA after the Preview-specific variables are applied; verify deployment ID, branch, exact SHA, and Supabase project ref.
+2. Use staging-only synthetic project/group/video/question records. Record sanitized request/response order and assert database state after latest-answer autosave, offline/reconnect, delayed save after submit, duplicate submit, concurrent save/submit, and cross-group/project access attempts.
+3. Clean up synthetic fixtures and verify that only those test records are removed.
+4. Run a controlled backup/restore exercise with the staging owner and record integrity checks. No backup/restore test was performed in this update.
+
+No Production environment settings or secrets were changed. No database migrations or schema changes were applied, no Production write test was run, and no Production deploy/promotion was invoked by this verification.
