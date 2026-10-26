@@ -106,3 +106,9 @@ Required follow-up by the project owner: configure and verify Preview-only Supab
 4. Run a controlled backup/restore exercise with the staging owner and record integrity checks. No backup/restore test was performed in this update.
 
 No Production environment settings or secrets were changed. No database migrations or schema changes were applied, no Production write test was run, and no Production deploy/promotion was invoked by this verification.
+
+## Follow-up execution tracking — staging Preview validation
+
+The environment override has been configured for branch `fix/p0-sustainability-hardening` only. Vercel's deployment list still shows the previous Ready deployment SHA `11a68bb38c9a503b7b5d734f6081edd23ed8b10f` and does not yet show a deployment created after those overrides. The override itself is therefore **not yet verified at runtime**.
+
+A separate tracking change is being prepared from main; it does not deploy or alter the application. Do not run browser writes until Vercel creates a fresh deployment containing the override and its exact Git SHA / backend reference have been checked.
