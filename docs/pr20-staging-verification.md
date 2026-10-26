@@ -2,7 +2,7 @@
 
 Last checked: 2026-10-26 (Asia/Jakarta)
 
-SQL/security, v1/v2, late-autosave/archive, and concurrent-publication integration checks were rerun against branch code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`. CI run #180 and Vercel were successful at that code candidate. A following evidence-documentation-only commit triggers a final CI/Preview check; browser writes remain blocked because the branch-specific Staging service-role secret is not yet available to set privately.
+All migration, SQL test, and concurrent-publish checks are against Supabase Staging. The security/CAS suite, repeatable v1/v2 integration suite, and two-session concurrent-publish test were rerun against the documentation-updated branch head `ded990a25ec154cd469a75fd667a33a12cfc26a1`; all passed and all temporary fixtures were removed. CI run #183 and Preview are successful on that same head. The remaining gates are a privately configured Staging service-role secret, human independent SQL review, and interactive browser E2E.
 
 ## Candidate and target
 
@@ -56,7 +56,7 @@ The CAS follow-up also sets `submissions.project_id NOT NULL` after a guard chec
 
 Repeatable source: `supabase/p1-versioning-v1-v2-integration-test.sql`.
 
-Executed again from branch code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0` against Staging; result sentinel:
+Executed again from branch code candidate `ded990a25ec154cd469a75fd667a33a12cfc26a1` against Staging; result sentinel:
 
 `PASS: V1/V2 integration completed; Group A remained on v1, Group B used v2, late autosave was rejected, historical snapshots survived archive, all fixtures will roll back`
 
@@ -88,9 +88,9 @@ This verifies database serialization/CAS under two concurrent publish RPC calls.
 - Branch-specific `NEXT_PUBLIC_SUPABASE_ANON_KEY` was compared with the legacy anon key returned for the same Supabase Staging project; it matched. No key value is recorded here.
 - Branch-specific `SUPABASE_SERVICE_ROLE_KEY` is intentionally a fail-closed placeholder, not a working credential. The platform's environment-variable API did not reveal the existing sensitive value, and the Staging service-role secret was not available through the Supabase connector. This prevents the Preview branch from inheriting the shared cross-environment key. Replace the placeholder directly in Vercel with the Staging project's service-role/secret key; never paste it into chat, source, logs, HTML or any `NEXT_PUBLIC_*` variable.
 - Code check: `lib/supabase/admin.ts` imports `server-only` and reads `SUPABASE_SERVICE_ROLE_KEY` only in server-side code. No client-side environment prefix is used.
-- Latest code-candidate deployment `https://civic-vision-4vr6rixl1-uki8.vercel.app` is READY from SHA `d74e6afd03b707f1ceaa458f8bb974aa950072e0`: https://vercel.com/uki8/civic-vision/HiL3cFjdvjWH3U78KdJzwbLS3zur
-- Read-only HTTP smoke checks on that deployment: `GET /` = 200; `GET /admin/versions` = 200; `GET /api/student-content` = 405 as expected for a POST-only route. No application write requests were sent.
-- Static initial-bundle check fetched all 11 JavaScript files linked directly from home/admin HTML; all returned HTTP 200. No fetched chunk contained `SUPABASE_SERVICE_ROLE_KEY`, the fail-closed placeholder, an `sb_secret_...` pattern, or a JWT-like string associated with `service_role`. No `sourceMappingURL` references were found in the scanned initial chunks. This is not an interactive browser/network test and cannot rule out route-specific dynamic chunks; those remain pending.
+- Latest deployment `https://civic-vision-hhyn5vjpl-uki8.vercel.app` is READY from SHA `ded990a25ec154cd469a75fd667a33a12cfc26a1`: https://vercel.com/uki8/civic-vision/26PK8ndm1uNZixgjHCkfZNzSivBE
+- Read-only HTTP smoke checks on this deployment: `GET /` = 200; `GET /admin/versions` = 200; `GET /api/student-content` = 405 as expected for a POST-only route. No application write request was sent.
+- Static initial-bundle check fetched all 11 JavaScript files linked directly from home/admin HTML; all returned HTTP 200. No fetched chunk contained `SUPABASE_SERVICE_ROLE_KEY`, the fail-closed placeholder, or an `sb_secret_...` pattern. The single JWT-shaped literal decoded only to the expected public `role=anon` and Staging project ref `bneqqkvhehrlcjhvvyvv`; no `service_role` claim was present. No `sourceMappingURL` references were found in the scanned chunks. Direct probes for each of the 11 corresponding `.map` URLs returned HTTP 403; no source map was readable via this path. This is a static asset check, not an interactive browser/network test, and cannot rule out route-specific dynamic chunks.
 
 **Environment gate remains BLOCKED.** The URL and anon key are verified, but the runtime service-role key is not yet a Staging key. Do not run application write tests until the placeholder is privately replaced and a fresh deployment is verified. A complete browser bundle/network leakage scan remains part of that browser gate.
 
@@ -106,12 +106,12 @@ This verifies database serialization/CAS under two concurrent publish RPC calls.
 - [x] Invalid-backfill failure rolled back without partial schema.
 - [x] Baseline v1 and legacy submission backfill verified.
 - [x] SQL security test executed after the CAS follow-up; includes valid/invalid publish and stale validated-draft rejection; fixtures rolled back.
-- [x] Repeatable SQL v1/v2 integration test passed on code candidate `d74e6afd03b707f1ceaa458f8bb974aa950072e0`: Group A v1, Group B v2, historical prompts, late autosave rejection, and archive guards. Fixtures rolled back.
+- [x] Repeatable SQL v1/v2 integration test passed on code candidate `ded990a25ec154cd469a75fd667a33a12cfc26a1`: Group A v1, Group B v2, historical prompts, late autosave rejection, and archive guards. Fixtures rolled back.
 - [x] Two simultaneous publication RPC calls against one CAS draft produced one successful publish and one safe rejection; exactly v2 was active, no draft remained, fixture rows were removed, and triggers were re-enabled.
 - [x] Preview URL and anon key branch-scoped to Staging.
 - [x] Read-only Preview HTTP smoke checks succeeded.
 - [x] CI run #166 passed on SQL candidate SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40297962828
-- [x] CI run #180 passed on code candidate SHA `d74e6afd03b707f1ceaa458f8bb974aa950072e0`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40303978999. Vercel check is green for the same SHA. This evidence-documentation update triggers a final CI/Preview run on the resulting head.
+- [x] CI run #183 passed on head SHA `ded990a25ec154cd469a75fd667a33a12cfc26a1`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40305468830. Vercel check and deployment are green on the same SHA.
 - [ ] Staging service-role key privately configured for this Preview branch, then runtime/key-ref verified.
 - [ ] Full browser bundle/network check confirms no secret leaked.
 - [ ] Independent SQL review submitted by a reviewer other than the PR author.
