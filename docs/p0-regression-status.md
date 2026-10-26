@@ -57,3 +57,8 @@ Keempat skenario berikut **BELUM DIUJI**. Jangan menyebutnya lulus dari CI atau 
 Preview terbaru belum diverifikasi memakai SHA kandidat terkini dan database staging. Akses Vercel scope tim `uki8` menghasilkan HTTP 403; komentar Vercel sebelumnya menandai deployment sebagai Ignored dan percobaan lain mencapai batas deployment harian paket Free. Tidak ada environment variable Vercel yang diubah.
 
 Jangan jalankan tes tulis pada Preview sampai pemilik tim memberi akses resmi, ketiga environment variable Preview diarahkan ke staging, deployment Ready dengan SHA kandidat yang sama terkonfirmasi, dan URL/key staging diverifikasi tanpa menampilkan nilai rahasia. Jangan mengubah Production atau menyalin data siswa asli ke staging.
+
+
+## Rujukan pedagogis
+
+Skenario teknis dan keamanan dalam dokumen ini tidak menggantikan penilaian aktivitas belajar. Untuk memeriksa apakah siswa benar-benar mengorientasi masalah, mengorganisasi belajar, menyelidiki bukti, menyajikan solusi, berefleksi, dan merevisi setelah umpan balik, gunakan [checklist pedagogis kanonis A.1–A.7](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26). Jangan mengubah status checklist tersebut berdasarkan source invariant atau tes keamanan saja.

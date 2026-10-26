@@ -1,5 +1,7 @@
 # Tahap 5 — Baseline, behavior tests, and release-readiness ledger
 
+> **Historical release-readiness ledger:** CI results and open gaps below refer to the specific Phase 5 candidates recorded in this file. Do not infer current PBL completeness from these historical checks; use the [canonical pedagogical checklist](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26).
+
 Last reviewed: 2026-10-23 (Asia/Jakarta).
 
 ## Baseline and traceability
@@ -41,3 +43,8 @@ The suite runs using Node's built-in test runner, synthetic objects, injected re
 - Service/controller tests may be treated as unit-level behavior evidence only.
 - Browser and concurrency gates stay blocked until Preview source SHA and staging target are verified.
 - Any decision to accept unresolved advisories needs explicit owner/risk/expiry; the fact that the audit step produced a report is not risk acceptance.
+
+
+## Rujukan checklist pedagogis kanonis (audit 2026-10-26)
+
+Checklist pedagogis yang harus dipakai lintas fase adalah [A.1–A.7 di audit UX belajar Tahap 3](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26). Jangan membuat checklist pedagogis duplikat di ledger rilis ini. Status implementasi dari audit source: A.1 PARTIAL, A.2 PARTIAL, A.3 NOT IMPLEMENTED, A.4 PARTIAL, A.5 PARTIAL, A.6 PARTIAL, A.7 PARTIAL. Status tersebut adalah hasil inspeksi source/dokumen, bukan hasil pengujian browser atau staging.

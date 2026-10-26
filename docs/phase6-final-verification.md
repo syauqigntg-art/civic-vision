@@ -1,5 +1,7 @@
 # Phase 6 — Final Verification & Release Decision
 
+> **Historical snapshot warning (added 2026-10-26):** the repository snapshot and PR state recorded below were captured on 2026-10-25 and are stale relative to current `main` at `f470cb5b322bc76282c24610be3a10e6c4809d65`. PR #13 has since been merged into `main` on 2026-10-25. Preserve the historical evidence ledger as a record of what was known then; do not use its old PR state as current. For current pedagogical status, use the [canonical PBL checklist](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26).
+
 **Last verified:** 2026-10-25 (Asia/Jakarta)
 **Application release decision:** **NO-GO for Production**
 **Scope:** This document is a verification record and release-gate checklist. Merging this documentation PR is not approval to release the application.
@@ -164,3 +166,10 @@ Application Production decision stays **NO-GO** until browser coverage, verified
 - Do not disable a global Ignored Build Step merely to make Vercel status appear green.
 - Do not relabel blocked/pending evidence as PASS.
 - Do not bypass required review or branch rules.
+
+
+## Rujukan checklist pedagogis kanonis (audit 2026-10-26)
+
+Untuk cakupan aktivitas guru/siswa, gunakan [Checklist validasi pedagogis PBL A.1–A.7](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26). Checklist itu merupakan sumber utama; daftar verifikasi browser, staging, deployment, dan rilis dalam dokumen ini tetap menjadi bukti teknis terpisah.
+
+Audit source terbaru menemukan empat label UI (SEE, THINK, CONNECT, ACT), bukan lima tahap PBL yang lengkap. A.3 organisasi belajar berstatus NOT IMPLEMENTED; A.1, A.2, A.4, A.5, A.6, dan A.7 PARTIAL. Tidak ada kriteria A.1–A.7 yang dinyatakan PASS. Perbaikan dokumentasi checklist ini tidak berarti fitur pedagogis telah diimplementasikan atau gate browser/staging telah lulus.
