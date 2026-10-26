@@ -1,6 +1,6 @@
 # CIVIC VISION — Staging Setup
 
-Last checked: 2026-10-23 (Asia/Jakarta)
+Last checked: 2026-10-26 (Asia/Jakarta)
 
 ## Staging project
 
@@ -21,6 +21,8 @@ Last checked: 2026-10-23 (Asia/Jakarta)
 5. Public-read lockdown from `supabase/p0-lock-public-reads.sql`.
 6. The five existing database hardening/editor migrations, `20261023010223_serialize_answer_saves_with_submission.sql`, and `20261023030000_serialize_submit_group_with_answer_saves.sql`.
 7. Staging-specific hardening for the `auth.users` trigger function `public.handle_new_user()`: empty search path and no EXECUTE grant to `anon` or `authenticated`.
+8. `20261026090535_add_project_content_versioning`: project/LKPD snapshots, immutable published baseline, submission version pinning, guarded publication RPCs, and backfill.
+9. `20261026091333_add_project_version_fk_indexes`: supporting indexes for the new version-related foreign keys.
 
 The staging migration history was populated through the Supabase migration API. Its generated staging versions do not match every pre-existing filename timestamp under `supabase/migrations`. This was not a data clone or a Production migration. **Do not run `supabase db push` against this staging project until migration history is reconciled with repository versions**; the current environment was bootstrapped for isolated runtime testing.
 
@@ -36,32 +38,39 @@ The staging migration history was populated through the Supabase migration API. 
 - Security Advisor currently reports only the informational finding about `api_rate_limits` having no RLS policy.
 - Counts verified as zero for `users`, `projects`, `groups`, `submissions`, `answers`, and `api_rate_limits`.
 
-## Current readiness and audit findings (2026-10-23)
+## Current readiness and audit findings (2026-10-26)
 
-- Staging database setup is complete and isolated; this does **not** mean frontend runtime tests have passed.
-- Vercel bot has since reported a deployment as **Ready** at [deployment details](https://vercel.com/uki8/civic-vision/FTLim96iQz21YVCEU21ZpWhw3sar) for alias [Preview URL](https://civic-vision-git-optimize-platform-hardening-2026-10-22-uki8.vercel.app). However, Vercel API tools still return HTTP 403 for scope `uki8`, and this connection cannot verify its exact source SHA or Preview environment values. Treat the reported Ready state as provisional for test preparation, not proof that it points at staging. Earlier attempts hit the free daily deployment limit. No Vercel environment variables were changed.
-- GitHub Actions run #23 on old head SHA `261176eb9aafc986244baa0b606eabecebbc0c7b` passed only because `continue-on-error: true` hid the failing audit. The workflow no longer has that exception. `package.json` requests `next@^16.4.1`; the lockfile selects `next@16.4.2`. Run #39 on head SHA `915a03100efd2b42cdf4cb60ab4d78d7fc0587c3` passed `npm ci`, TypeScript, source invariants, `git diff --check`, `npm run build`, and `npm audit --omit=dev` with 0 production dependency vulnerabilities. The install output still summarized 7 advisories across the full tree (2 moderate, 5 high); the full-tree audit has not been completed, so this does not mean all development/transitive dependencies are clean.
-- PR #6 remains Draft and unmerged. CI and database metadata checks are not browser/runtime tests.
+- Supabase Staging is `civic-vision-staging`, ref `bneqqkvhehrlcjhvvyvv`, URL `https://bneqqkvhehrlcjhvvyvv.supabase.co`. No Production migration or write test was run.
+- PR #20 at candidate SHA `c861db8f0c940be913fc9d5a5761636889dd37ba` applies the versioning migration as staging ledger version `20261026090535` and FK index migration as `20261026091333`. Their recorded migration names now match the corresponding repository filenames.
+- One synthetic legacy project/submission/answer was used to verify backfill: 1 baseline v1, 1 pinned submission, 1 unchanged answer, 0 submissions missing a version. A deliberately invalid submission caused the migration's transaction to fail with `project_version_backfill_failed`; the invalid row was then removed and the valid backfill completed.
+- The expanded `supabase/p1-versioning-security-test.sql` completed without SQL error and rolled back temporary users/test records. The separate v1/v2 SQL scenario verified old Group A remains on v1 and a newly started Group B pins to v2; the transaction was rolled back to preserve the reusable baseline fixture.
+- Supabase privilege checks confirmed: `anon` has no privileges on `project_versions`; `authenticated` and `service_role` have SELECT only; table RLS is enabled; both admin RPCs are SECURITY DEFINER; the active-version guard trigger exists.
+- Security Advisor still flags the two authenticated-callable SECURITY DEFINER admin RPCs. Their body checks `private.is_admin()` and the non-admin/no-UID cases passed in the SQL test, but an independent reviewer must explicitly accept or require changes. Advisor also reports the pre-existing informational RLS-without-policy notice on `api_rate_limits`.
+- Performance Advisor no longer reports missing covering indexes for the new foreign keys. It reports the new indexes as unused because the staging database is tiny; do not remove them solely on that signal without workload review.
+- Preview URL and anon key have branch-specific overrides for `feature/project-lkpd-versioning-sync` and have been compared with the Staging project (host/ref and legacy anon key match). To prevent accidental use of the shared cross-environment secret, branch-specific `SUPABASE_SERVICE_ROLE_KEY` is currently a fail-closed placeholder. It is **not** a working staging key.
+- Fresh Preview deployment `https://civic-vision-jua31xt9u-uki8.vercel.app` is READY from SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`. Read-only GET smoke checks for `/` and `/admin/versions` returned HTTP 200. `GET /api/student-content` returned 405, consistent with its POST-only route. These are smoke checks, not interactive browser E2E.
+- `lib/supabase/admin.ts` imports `server-only` and reads `SUPABASE_SERVICE_ROLE_KEY` in server-side code. The variable is not prefixed `NEXT_PUBLIC_`. A full browser network/bundle test remains part of E2E verification.
 
-## Four required browser scenarios — all NOT TESTED
+## Four required browser scenarios — NOT TESTED
 
-Run only after Preview is confirmed to use this staging project and its deployment commit SHA is confirmed:
+Do not start application write tests until the branch-specific service key is privately replaced in Vercel with the matching Staging credential and a new deployment has been built from the exact candidate SHA.
 
-- [ ] **Type an answer and submit immediately:** final stored value must equal the latest typed value.
-- [ ] **Disconnect during autosave and reconnect:** pending values retry; latest answer is stored correctly after connection returns.
-- [ ] **Release a delayed save after submission:** server rejects the late save and the submitted answer remains unchanged.
-- [ ] **Teacher reopens a submission, if this capability exists:** first verify a real UI action/RPC exists; if present, ensure existing answers remain and the student can continue. If absent, record the feature as not implemented rather than marking the scenario passed.
+- [ ] Type an answer and submit immediately; the final stored value equals the latest typed value.
+- [ ] Disconnect during autosave and reconnect; pending values retry and the latest answer is stored correctly.
+- [ ] Release a delayed save after submission; the server rejects the late save and the submitted answer remains unchanged.
+- [ ] Teacher reopens a submission, if this capability exists; first verify the real UI action/RPC exists, otherwise record as not implemented.
 
 ## Remaining before browser tests
 
-- [ ] Restore authorized access to Vercel team scope `uki8` for this connection; current tools return HTTP 403 and cannot list accessible teams.
-- [ ] Set Preview-only `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and `SUPABASE_SERVICE_ROLE_KEY` to staging values. Do not alter Production targets.
-- [ ] Create or confirm a fresh Preview deployment from the latest PR commit and verify runtime points to staging without printing secret values.
-- [ ] Create test-only admin/group/video/question fixtures in staging and execute the four scenarios above.
-
-Do not run student write-flow tests in the current Preview until the environment is proven to use this staging project. Do not copy real student data or secrets into source control.
+- [ ] In Vercel Project → Settings → Environment Variables, replace the branch-only `SUPABASE_SERVICE_ROLE_KEY` placeholder for Preview branch `feature/project-lkpd-versioning-sync` with the secret/service-role credential from Supabase project ref `bneqqkvhehrlcjhvvyvv`. Do not paste the secret into chat, logs, source, or `NEXT_PUBLIC_*`; do not change Production targets.
+- [ ] Create a fresh Preview deployment and verify the URL/ref, anon key/ref, and server-side key/ref are all the same Staging project without printing any key. Confirm service-role secret is absent from HTML/JS/browser response.
+- [ ] Obtain a genuine independent SQL review on PR #20 covering grants/default privileges, SECURITY DEFINER, `private.is_admin()`, pointer trigger, row locking/concurrent publication, and backfill failure/rollback.
+- [ ] Prepare a test-only administrator login plus synthetic teacher/student/group/video/question fixtures in Staging. Do not import real student data.
+- [ ] Run and record teacher/student browser E2E on the same exact source SHA: old/new group version pinning, history/results, CSV/Excel exports, video/question archive, stale draft after validation, simultaneous publication, and delayed autosave after submit.
+- [ ] Re-run CI on the final head. Merge stays NO-GO until the review, environment, and browser gates are all evidenced.
 
 ## Migration history reconciliation
+
 
 The migration API assigned staging-specific version identifiers at apply time. These IDs intentionally do not equal the original repository filename timestamps, so do **not** use `supabase db push` against this project until the CLI ledger is separately rebuilt and verified. To account for the complete current staging ledger, the records read from Supabase map as follows:
 
