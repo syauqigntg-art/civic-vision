@@ -424,6 +424,22 @@ BEGIN
     END;
   END IF;
 
+  -- Directly attempting to point at a published version belonging to another
+  -- project must be blocked by the same guard (or by table grants if UPDATE is absent).
+  IF has_table_privilege('authenticated', 'public.projects', 'UPDATE') THEN
+    BEGIN
+      UPDATE public.projects
+      SET active_version_id = current_setting('versioning_test.other_version_id')::uuid
+      WHERE id = v_project_id;
+      RAISE EXCEPTION 'TEST FAILED: direct cross-project active_version_id change was accepted';
+    EXCEPTION WHEN insufficient_privilege THEN
+      GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
+      IF v_message <> 'active_project_version_must_use_publish_rpc' THEN
+        RAISE EXCEPTION 'TEST FAILED: cross-project pointer write rejected unexpectedly: %', v_message;
+      END IF;
+    END;
+  END IF;
+
   -- Negative test 4: DELETE is just as restricted as INSERT/UPDATE for the app role.
   BEGIN
     DELETE FROM public.project_versions WHERE id = v_original_active_version;
