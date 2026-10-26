@@ -123,4 +123,3 @@ assert.match(versioningMigration, /submission_video_already_pinned/, "A submissi
 assert.match(studentContent, /pinnedVideoId !== videoId/, "Existing submissions cannot switch to another video's content");
 assert.match(studentContent, /assignedIds = new Set\(\[submission\.video_id\]\)/, "Existing work remains discoverable if live assignment changes");
 console.log("CIVIC VISION PBL/security/versioning source invariants: PASS");
-
