@@ -1,6 +1,6 @@
 # Versi Proyek dan LKPD — Desain dan Panduan Rilis
 
-**Status:** implementasi pada branch; migration belum diterapkan pada Supabase staging maupun Production.
+**Status per 2026-10-26:** migration dan tes SQL telah dijalankan pada Supabase Staging saja. Browser E2E dan review SQL independen masih menjadi blocker; Production belum disentuh.
 **Tujuan:** memisahkan materi kerja guru dari snapshot konten yang dipakai siswa, agar publikasi baru tidak mengubah tafsir pekerjaan yang sudah berjalan.
 
 ## Alur kerja guru
@@ -52,6 +52,31 @@ Tahap lanjut disarankan menambahkan `rubric_versions` dengan draft/published sna
 5. Uji kompatibilitas terhadap proyek/submission pra-migrasi, baca hasil lama dan ekspor, nonaktifkan konten secara aman, serta jalankan backup/restore rehearsal.
 6. Setelah semua bukti lulus, minta review independen sebelum memutuskan merge/deploy.
 
-## Status implementasi
+## Hasil verifikasi Staging — 2026-10-26
 
-Pada branch implementasi ini tersedia migration, halaman versi admin, pemuatan konten siswa dari snapshot terbit, pin versi pada submission, label versi pada hasil guru/siswa, dan pemeriksaan source-level. Belum ada migration yang diterapkan ke database, tes browser, atau tes database integrasi pada versi baru. CI/build dan tes source-level tidak menggantikan verifikasi migration/runtime.
+Staging Supabase `civic-vision-staging` (ref `bneqqkvhehrlcjhvvyvv`) sudah menjalankan migration versioning dengan urutan berikut:
+
+- `20261026090535_add_project_content_versioning`: baseline v1, kolom versi, fungsi/RPC, RLS, dan trigger.
+- `20261026091333_add_project_version_fk_indexes`: indeks untuk foreign key versi baru.
+
+Bukti yang dijalankan langsung di database:
+
+- Migration ditolak secara transactional dengan `project_version_backfill_failed` saat ada submission sintetis tanpa `project_id`; setelah kegagalan tidak ada tabel/kolom versi yang tertinggal.
+- Sesudah baris invalid dibersihkan, satu proyek sintetis memperoleh satu baseline v1 published/aktif, satu submission lama dipin ke v1, jawabannya tetap `legacy-answer-untouched`, dan jumlah submission tanpa versi adalah nol.
+- `supabase/p1-versioning-security-test.sql` berjalan tanpa SQL error. Pemeriksaan setelah rollback memastikan akun/fixture tes sementara tidak tersisa.
+- Uji integrasi SQL yang di-rollback menerbitkan v2 dengan teks pertanyaan berbeda; Group A tetap menggunakan v1 beserta jawaban lama, dan Group B yang baru memulai melalui `begin_submission` terhubung ke v2.
+- Proyek sintetis backfill diarsipkan. Tidak ada migration maupun write test di Production.
+
+Lihat [`docs/pr20-staging-verification.md`](pr20-staging-verification.md) untuk bukti, SHA, hasil Advisor, dan blocker terkini.
+
+## Status implementasi dan gerbang rilis
+
+Source dan migration telah terverifikasi pada database staging, tetapi belum semua gerbang rilis ditutup:
+
+1. URL dan anon key Preview sudah branch-scoped ke Staging. `SUPABASE_SERVICE_ROLE_KEY` pada branch Preview sengaja fail-closed berupa placeholder; ganti langsung di Vercel dengan service-role/secret key dari project Staging yang sama. Jangan membagikan atau memasukkan key ke repository/chat.
+2. Smoke check HTTP GET halaman publik dan halaman admin menghasilkan 200; ini bukan tes browser interaktif. Aksi API/tulis tidak dijalankan saat placeholder masih terpasang.
+3. Tes browser guru/siswa tetap harus dijalankan pada kandidat yang sama setelah kunci server Staging terpasang, termasuk hasil/ekspor historis, arsip konten, draft stale, publikasi konkuren, dan autosave terlambat setelah submission terkirim.
+4. Review SQL independen harus mencatat penilaian atas grants, `SECURITY DEFINER`, pemeriksaan admin, pointer trigger, penguncian, backfill, serta dua temuan Security Advisor.
+5. CI harus lulus pada SHA akhir yang sama setelah setiap perubahan.
+
+CI/build, tes SQL, dan smoke check HTTP tidak boleh disebut sebagai pengganti browser E2E. Jangan merge PR sebelum seluruh gerbang di atas lulus.
