@@ -166,20 +166,32 @@ export default function ProjectVersionsPage() {
     setValidation(null);
     setValidatedVersionId("");
     try {
+      // Resnapshot the current working tables before validation so the teacher
+      // cannot accidentally validate an out-of-date draft snapshot.
+      const { data: versionId, error: saveError } = await sb.rpc("admin_save_project_version_draft", {
+        p_project_id: projectId,
+      });
+      if (saveError) throw saveError;
+      if (typeof versionId !== "string" || !versionId) {
+        throw new Error("Server tidak mengembalikan ID versi draft.");
+      }
+
       const { data, error } = await sb.rpc("admin_validate_project_version", {
         p_project_id: projectId,
-        p_version_id: draft.id,
+        p_version_id: versionId,
       });
       if (error) throw error;
       const result = data as ValidationResult;
       if (!result || typeof result.valid !== "boolean" || !Array.isArray(result.errors)) {
         throw new Error("Respons validasi dari server tidak sesuai format.");
       }
+      await loadVersions();
+      setShowPreview(true);
       setValidation(result);
-      setValidatedVersionId(draft.id);
+      setValidatedVersionId(versionId);
       setMessage(result.valid
-        ? "Validasi lulus. Snapshot ini siap diterbitkan."
-        : "Validasi menemukan masalah. Perbaiki materi kerja, simpan ulang snapshot draft, lalu validasi kembali.");
+        ? "Draft terbaru berhasil disimpan dan validasi lulus. Snapshot ini siap diterbitkan."
+        : "Draft terbaru berhasil disimpan, tetapi validasi menemukan masalah. Perbaiki materi kerja, simpan ulang, lalu validasi kembali.");
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : "Validasi draft gagal.");
     } finally {
