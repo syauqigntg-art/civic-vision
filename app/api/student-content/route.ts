@@ -86,18 +86,28 @@ async function loadAssignedVideo(
   projectId: string,
   videoId: string,
   content: ProjectContentSnapshot,
+  pinnedVideoId?: string | null,
 ) {
-  const { data: assignment, error: assignmentError } = await admin
-    .from("group_videos")
-    .select("id")
-    .eq("group_id", groupId)
-    .eq("project_id", projectId)
-    .eq("video_id", videoId)
-    .limit(1)
-    .maybeSingle();
+  // Existing work must remain reachable even if a teacher later changes the
+  // current group assignment. A group with a submission is restricted to its
+  // pinned video, never to a new assignment/version.
+  if (pinnedVideoId && pinnedVideoId !== videoId) {
+    return { data: null, error: null };
+  }
 
-  if (assignmentError || !assignment) {
-    return { data: null, error: assignmentError };
+  if (!pinnedVideoId) {
+    const { data: assignment, error: assignmentError } = await admin
+      .from("group_videos")
+      .select("id")
+      .eq("group_id", groupId)
+      .eq("project_id", projectId)
+      .eq("video_id", videoId)
+      .limit(1)
+      .maybeSingle();
+
+    if (assignmentError || !assignment) {
+      return { data: null, error: assignmentError };
+    }
   }
 
   const video = (content.videos || []).find(
@@ -180,7 +190,7 @@ export async function POST(req: Request) {
   // Only groups without a submission resolve to the currently active publication.
   const [projectResult, submissionResult] = await Promise.all([
     admin.from("projects").select("is_active,active_version_id").eq("id", group.project_id).maybeSingle(),
-    admin.from("submissions").select("status,project_version_id").eq("group_id", group.id).maybeSingle(),
+    admin.from("submissions").select("status,project_version_id,video_id").eq("group_id", group.id).maybeSingle(),
   ]);
   if (projectResult.error || submissionResult.error || !projectResult.data) {
     console.error("Project version lookup failed.");
@@ -227,16 +237,25 @@ export async function POST(req: Request) {
 
   try {
     if (parsed.data.op === "list_videos") {
-      const { data: assignments, error: assignmentsError } = await admin
-        .from("group_videos")
-        .select("video_id")
-        .eq("group_id", group.id)
-        .eq("project_id", group.project_id);
+      let assignedIds: Set<string>;
 
-      if (assignmentsError) return fail(500);
-      const assignedIds = new Set(
-        (assignments || []).map((assignment) => assignment.video_id).filter(Boolean)
-      );
+      if (submission?.video_id) {
+        // Continue the exact work already started; never switch the pinned
+        // video or version merely because assignments changed after starting.
+        assignedIds = new Set([submission.video_id]);
+      } else {
+        const { data: assignments, error: assignmentsError } = await admin
+          .from("group_videos")
+          .select("video_id")
+          .eq("group_id", group.id)
+          .eq("project_id", group.project_id);
+
+        if (assignmentsError) return fail(500);
+        assignedIds = new Set(
+          (assignments || []).map((assignment) => assignment.video_id).filter(Boolean)
+        );
+      }
+
       const data = content.videos
         .filter((video) =>
           assignedIds.has(video.id) &&
@@ -250,7 +269,13 @@ export async function POST(req: Request) {
     }
 
     const { vid } = parsed.data.args;
-    const videoResult = await loadAssignedVideo(group.id, group.project_id, vid, content);
+    const videoResult = await loadAssignedVideo(
+      group.id,
+      group.project_id,
+      vid,
+      content,
+      submission?.video_id,
+    );
     if (videoResult.error) {
       console.error("Student assignment video lookup failed:", videoResult.error.message);
       return fail(500);
