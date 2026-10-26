@@ -145,6 +145,24 @@ FROM public.projects AS p
 WHERE p.id = s.project_id
   AND s.project_version_id IS NULL;
 
+DO $
+BEGIN
+  IF EXISTS (
+    SELECT 1
+    FROM public.submissions AS s
+    LEFT JOIN public.projects AS p ON p.id = s.project_id
+    WHERE s.project_id IS NULL
+       OR p.id IS NULL
+       OR s.project_version_id IS NULL
+  ) THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '23502',
+      MESSAGE = 'project_version_backfill_failed',
+      DETAIL = 'One or more legacy submissions could not be mapped to a project baseline version. Inspect project_id/project rows and retry; no data was changed because the migration is transactional.';
+  END IF;
+END;
+$;
+
 ALTER TABLE public.projects
   ADD CONSTRAINT projects_active_version_fk
   FOREIGN KEY (id, active_version_id)
