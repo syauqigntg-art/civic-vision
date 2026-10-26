@@ -211,29 +211,24 @@ export default function Videos() {
   };
 
   const del = async (v: any) => {
-    if (readOnly) { setErr("Proyek diarsipkan. Aktifkan kembali sebelum menghapus video."); return; }
-    if (!confirm("Hapus video ini? Pastikan kelompok tidak lagi memerlukan tugas tersebut. Jawaban yang tersimpan mungkin tetap ada, tetapi referensi video pada hasil dapat terlepas.")) return;
+    if (readOnly) { setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengarsipkan video."); return; }
+    if (!confirm("Arsipkan video ini dari materi kerja terbaru? Versi terbit dan submission lama tetap menyimpan snapshot materi; file video tidak dihapus.")) return;
 
     setErr("");
     setMessage("");
-    const { error: deleteError } = await sb.from("videos").delete().eq("id", v.id);
-    if (deleteError) {
-      setErr("Video gagal dihapus. Periksa apakah video masih digunakan oleh penugasan kelompok.");
+    const { data, error: archiveError } = await sb
+      .from("videos")
+      .update({ is_active: false, updated_at: new Date().toISOString() })
+      .eq("id", v.id)
+      .select("id,is_active")
+      .maybeSingle();
+    if (archiveError || !data || data.is_active !== false) {
+      setErr("Video belum berhasil diarsipkan. Versi terbit historis harus tetap dipertahankan.");
       return;
     }
 
-    const paths = [pathOf(v.video_url), pathOf(v.thumbnail_url)].filter(Boolean) as string[];
-    if (paths.length) {
-      const { error: storageError } = await sb.storage.from("videos").remove(paths);
-      if (storageError) {
-        setMessage("Data video telah dihapus. File Storage lama belum berhasil dibersihkan.");
-      } else {
-        setMessage("Video berhasil dihapus.");
-      }
-    } else {
-      setMessage("Video berhasil dihapus.");
-    }
     if (editForm?.id === v.id) setEditForm(null);
+    setMessage("Video diarsipkan dari materi kerja terbaru. Untuk menerapkan perubahan ke siswa, simpan draft dan terbitkan versi baru.");
     await load();
   };
 
@@ -376,7 +371,7 @@ export default function Videos() {
                           <div className="admin-row-actions">
                             <button className="btn g" type="button" onClick={() => editing ? setEditForm(null) : startEdit(v)} disabled={readOnly}>{editing ? "Tutup" : "Edit"}</button>
                             <button className="btn g" type="button" onClick={() => toggleActive(v)} disabled={readOnly}>{v.is_active === false ? "Aktifkan" : "Nonaktifkan"}</button>
-                            <button className="btn g danger" type="button" onClick={() => del(v)} disabled={readOnly}>Hapus</button>
+                            <button className="btn g danger" type="button" onClick={() => del(v)} disabled={readOnly}>Arsipkan</button>
                           </div>
                         </td>
                       </tr>
