@@ -460,10 +460,80 @@ BEGIN
       IS DISTINCT FROM v_original_active_version THEN
     RAISE EXCEPTION 'TEST FAILED: active version changed after invalid publication';
   END IF;
+  PERFORM set_config('versioning_test.invalid_draft_id', v_draft_id::text, true);
 
   RAISE NOTICE 'PASS: authenticated direct INSERT/UPDATE/DELETE blocked; pointer bypass rejected; valid RPC publication passed; invalid publication rejected; active version unchanged.';
 END;
 $negative_tests$;
 
 RESET ROLE;
+
+-- The immutability trigger is defense in depth: even the database-owner path
+-- cannot UPDATE or DELETE a row that has already been published.
+DO $owner_immutability_tests$
+DECLARE
+  v_version1_id uuid := current_setting('versioning_test.version1_id')::uuid;
+  v_message text;
+BEGIN
+  BEGIN
+    UPDATE public.project_versions
+    SET content = '{"tampered":true}'::jsonb
+    WHERE id = v_version1_id;
+    RAISE EXCEPTION 'TEST FAILED: database-owner UPDATE of published snapshot was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
+    IF v_message <> 'published_project_version_is_immutable' THEN
+      RAISE EXCEPTION 'TEST FAILED: published UPDATE blocked for unexpected reason: %', v_message;
+    END IF;
+  END;
+
+  BEGIN
+    DELETE FROM public.project_versions WHERE id = v_version1_id;
+    RAISE EXCEPTION 'TEST FAILED: database-owner DELETE of published snapshot was accepted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
+    IF v_message <> 'published_project_version_is_immutable' THEN
+      RAISE EXCEPTION 'TEST FAILED: published DELETE blocked for unexpected reason: %', v_message;
+    END IF;
+  END;
+
+  RAISE NOTICE 'PASS: immutability trigger rejects owner-level UPDATE and DELETE of published v1.';
+END;
+$owner_immutability_tests$;
+
+-- When the SQL editor runs as the publication function's owner, also exercise
+-- the trigger's content-state check directly with a draft pointer. If the
+-- current session is not that owner, the authenticated bypass-denial tests
+-- above still cover the public attack path; report this branch as skipped.
+DO $owner_pointer_state_test$
+DECLARE
+  v_project_id uuid := current_setting('versioning_test.project_id')::uuid;
+  v_draft_id uuid := current_setting('versioning_test.invalid_draft_id')::uuid;
+  v_publish_owner name;
+  v_message text;
+BEGIN
+  SELECT pg_catalog.pg_get_userbyid(p.proowner)
+  INTO v_publish_owner
+  FROM pg_catalog.pg_proc AS p
+  WHERE p.oid = 'public.admin_publish_project_version(uuid,uuid)'::regprocedure;
+
+  IF current_user IS DISTINCT FROM v_publish_owner THEN
+    RAISE NOTICE 'SKIP: direct owner-only draft-pointer check; current SQL role differs from publish RPC owner.';
+    RETURN;
+  END IF;
+
+  BEGIN
+    UPDATE public.projects SET active_version_id = v_draft_id WHERE id = v_project_id;
+    RAISE EXCEPTION 'TEST FAILED: project accepted a draft as active_version_id';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
+    IF v_message <> 'active_project_version_must_be_published_for_project' THEN
+      RAISE EXCEPTION 'TEST FAILED: draft pointer rejected for unexpected reason: %', v_message;
+    END IF;
+  END;
+
+  RAISE NOTICE 'PASS: pointer guard rejects a draft version even in publish-owner context.';
+END;
+$owner_pointer_state_test$;
+
 ROLLBACK;
