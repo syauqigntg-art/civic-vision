@@ -189,7 +189,10 @@ CREATE POLICY "admin manage project versions"
   WITH CHECK ((SELECT private.is_admin()));
 
 REVOKE ALL ON TABLE public.project_versions FROM PUBLIC, anon;
-GRANT SELECT, INSERT, UPDATE ON TABLE public.project_versions TO authenticated;
+-- Browser/admin sessions can read versions, but writes must go through the
+-- validated SECURITY DEFINER RPCs below. Table-level writes would allow an
+-- administrator to forge a published row without server validation.
+GRANT SELECT ON TABLE public.project_versions TO authenticated;
 GRANT SELECT ON TABLE public.project_versions TO service_role;
 
 CREATE OR REPLACE FUNCTION private.protect_published_project_version()
@@ -316,7 +319,7 @@ GRANT EXECUTE ON FUNCTION private.validate_project_version_content(jsonb) TO aut
 CREATE OR REPLACE FUNCTION public.admin_save_project_version_draft(p_project_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $function$
 DECLARE
@@ -428,7 +431,7 @@ CREATE OR REPLACE FUNCTION public.admin_publish_project_version(
 )
 RETURNS uuid
 LANGUAGE plpgsql
-SECURITY INVOKER
+SECURITY DEFINER
 SET search_path = ''
 AS $function$
 DECLARE
@@ -493,6 +496,59 @@ $function$;
 
 REVOKE ALL ON FUNCTION public.admin_publish_project_version(uuid, uuid) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_publish_project_version(uuid, uuid) TO authenticated;
+
+-- projects may retain ordinary authenticated UPDATE access for metadata editing,
+-- so independently protect the active-version pointer. Only the owner of the
+-- publication RPC may move it, and only to an already-published snapshot from
+-- the same project. The RPC revalidates the draft before changing the pointer.
+CREATE OR REPLACE FUNCTION private.guard_active_project_version_pointer()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = ''
+AS $function$
+DECLARE
+  v_publish_owner name;
+BEGIN
+  IF NEW.active_version_id IS NOT DISTINCT FROM OLD.active_version_id THEN
+    RETURN NEW;
+  END IF;
+
+  SELECT pg_catalog.pg_get_userbyid(p.proowner)
+    INTO v_publish_owner
+  FROM pg_catalog.pg_proc AS p
+  WHERE p.oid = 'public.admin_publish_project_version(uuid,uuid)'::regprocedure;
+
+  IF v_publish_owner IS NULL OR current_user IS DISTINCT FROM v_publish_owner THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '42501',
+      MESSAGE = 'active_project_version_must_use_publish_rpc';
+  END IF;
+
+  IF NEW.active_version_id IS NULL OR NOT EXISTS (
+    SELECT 1
+    FROM public.project_versions AS pv
+    WHERE pv.id = NEW.active_version_id
+      AND pv.project_id = NEW.id
+      AND pv.status = 'published'
+  ) THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '22023',
+      MESSAGE = 'active_project_version_must_be_published_for_project';
+  END IF;
+
+  RETURN NEW;
+END;
+$function$;
+
+REVOKE ALL ON FUNCTION private.guard_active_project_version_pointer() FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION private.guard_active_project_version_pointer() TO authenticated, service_role;
+
+DROP TRIGGER IF EXISTS projects_active_version_publish_guard ON public.projects;
+CREATE TRIGGER projects_active_version_publish_guard
+  BEFORE UPDATE OF active_version_id ON public.projects
+  FOR EACH ROW
+  EXECUTE FUNCTION private.guard_active_project_version_pointer();
 
 -- Keep current and historical submissions attached to their original snapshot.
 CREATE OR REPLACE FUNCTION public.begin_submission(code text, vid uuid)
