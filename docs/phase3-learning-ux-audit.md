@@ -2,6 +2,8 @@
 
 Last checked: 2026-10-23 (Asia/Jakarta). Source-based review of branch `phase3/pbl-ux-testing`. Verified candidate before this documentation update: `ce450964b9b3061fb9242e608f27a2ed390dd49f`. Browser/runtime behavior has not been assumed.
 
+> The original Phase 3 findings below are a historical snapshot. The canonical pedagogical checklist and its current source-audit statuses are maintained in the final section of this document; the current audit baseline is `main` at `f470cb5b322bc76282c24610be3a10e6c4809d65` (2026-10-26).
+
 ## Scope and evidence rules
 
 This audit reads the current teacher/student pages, request schemas, answer helpers, autosave hook, and CI workflow. It is not a browser usability study. Items below are labeled **observed in source**, **unit-tested**, or **pending runtime** so that source inspection cannot be mistaken for proof that a deployment works.
