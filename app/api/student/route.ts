@@ -137,6 +137,9 @@ export async function POST(req: Request) {
     if (normalized.includes("proyek diarsipkan")) {
       return fail("Proyek ini diarsipkan. Jawaban yang tersimpan tetap aman; minta guru mengaktifkan kembali proyek untuk melanjutkan.", 403);
     }
+    if (normalized.includes("project_version_not_published")) {
+      return fail("Proyek ini belum memiliki versi LKPD yang diterbitkan. Minta guru menyimpan draft, memvalidasi, lalu menerbitkan versi.", 409);
+    }
     if (normalized.includes("video ini tidak ditugaskan") || normalized.includes("tidak ditugaskan kepada kelompok")) {
       return fail("Video ini tidak ditugaskan kepada kelompok kalian. Hubungi guru jika penugasan seharusnya tersedia.", 403);
     }
