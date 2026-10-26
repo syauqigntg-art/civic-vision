@@ -108,22 +108,28 @@ export default function ProjectVersionsPage() {
 
     setLoading(true);
     setErrorMessage("");
-    const { data, error } = await sb
-      .from("project_versions")
-      .select("id,project_id,version_number,status,content,based_on_version_id,created_at,updated_at,published_at")
-      .eq("project_id", projectId)
-      .order("version_number", { ascending: false });
+    try {
+      const { data, error } = await sb
+        .from("project_versions")
+        .select("id,project_id,version_number,status,content,based_on_version_id,created_at,updated_at,published_at")
+        .eq("project_id", projectId)
+        .order("version_number", { ascending: false });
 
-    if (error) {
+      if (error) {
+        setErrorMessage(versioningErrorMessage(error, "load"));
+        setVersions([]);
+        return false;
+      }
+
+      setVersions((data || []) as ProjectVersion[]);
+      return true;
+    } catch (error) {
       setErrorMessage(versioningErrorMessage(error, "load"));
       setVersions([]);
-      setLoading(false);
       return false;
+    } finally {
+      setLoading(false);
     }
-
-    setVersions((data || []) as ProjectVersion[]);
-    setLoading(false);
-    return true;
   }, [projectId]);
 
   useEffect(() => {
