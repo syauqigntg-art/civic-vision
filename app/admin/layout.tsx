@@ -9,6 +9,7 @@ import { ProjectPageScope, ProjectProvider, ProjectSwitcher } from "@/components
 const NAV = [
   { href: "/admin", label: "Ringkasan", hint: "Aktivitas belajar", icon: "⌂" },
   { href: "/admin/project", label: "Proyek", hint: "Identitas pembelajaran", icon: "▣" },
+  { href: "/admin/versions", label: "Versi Proyek & LKPD", hint: "Draft, validasi, publikasi", icon: "↺" },
   { href: "/admin/videos", label: "Video Kasus", hint: "Materi media", icon: "▷" },
   { href: "/admin/questions", label: "Pertanyaan LKPD", hint: "Susun instrumen", icon: "?" },
   { href: "/admin/groups", label: "Kelompok", hint: "Daftar dan penugasan", icon: "◎" },
@@ -19,6 +20,7 @@ const NAV = [
 const PAGE_INFO = [
   { href: "/admin", title: "Ringkasan", desc: "Aktivitas dan kemajuan pembelajaran." },
   { href: "/admin/project", title: "Pengaturan Proyek", desc: "Atur identitas dan informasi proyek pembelajaran." },
+  { href: "/admin/versions", title: "Versi Proyek & LKPD", desc: "Simpan draft, tinjau snapshot, validasi, dan terbitkan versi konten." },
   { href: "/admin/videos", title: "Video Kasus", desc: "Kelola video pembelajaran dan materi kasus." },
   { href: "/admin/questions", title: "Pertanyaan LKPD", desc: "Susun pertanyaan berdasarkan tahap SEE, THINK, CONNECT, dan ACT." },
   { href: "/admin/groups", title: "Kelola Kelompok", desc: "Atur identitas kelompok dan distribusi video." },
