@@ -1,6 +1,8 @@
 # PR #20 — Staging Verification Evidence
 
-Last checked: 2026-10-26 (Asia/Jakarta)\n\nDocumentation candidate before this follow-up: `d4a341d71c7a78cfb33dd21fb77323b3d798567d`. CI run #169 passed on that candidate; this follow-up changes only verification documentation.
+Last checked: 2026-10-26 (Asia/Jakarta)
+
+This evidence log is being maintained during the PR #20 CAS follow-up. See the PR head and linked Actions run for the exact final candidate; CI must be green after the last code/documentation change.
 
 ## Candidate and target
 
@@ -16,6 +18,7 @@ The repository migration filenames now align with the migration ledger records c
 | --- | --- | --- |
 | `20261026090535` | `add_project_content_versioning` | Applied |
 | `20261026091333` | `add_project_version_fk_indexes` | Applied |
+| `20261026093943` | `version_publish_compare_and_swap` | Applied |
 
 ## Backfill and transactional failure evidence
 
@@ -40,10 +43,14 @@ The direct privilege matrix was separately queried in PostgreSQL:
 - `authenticated`: SELECT only; direct INSERT/UPDATE/DELETE false.
 - `service_role`: SELECT only; direct INSERT/UPDATE/DELETE false.
 - RLS on `public.project_versions`: enabled.
-- `admin_save_project_version_draft(uuid)` and `admin_publish_project_version(uuid,uuid)`: SECURITY DEFINER.
+- `admin_save_project_version_draft(uuid)` and `admin_publish_project_version(uuid,uuid,timestamptz)`: SECURITY DEFINER. The legacy two-argument publish function has been removed.
 - `projects_active_version_publish_guard`: present.
 
 The script includes negative checks for direct DML, anon access, non-admin and no-UID RPC denial, direct active-pointer bypass (including cross-project pointer), invalid publication without pointer movement, published-version UPDATE/DELETE protection, and a positive valid-publication flow. It rolls back test fixtures.
+
+After the compare-and-swap follow-up migration, the script was run again with a final explicit PASS sentinel. It includes an additional stale-validation race test: it saves a draft, changes the working question after the expected timestamp is captured, resaves the draft, and verifies publication with the old timestamp is rejected as `project_version_validation_stale` while the active pointer remains on v2. The run returned `PASS: versioning SQL security test transaction completed and fixtures rolled back`.
+
+The CAS follow-up also sets `submissions.project_id NOT NULL` after a guard check. A read-only Staging query confirmed both `submissions.project_id` and `project_version_id` are NOT NULL, there are zero submissions missing either link, the old publish RPC signature is absent, the new three-argument signature exists, and anon cannot execute the new RPC.
 
 ## SQL v1/v2 integration scenario
 
@@ -78,15 +85,15 @@ This verifies DB-level pinning in a transaction; it does not replace browser E2E
 
 ## Release gate status
 
-- [x] Migration applied to Staging and ledger recorded.
+- [x] Versioning migration, FK-index migration, and CAS/NOT NULL follow-up migration applied to Staging and ledger recorded.
 - [x] Invalid-backfill failure rolled back without partial schema.
 - [x] Baseline v1 and legacy submission backfill verified.
-- [x] SQL security test executed; fixtures rolled back.
+- [x] SQL security test executed after the CAS follow-up; includes valid/invalid publish and stale validated-draft rejection; fixtures rolled back.
 - [x] DB-level Group A v1 / Group B v2 scenario passed; changes rolled back.
 - [x] Preview URL and anon key branch-scoped to Staging.
 - [x] Read-only Preview HTTP smoke checks succeeded.
 - [x] CI run #166 passed on SQL candidate SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40297962828
-- [x] CI run #169 passed on documentation candidate SHA `d4a341d71c7a78cfb33dd21fb77323b3d798567d`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40300077820. This follow-up changes only verification documentation, and a new CI run is still required on the resulting final head.
+- [x] CI run #170 passed on the pre-CAS candidate SHA `8d312f257d19f0c1488c898567d8a51cb92570b5`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40300571081. The CAS migration, UI, invariant, and evidence updates followed this run; a new CI run must pass on the final head.
 - [ ] Staging service-role key privately configured for this Preview branch, then runtime/key-ref verified.
 - [ ] Full browser bundle/network check confirms no secret leaked.
 - [ ] Independent SQL review submitted by a reviewer other than the PR author.
