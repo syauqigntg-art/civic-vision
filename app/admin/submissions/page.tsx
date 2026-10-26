@@ -26,7 +26,7 @@ export default function Submissions() {
   const cur = rows.find(r => r.g.id === sel);
   if (cur) { const { g, s, v, pv } = cur; const list = qsFor(s); const cats = [...new Set(list.map(q => q.category))]; const snapshotMissing = cur.snapshotMissing;
     return (<section className="glass"><button className="btn g" onClick={() => setSel("")}>← Semua hasil</button><h2 style={{ marginTop: 14 }}>Kelompok {two(g.group_number)} — {v?.title || "Video belum ditentukan"}</h2>
-      <p>Status: <b style={{ color: "#fff" }}>{statusLabel(s?.status, Boolean(s))}</b>{cur.date && ` · ${cur.date}`} · Versi LKPD: <b style={{ color: "#fff" }}>{pv ? `v${pv.version_number}` : "Belum tercatat"}</b></p>
+      <p>Status: <b style={{ color: "#fff" }}>{statusLabel(s?.status, Boolean(s))}</b>{cur.date && ` · ${cur.date}`} · Versi LKPD: <b style={{ color: "#fff" }}>{pv ? `v${pv.version_number}` : (s ? "Snapshot tidak tersedia" : "—")}</b></p>
       <div className="qrow"><b>Identitas kelompok</b><p style={{ margin: "6px 0 0" }}>{g.group_name || "—"} · Kelas {g.class_name || "—"} · Ketua: {g.leader_name || "—"}<br />Anggota: {gm.filter(m => m.group_id === g.id).map(m => m.name).join(", ") || "—"}</p></div>
       {v?.video_url && <Media path={v.video_url} kind="video" />}
       {!s ? <p>Kelompok ini belum memulai analisis.</p> : cats.map(c => <div key={c} className="qrow" style={{ marginTop: 12 }}><b style={{ color: "#38bdf8" }}>{c}</b>{list.filter(q => q.category === c).map((q: any) => <div key={q.id} style={{ marginTop: 8 }}>
@@ -64,7 +64,8 @@ export default function Submissions() {
             window.alert("Terjadi kesalahan saat membuka kembali pengerjaan. Periksa akses admin dan coba lagi.");
           }
         }} disabled={readOnly}>Buka kembali</button></>}</td></tr>)}</tbody></table></div>
-    {rows.some(r => r.snapshotMissing) && <p role="alert" className="warn">Sebagian submission tidak memiliki snapshot yang dapat dibaca. Hasil historis yang tidak lengkap tidak akan ditafsirkan memakai materi terkini.</p>}\n    {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
+    {rows.some(r => r.snapshotMissing) && <p role="alert" className="warn">Sebagian submission tidak memiliki snapshot yang dapat dibaca. Hasil historis yang tidak lengkap tidak akan ditafsirkan memakai materi terkini.</p>}
+    {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
     <div className="row"><button className="btn" onClick={() => saveBlob(`hasil-civic-vision-${stamp()}.csv`, new Blob([toCsv(exportRows())], { type: "text/csv;charset=utf-8" }))}>Unduh CSV</button><button className="btn" onClick={() => toXlsx(exportRows(), `hasil-civic-vision-${stamp()}.xlsx`)}>Unduh Excel</button></div>
     <p style={{ fontSize: 13 }}>Unduhan mengikuti filter yang aktif dan hanya membaca data, tidak mengubah jawaban asli.</p></section>);
 }
