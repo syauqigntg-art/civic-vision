@@ -19,6 +19,11 @@ BEGIN
   IF has_table_privilege('authenticated', 'public.project_versions', 'UPDATE') THEN
     RAISE EXCEPTION 'FAIL: authenticated still has direct UPDATE on project_versions';
   END IF;
+  IF has_table_privilege('service_role', 'public.project_versions', 'INSERT')
+     OR has_table_privilege('service_role', 'public.project_versions', 'UPDATE')
+     OR has_table_privilege('service_role', 'public.project_versions', 'DELETE') THEN
+    RAISE EXCEPTION 'FAIL: service_role still has direct write privileges on project_versions';
+  END IF;
   IF NOT has_function_privilege('authenticated', 'public.admin_save_project_version_draft(uuid)', 'EXECUTE')
      OR NOT has_function_privilege('authenticated', 'public.admin_publish_project_version(uuid,uuid)', 'EXECUTE') THEN
     RAISE EXCEPTION 'FAIL: official draft/publish RPC is not executable by authenticated';
@@ -72,6 +77,35 @@ BEGIN
   WHERE id = v_project_id;
 END;
 $setup$;
+
+-- The trusted service role may read snapshots but cannot move the active
+-- pointer with a direct table UPDATE either.
+SET LOCAL ROLE service_role;
+DO $service_role_pointer_test$
+DECLARE
+  v_project_id uuid;
+  v_message text;
+BEGIN
+  SELECT id INTO v_project_id
+  FROM public.projects
+  WHERE title = '__versioning_security_test__'
+  ORDER BY id
+  LIMIT 1;
+
+  IF has_table_privilege('service_role', 'public.projects', 'UPDATE') THEN
+    BEGIN
+      UPDATE public.projects SET active_version_id = NULL WHERE id = v_project_id;
+      RAISE EXCEPTION 'TEST FAILED: service_role direct active_version_id change was accepted';
+    EXCEPTION WHEN insufficient_privilege THEN
+      GET STACKED DIAGNOSTICS v_message = MESSAGE_TEXT;
+      IF v_message <> 'active_project_version_must_use_publish_rpc' THEN
+        RAISE EXCEPTION 'TEST FAILED: service_role pointer write was rejected for an unexpected reason: %', v_message;
+      END IF;
+    END;
+  END IF;
+END;
+$service_role_pointer_test$;
+RESET ROLE;
 
 -- Supply the identity of an existing administrator, then test through the
 -- same authenticated role used by the admin dashboard.
