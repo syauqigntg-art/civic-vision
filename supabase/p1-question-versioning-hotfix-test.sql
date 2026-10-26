@@ -61,8 +61,16 @@ END;
 $setup$;
 
 -- A project with no draft must create one; resaving identical content must reuse it.
-SELECT set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
-SELECT set_config('request.jwt.claim.role','authenticated',true);
+DO $set_admin_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
+END;
+$set_admin_claim$;
+DO $set_authenticated_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.role','authenticated',true);
+END;
+$set_authenticated_claim$;
 SET LOCAL ROLE authenticated;
 DO $v1$
 DECLARE
@@ -89,12 +97,26 @@ $v1$;
 
 RESET ROLE;
 SET LOCAL ROLE service_role;
-SELECT public.begin_submission(current_setting('cv_hotfix.code_a'),current_setting('cv_hotfix.video_id')::uuid);
-SELECT public.save_answer(current_setting('cv_hotfix.code_a'),current_setting('cv_hotfix.question_id')::uuid,'A');
+DO $start_a$
+BEGIN
+  PERFORM public.begin_submission(current_setting('cv_hotfix.code_a'),current_setting('cv_hotfix.video_id')::uuid);
+  IF public.save_answer(current_setting('cv_hotfix.code_a'),current_setting('cv_hotfix.question_id')::uuid,'A') IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: Group A answer did not save';
+  END IF;
+END;
+$start_a$;
 
 RESET ROLE;
-SELECT set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
-SELECT set_config('request.jwt.claim.role','authenticated',true);
+DO $set_admin_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
+END;
+$set_admin_claim$;
+DO $set_authenticated_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.role','authenticated',true);
+END;
+$set_authenticated_claim$;
 SET LOCAL ROLE authenticated;
 
 -- Semantic edits (prompt, type and options) must be accepted only because v1
@@ -192,8 +214,14 @@ $edit_v2$;
 
 RESET ROLE;
 SET LOCAL ROLE service_role;
-SELECT public.begin_submission(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.video_id')::uuid);
-SELECT public.save_answer(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.question_id')::uuid,'["A"]');
+DO $start_b$
+BEGIN
+  PERFORM public.begin_submission(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.video_id')::uuid);
+  IF public.save_answer(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.question_id')::uuid,'["A"]') IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: Group B initial answer did not save';
+  END IF;
+END;
+$start_b$;
 DO $v2_answer_validation$
 BEGIN
   IF public.submit_group(current_setting('cv_hotfix.code_b')) IS DISTINCT FROM 'belum lengkap' THEN
@@ -201,7 +229,13 @@ BEGIN
   END IF;
 END;
 $v2_answer_validation$;
-SELECT public.save_answer(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.question_id')::uuid,'["C"]');
+DO $save_b_valid$
+BEGIN
+  IF public.save_answer(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.question_id')::uuid,'["C"]') IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: valid v2 answer did not save';
+  END IF;
+END;
+$save_b_valid$;
 DO $v2_submit$
 BEGIN
   IF public.submit_group(current_setting('cv_hotfix.code_b')) IS DISTINCT FROM 'ok' THEN
@@ -247,12 +281,24 @@ END;
 $v1_submit$;
 
 RESET ROLE;
-SELECT set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
-SELECT set_config('request.jwt.claim.role','authenticated',true);
+DO $set_admin_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
+END;
+$set_admin_claim$;
+DO $set_authenticated_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.role','authenticated',true);
+END;
+$set_authenticated_claim$;
 SET LOCAL ROLE authenticated;
 
 -- Non-admin must still be rejected by the admin RPC.
-SELECT set_config('request.jwt.claim.sub',current_setting('cv_hotfix.student_id'),true);
+DO $set_student_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub',current_setting('cv_hotfix.student_id'),true);
+END;
+$set_student_claim$;
 DO $non_admin$
 DECLARE
   q uuid := current_setting('cv_hotfix.question_id')::uuid;
@@ -270,7 +316,11 @@ BEGIN
 END;
 $non_admin$;
 
-SELECT set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
+DO $set_admin_claim$
+BEGIN
+  PERFORM set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
+END;
+$set_admin_claim$;
 DO $archive_question$
 DECLARE
   q uuid := current_setting('cv_hotfix.question_id')::uuid;
@@ -317,3 +367,4 @@ END;
 $final_integrity$;
 
 ROLLBACK;
+SELECT 'PASS: snapshot-safe question editing, v1/v2 validation, stale CAS, soft-delete, non-admin denial and fixture rollback' AS test_result;
