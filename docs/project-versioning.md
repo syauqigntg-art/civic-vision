@@ -48,7 +48,7 @@ Tahap lanjut disarankan menambahkan `rubric_versions` dengan draft/published sna
 
 1. Tinjau SQL migration dan pastikan urutannya cocok dengan history database target.
 2. Terapkan hanya ke project staging yang benar melalui alur migration yang disetujui; jangan `db push` ke Production. Setelah migration, jalankan `supabase/p1-versioning-security-test.sql` di SQL Editor Staging sebagai database owner. Skrip memeriksa penolakan direct DML, bypass pointer, RPC simpan draft, publikasi valid, publikasi invalid, dan stale-validation compare-and-swap; skrip melakukan rollback atas fixture sintetis.
-3. Jalankan tes dengan fixture sintetis: baseline existing, simpan draft, edit working table setelah draft, preview harus tetap stabil, validasi gagal/lulus, publish v2, v1 tetap immutable, submission baru memakai v2, submission lama tetap di v1, save/submit mengacu pertanyaan v1/v2 yang benar, serta isolasi lintas proyek.
+3. Jalankan tes dengan fixture sintetis: baseline existing, simpan draft, edit working table setelah draft, preview harus tetap stabil, validasi gagal/lulus, publish v2, v1 tetap immutable, submission baru memakai v2, submission lama tetap di v1, save/submit mengacu pertanyaan v1/v2 yang benar, serta isolasi lintas proyek. Gunakan `supabase/p1-versioning-v1-v2-integration-test.sql` untuk mengulang pemeriksaan pinning, historis, arsip, dan autosave terlambat.
 4. Uji jalur browser guru dan siswa pada deployment dari SHA yang sama dengan target staging. Pastikan URL, anon key, dan server-side service-role credential semua menunjuk staging; jangan mengubah konfigurasi Production.
 5. Uji kompatibilitas terhadap proyek/submission pra-migrasi, baca hasil lama dan ekspor, nonaktifkan konten secara aman, serta jalankan backup/restore rehearsal.
 6. Setelah semua bukti lulus, minta review independen sebelum memutuskan merge/deploy.
@@ -60,6 +60,7 @@ Staging Supabase `civic-vision-staging` (ref `bneqqkvhehrlcjhvvyvv`) sudah menja
 - `20261026090535_add_project_content_versioning`: baseline v1, kolom versi, fungsi/RPC, RLS, dan trigger.
 - `20261026091333_add_project_version_fk_indexes`: indeks untuk foreign key versi baru.
 - `20261026093943_version_publish_compare_and_swap`: membuat `submissions.project_id` `NOT NULL` setelah guard pemeriksaan, mengganti publish RPC dua argumen dengan RPC compare-and-swap tiga argumen, dan memperbarui owner lookup pada trigger pointer.
+- Tes pendukung: `supabase/p1-versioning-security-test.sql` meliputi grants/RPC/immutability/CAS stale-draft, dan `supabase/p1-versioning-v1-v2-integration-test.sql` membuktikan Group A tetap di v1, Group B mulai di v2, jawaban final tahan terhadap autosave terlambat, dan arsip tidak mengubah snapshot.
 
 Bukti yang dijalankan langsung di database:
 
@@ -70,6 +71,17 @@ Bukti yang dijalankan langsung di database:
 - Proyek sintetis backfill diarsipkan. Tidak ada migration maupun write test di Production.
 
 Lihat [`docs/pr20-staging-verification.md`](pr20-staging-verification.md) untuk bukti, SHA, hasil Advisor, dan blocker terkini.
+
+## Bukti integrasi lanjutan pada Staging — 2026-10-26
+
+Pada kandidat kode `d74e6afd03b707f1ceaa458f8bb974aa950072e0`, tes berikut dijalankan terhadap Supabase Staging:
+
+- `supabase/p1-versioning-security-test.sql`: PASS; fixtures di-rollback.
+- `supabase/p1-versioning-v1-v2-integration-test.sql`: PASS. Group A tetap di v1 dan jawaban `group-a-answer-v1` tidak berubah; Group B memulai setelah publikasi dan dipin ke v2; teks pertanyaan historis v1/v2 tetap berbeda; autosave sesudah submission dikirim ditolak; penghapusan fisik pertanyaan/video yang direferensikan snapshot terbit ditolak; arsip konten kerja tidak mengubah snapshot.
+- Tes dua publikasi bersamaan pada satu draft dan timestamp yang sama: satu RPC berhasil, satu lagi ditolak dengan `project_version_draft_not_found`; hanya v1 dan v2 yang terbit, pointer aktif konsisten di v2, dan tidak ada draft tersisa. Fixture dan user sementara dihapus; trigger integritas diverifikasi aktif kembali.
+- CI #180 lulus pada kandidat kode tersebut: https://github.com/syauqigntg-art/civic-vision/actions/runs/40303978999. Deployment Preview pada kandidat tersebut READY: https://vercel.com/uki8/civic-vision/HiL3cFjdvjWH3U78KdJzwbLS3zur.
+
+Tes-tes database ini **tidak menggantikan browser E2E**. Preview masih memakai placeholder untuk `SUPABASE_SERVICE_ROLE_KEY`, sehingga tes tulis aplikasi belum dijalankan. Review SQL independen juga belum tercatat.
 
 ## Status implementasi dan gerbang rilis
 
