@@ -114,3 +114,116 @@ This is not an integration test of the Supabase RPC, browser, or concurrent tran
 | Retry/identity state transitions in UI | Source invariants only | Runtime pending |
 | Supabase autosave/submit race behavior | No database-writing/runtime test in this phase | Runtime pending |
 | Preview's exact source SHA and staging configuration | Vercel access still blocked with HTTP 403 | Blocked |
+
+
+---
+
+## Kanonis — checklist validasi pedagogis PBL (audit 2026-10-26)
+
+**Baseline yang diaudit:** `main` pada SHA `f470cb5b322bc76282c24610be3a10e6c4809d65`.  
+**Status dokumen:** Checklist ini menjadi sumber utama untuk cakupan pedagogis PBL. Audit ini memeriksa source code, seed, skema data, tes otomatis, dan catatan QA yang tersedia. Audit ini **bukan** bukti bahwa alur telah diuji pada browser atau staging.  
+**Pembedaan penting:** UI saat ini mempunyai empat label kerja — SEE, THINK, CONNECT, ACT — bukan lima tahap PBL yang lengkap. Empat label tersebut tidak boleh dihitung sebagai bukti bahwa organisasi belajar, penyelidikan terstruktur, presentasi/evaluasi, atau revisi berdasarkan umpan balik telah tersedia.
+
+### Status ringkas A.1–A.7
+
+| ID | Kriteria | Status audit | Bukti implementasi yang ditemukan | Bukti pengujian | Kesenjangan / tindakan |
+|---|---|---|---|---|---|
+| A.1 | Validitas dan keterbukaan masalah | **PARTIAL** | `app/admin/videos/page.tsx` menyediakan konteks kasus; `app/admin/questions/page.tsx` mempunyai prompt SEE/THINK tentang masalah, fakta, penyebab, dampak, dan pihak terdampak; `scripts/seed.mjs` memuat pertanyaan kasus awal. | Tes unit dan invariant menguji skema/struktur sumber, bukan kualitas pedagogis setiap kasus aktif. Belum ada bukti browser/staging yang menilai kasus dan jawaban siswa. | Audit contoh video/kasus yang benar-benar dipakai: konteks nyata, masalah terbuka, alternatif solusi yang dapat dipertanggungjawabkan, pihak terdampak, fakta awal, penyebab, konsekuensi. Pastikan pertanyaan tidak mengarahkan hanya ke satu jawaban hafalan. |
+| A.2 | Tahap 1 — orientasi masalah | **PARTIAL** | `components/lkpd/PhaseBar.tsx`, `app/lkpd/kasus/[id]/page.tsx`, dan `app/admin/questions/page.tsx` mendukung stimulus/video, pengamatan, fakta, masalah awal, dan pihak terdampak. | Ada pemeriksaan source-level untuk empat label fase dan unit test formulir; belum membuktikan pemahaman siswa atau perilaku runtime. | Pastikan instruksi membedakan fakta, dugaan, dan pendapat; menjelaskan ruang lingkup, pertanyaan pemantik, pihak terdampak, dan hasil belajar. Uji dengan kasus contoh dan respons siswa. |
+| A.3 | Tahap 2 — organisasi belajar | **NOT IMPLEMENTED** | `groups` dan `group_members` menyimpan kelompok/anggota; halaman admin kelompok mengelola kelompok dan penugasan video. Tidak ditemukan model peran anggota, pertanyaan penyelidikan terstruktur, atau rencana kerja kelompok yang disimpan. | Tidak ada tes yang membuktikan pembagian peran, rencana pencarian informasi, atau target keluaran kelompok. Identitas anggota bukan bukti pembagian peran. | Rancang sebagai pekerjaan pengembangan terpisah: pertanyaan penyelidikan, peran/tanggung jawab anggota, rencana sumber/bukti, urutan kerja, dan keluaran. Setelah diimplementasikan, uji simpan, muat ulang, dan akses antarkelompok. |
+| A.4 | Tahap 3 — penyelidikan | **PARTIAL** | Pertanyaan dan jawaban siswa dapat disimpan; prompt THINK meminta bukti/fakta, penyebab, dampak, dan perspektif. Skema `questions`/`answers` menyimpan pertanyaan dan jawaban. | `scripts/pbl-ux-validation.test.mjs` menguji helper/skema dan `scripts/check-pbl-invariants.mjs` menguji invariant sumber. Keduanya bukan tes pengelolaan sumber eksternal atau hubungan klaim–bukti. | Belum ditemukan field/alur khusus untuk mencatat sumber informasi, kutipan/tautan, klaim yang didukung setiap bukti, kekuatan/keterbatasan bukti, atau asumsi. Jangan menganggap pertanyaan teks terbuka sebagai fitur manajemen bukti. |
+| A.5 | Tahap 4 — pengembangan dan penyajian solusi | **PARTIAL** | Prompt ACT meminta solusi, tindakan nyata, langkah awal, pihak yang dilibatkan, dan kelayakan; instruksi fase meminta pembagian peran dan indikator keberhasilan. Halaman `app/admin/submissions/page.tsx` menampilkan jawaban dan mendukung ekspor. | Tes otomatis memvalidasi sebagian perilaku data/form, bukan presentasi produk atau tinjauan guru. Belum ada bukti runtime presentasi. | Belum ditemukan mekanisme tersendiri untuk mengumpulkan/menyajikan produk akhir (mis. artefak/presentasi) dan memberi umpan balik guru atas kualitas solusi. Rencana aksi ACT tidak otomatis memenuhi kriteria presentasi. |
+| A.6 | Tahap 5 — evaluasi dan refleksi | **PARTIAL** | Sistem pertanyaan umum dapat menyimpan jawaban; daftar placeholder kategori solusi/refleksi/kesimpulan memuat “Apa pelajaran penting yang kalian peroleh?”. Seed menempatkan pertanyaan kesimpulan dalam ACT. | Tidak ada tes yang membuktikan aktivitas refleksi/evaluasi tersendiri, evaluasi dampak/kelayakan, atau perbandingan tujuan awal dengan hasil. | Belum ada tahap refleksi yang eksplisit dengan pertanyaan tentang keterbatasan bukti, proses kelompok, kontribusi anggota, kelayakan/dampak solusi, tujuan awal vs hasil, dan perbaikan berikutnya. Pastikan aktivitas tersebut dapat disimpan dan ditinjau. |
+| A.7 | Revisi solusi berdasarkan umpan balik | **PARTIAL** | Alur admin mempunyai mekanisme “Buka kembali” pengerjaan yang dicatat dalam `docs/p0-autosave-submit-qa.md`; data jawaban bisa diedit saat pengerjaan kembali dibuka. | QA dokumen mencantumkan skenario buka kembali, tetapi itu bukan bukti bahwa umpan balik, versi revisi, atau urutan penilaian akhir telah diuji. | Tidak ditemukan alur lengkap komentar/umpan balik guru → revisi siswa → alasan mempertahankan/mengubah solusi → versi/riwayat revisi → penilaian final. Membuka submission kembali saja tidak memenuhi kriteria. |
+
+### Definisi status dan batas bukti
+
+- **PASS:** seluruh kriteria terukur dibuktikan oleh implementasi dan pengujian yang sesuai.
+- **PARTIAL:** ada dukungan terkait, tetapi setidaknya satu unsur wajib belum tersedia atau belum dibuktikan.
+- **FAIL:** pengujian menemukan perilaku yang bertentangan dengan kriteria.
+- **BLOCKED:** verifikasi belum dapat dilakukan karena akses/lingkungan/bukti tidak tersedia.
+- **NOT IMPLEMENTED:** kemampuan inti yang disyaratkan tidak ditemukan dalam source yang diaudit.
+- **NOT APPLICABLE:** hanya jika alasan ketidakberlakuan dijelaskan.
+
+Status di tabel adalah **hasil audit source dan dokumentasi**, bukan hasil uji browser. Tidak ada A.1–A.7 yang diberi PASS. Tes unit/source invariant tidak membuktikan kualitas kasus, pemahaman siswa, presentasi, refleksi, atau revisi saat runtime.
+
+### Kriteria penerimaan terukur dan bukti yang perlu direkam
+
+#### A.1 — Validitas dan keterbukaan masalah
+- [ ] Guru dapat menunjuk kasus/video yang relevan dengan materi dan konteks nyata.
+- [ ] Pertanyaan pemantik memungkinkan lebih dari satu alternatif solusi yang harus dijustifikasi, bukan satu jawaban hafalan.
+- [ ] Siswa diminta mengidentifikasi fakta awal, dugaan, pihak terdampak, penyebab, dan konsekuensi.
+- [ ] Reviewer mencatat ID/nama kasus, prompt aktif, contoh respons, dan alasan mengapa masalah terbuka.
+- **Bukti:** konfigurasi kasus/pertanyaan aktif dan hasil respons contoh; bukan sekadar adanya kolom video/pertanyaan.
+
+#### A.2 — Orientasi masalah
+- [ ] Siswa dapat menyatakan ulang masalah dan ruang lingkupnya.
+- [ ] Instruksi memisahkan fakta yang diamati dari dugaan/pendapat.
+- [ ] Pihak terdampak dan pertanyaan pemantik disebut secara eksplisit.
+- [ ] Hasil belajar/keluaran yang diharapkan dijelaskan sebelum analisis solusi.
+- **Bukti:** prompt aktif, contoh kasus, dan pengujian browser dengan respons yang menunjukkan pemahaman awal.
+
+#### A.3 — Organisasi belajar
+- [ ] Kelompok merumuskan pertanyaan penyelidikan yang dapat dijawab melalui pengumpulan informasi.
+- [ ] Setiap anggota mempunyai peran/tanggung jawab yang eksplisit; nama anggota saja tidak cukup.
+- [ ] Kelompok menyimpan rencana pencarian informasi/bukti, urutan kerja, dan target keluaran.
+- [ ] Guru dapat meninjau rencana tersebut; data tetap tersedia setelah reload dan tidak bocor antar-kelompok.
+- **Bukti:** record rencana/peran pada lingkungan uji dan tes simpan-muat ulang/isolation. Saat ini status **NOT IMPLEMENTED**.
+
+#### A.4 — Penyelidikan
+- [ ] Siswa dapat mencatat fakta/informasi dan sumber eksternal bila digunakan.
+- [ ] Klaim/kesimpulan dikaitkan dengan bukti yang mendukungnya.
+- [ ] Siswa membahas penyebab, dampak, perspektif pihak terdampak, asumsi, serta informasi yang belum cukup.
+- [ ] Guru dapat meninjau jawaban beserta sumber dan keterbatasan bukti.
+- **Bukti:** respons siswa yang tersimpan, sumber/tautan yang tercatat, dan tampilan guru yang menunjukkan relasi klaim–bukti. Saat ini pengelolaan sumber/bukti khusus belum ditemukan.
+
+#### A.5 — Pengembangan dan penyajian solusi
+- [ ] Solusi merujuk pada temuan penyelidikan dan menyertakan argumentasi/bukti.
+- [ ] Solusi mempunyai langkah penerapan, pihak yang bertanggung jawab, dan indikator keberhasilan.
+- [ ] Siswa dapat mengumpulkan/menyajikan produk akhir; guru dapat membukanya dan memberikan umpan balik.
+- [ ] Bukti presentasi/produk tidak hanya berupa status `submitted` atau rencana ACT.
+- **Bukti:** artefak/presentasi tersimpan, tampilan tinjauan guru, dan uji pengiriman/akses pada staging. Mekanisme presentasi khusus belum ditemukan.
+
+#### A.6 — Evaluasi dan refleksi
+- [ ] Siswa menilai kelayakan dan potensi dampak solusi dengan alasan.
+- [ ] Siswa mencatat keterbatasan bukti/informasi yang belum diketahui.
+- [ ] Siswa merefleksikan proses penyelidikan, keputusan kelompok, dan kontribusi anggota.
+- [ ] Siswa membandingkan tujuan awal dengan hasil dan menjelaskan pelajaran/perbaikan berikutnya.
+- [ ] Jawaban refleksi tersimpan dan dapat ditinjau guru secara terpisah dari ringkasan submission.
+- **Bukti:** aktivitas refleksi yang eksplisit dan jawaban tersimpan; satu prompt “pelajaran penting” saja belum cukup.
+
+#### A.7 — Revisi berdasarkan umpan balik
+- [ ] Guru dapat menyimpan umpan balik yang terkait dengan solusi/argumentasi tertentu.
+- [ ] Siswa dapat membaca umpan balik dan mengirim revisi beserta alasan/bukti.
+- [ ] Sistem membedakan versi awal dan revisi atau menyediakan riwayat perubahan yang dapat ditinjau.
+- [ ] Penilaian final terjadi setelah revisi selesai atau kesempatan revisi ditutup menurut kebijakan.
+- **Bukti:** urutan umpan balik → revisi → versi/riwayat → penilaian final yang diuji. Fitur buka kembali submission saja belum cukup.
+
+### Cara menjalankan audit lanjutan tanpa melebih-lebihkan status
+
+Untuk setiap butir, simpan secara terpisah:
+1. **Source:** path komponen/API/skema yang mendukung perilaku.
+2. **Automated test:** nama tes dan run URL yang lulus pada SHA yang diuji.
+3. **Browser/staging:** URL deployment, exact SHA, browser/OS/versi/viewport, skenario, hasil aktual, dan bukti aman.
+4. **Gap:** fitur yang belum ada, bukti yang belum tersedia, pemilik tindak lanjut, dan kriteria penerimaan.
+
+Gunakan data sintetis pada staging yang telah diverifikasi. Jangan menguji tulis pada Production. Jika akses Preview/staging belum dapat diverifikasi, tandai **BLOCKED** dan jangan menyimpulkan PASS.
+
+### Prioritas tindak lanjut
+
+1. **P0 — A.3 organisasi belajar:** rancang dan implementasikan peran, pertanyaan penyelidikan, dan rencana kerja tersimpan; tanpa ini alur kelompok belum mencakup organisasi belajar.
+2. **P0 — A.4 pengelolaan bukti:** putuskan struktur pencatatan sumber dan hubungan klaim–bukti; pertanyaan teks saja tidak mencukupi.
+3. **P1 — A.5 presentasi dan tinjauan guru:** definisikan produk akhir dan alur umpan balik.
+4. **P1 — A.6 refleksi/evaluasi:** tambahkan aktivitas eksplisit dan dapat disimpan, tidak hanya kesimpulan pada ACT.
+5. **P1 — A.7 revisi:** tentukan komentar guru, revisi siswa, riwayat, dan aturan penilaian final.
+6. **P1 — A.1/A.2 validasi konten:** audit kasus dan prompt aktif dengan rubrik terbuka/fakta-dugaan/pihak terdampak.
+7. **P2 — validasi runtime:** jalankan skenario browser dan staging sesudah fitur tersedia; jangan menutup gap berdasarkan source invariant saja.
+
+### Hubungan dengan dokumen lain
+
+Checklist pedagogis kanonis ada di bagian ini. Dokumen berikut adalah catatan historis/teknis untuk domain masing-masing dan tidak membuat checklist pedagogis duplikat:
+- [Tahap 4 — dependency, staging, dan runtime ledger](phase4-verification-status.md)
+- [Tahap 5 — release-readiness ledger](phase5-release-readiness.md)
+- [Tahap 6 — final verification dan release gate](phase6-final-verification.md)
+- [QA autosave dan submit](p0-autosave-submit-qa.md)
+- [Status regresi keamanan dan staging](p0-regression-status.md)
