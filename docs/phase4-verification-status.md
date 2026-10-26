@@ -1,5 +1,7 @@
 # CIVIC VISION — Tahap 4: Dependency, staging, dan runtime verification ledger
 
+> **Historical evidence ledger:** statuses below belong to the Phase 4 candidate/date and are not a current pedagogical PASS. Use the [canonical PBL checklist](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26) for current A.1–A.7 source-audit status; browser/staging results must still be verified against the exact candidate.
+
 Last checked: 2026-10-23 (Asia/Jakarta)
 
 ## Candidate and evidence baseline
