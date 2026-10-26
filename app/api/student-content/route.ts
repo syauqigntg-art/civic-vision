@@ -29,6 +29,50 @@ async function limit(bucket: "student" | "bad-code", keyHash: string, max: numbe
   });
 }
 
+type SnapshotVideo = {
+  id: string;
+  project_id: string;
+  number: number;
+  title: string;
+  category: string | null;
+  description: string | null;
+  video_url: string | null;
+  thumbnail_url: string | null;
+  duration: string | null;
+  is_active: boolean | null;
+};
+
+type SnapshotQuestion = {
+  id: string;
+  category: string;
+  phase: "see" | "think" | "connect" | "act" | null;
+  question_text: string;
+  description: string | null;
+  question_type: string;
+  placeholder: string | null;
+  is_required: boolean | null;
+  min_items: number | null;
+  display_order: number;
+  is_active: boolean | null;
+  question_options?: Array<{ option_text: string; display_order: number }>;
+};
+
+type ProjectContentSnapshot = {
+  schema_version: number;
+  project: {
+    id: string;
+    title: string;
+    tagline: string | null;
+    description: string | null;
+    subject: string | null;
+    grade: string | null;
+    phase: string | null;
+    duration: string | null;
+  };
+  videos: SnapshotVideo[];
+  questions: SnapshotQuestion[];
+};
+
 async function loadGroup(code: string) {
   return admin
     .from("groups")
@@ -37,11 +81,17 @@ async function loadGroup(code: string) {
     .maybeSingle();
 }
 
-async function loadAssignedVideo(groupId: string, projectId: string, videoId: string) {
+async function loadAssignedVideo(
+  groupId: string,
+  projectId: string,
+  videoId: string,
+  content: ProjectContentSnapshot,
+) {
   const { data: assignment, error: assignmentError } = await admin
     .from("group_videos")
     .select("id")
     .eq("group_id", groupId)
+    .eq("project_id", projectId)
     .eq("video_id", videoId)
     .limit(1)
     .maybeSingle();
@@ -50,50 +100,29 @@ async function loadAssignedVideo(groupId: string, projectId: string, videoId: st
     return { data: null, error: assignmentError };
   }
 
-  const { data, error } = await admin
-    .from("videos")
-    .select("id,project_id,number,title,category,description,video_url,thumbnail_url,is_active")
-    .eq("id", videoId)
-    .eq("project_id", projectId)
-    .eq("is_active", true)
-    .maybeSingle();
+  const video = (content.videos || []).find(
+    (item) =>
+      item.id === videoId &&
+      item.project_id === projectId &&
+      item.is_active !== false
+  );
 
-  return { data, error };
+  return { data: video || null, error: null };
 }
 
-async function loadQuestions(projectId: string, phase?: "see") {
-  let query = admin
-    .from("questions")
-    .select("id,category,phase,question_text,description,question_type,placeholder,is_required,min_items,display_order")
-    .eq("project_id", projectId)
-    .eq("is_active", true)
-    .order("display_order");
+function loadQuestions(content: ProjectContentSnapshot, phase?: SnapshotQuestion["phase"]) {
+  const questions = (content.questions || [])
+    .filter((question) => question.is_active !== false)
+    .filter((question) => !phase || question.phase === phase)
+    .sort((a, b) => a.display_order - b.display_order)
+    .map((question) => ({
+      ...question,
+      question_options: (question.question_options || [])
+        .map(({ option_text, display_order }) => ({ option_text, display_order }))
+        .sort((a, b) => a.display_order - b.display_order),
+    }));
 
-  if (phase) query = query.eq("phase", phase);
-
-  const { data: questions, error } = await query;
-  if (error) return { data: null, error };
-
-  const rows = questions || [];
-  if (!rows.length) return { data: [], error: null };
-
-  const { data: options, error: optionsError } = await admin
-    .from("question_options")
-    .select("question_id,option_text,display_order")
-    .in("question_id", rows.map((q) => q.id))
-    .order("display_order");
-
-  if (optionsError) return { data: null, error: optionsError };
-
-  const optionRows = options || [];
-  const output = rows.map((q) => ({
-    ...q,
-    question_options: optionRows
-      .filter((o) => o.question_id === q.id)
-      .map(({ option_text, display_order }) => ({ option_text, display_order })),
-  }));
-
-  return { data: output, error: null };
+  return { data: questions, error: null };
 }
 
 export async function POST(req: Request) {
@@ -147,18 +176,21 @@ export async function POST(req: Request) {
     return fail(counted.data === true ? 404 : 429);
   }
 
-  // Archived projects preserve all historical answers. Submitted groups may
-  // still view their read-only results; draft groups must wait until reactivated.
+  // A group with a submission stays pinned to that exact immutable snapshot.
+  // Only groups without a submission resolve to the currently active publication.
   const [projectResult, submissionResult] = await Promise.all([
-    admin.from("projects").select("is_active").eq("id", group.project_id).maybeSingle(),
-    admin.from("submissions").select("status").eq("group_id", group.id).maybeSingle(),
+    admin.from("projects").select("is_active,active_version_id").eq("id", group.project_id).maybeSingle(),
+    admin.from("submissions").select("status,project_version_id").eq("group_id", group.id).maybeSingle(),
   ]);
   if (projectResult.error || submissionResult.error || !projectResult.data) {
-    console.error("Project archive status lookup failed.");
+    console.error("Project version lookup failed.");
     return fail(500);
   }
-  const projectArchived = projectResult.data.is_active === false;
-  const alreadySubmitted = submissionResult.data?.status === "submitted";
+
+  const project = projectResult.data;
+  const submission = submissionResult.data;
+  const projectArchived = project.is_active === false;
+  const alreadySubmitted = submission?.status === "submitted";
   if (projectArchived && !alreadySubmitted) {
     return fail(
       403,
@@ -166,33 +198,59 @@ export async function POST(req: Request) {
     );
   }
 
+  const versionId = submission?.project_version_id || project.active_version_id;
+  if (!versionId) {
+    return fail(409, "Proyek ini belum memiliki versi LKPD yang diterbitkan. Hubungi guru.");
+  }
+
+  const versionResult = await admin
+    .from("project_versions")
+    .select("id,project_id,version_number,status,content")
+    .eq("id", versionId)
+    .eq("project_id", group.project_id)
+    .maybeSingle();
+
+  if (versionResult.error) {
+    console.error("Project version snapshot lookup failed:", versionResult.error.message);
+    return fail(503, "Versi materi belum dapat diverifikasi. Coba lagi nanti.");
+  }
+  const version = versionResult.data;
+  if (!version || version.status !== "published" || !version.content) {
+    return fail(409, "Versi LKPD kelompok tidak tersedia. Hubungi guru.");
+  }
+
+  const content = version.content as ProjectContentSnapshot;
+  if (!Array.isArray(content.videos) || !Array.isArray(content.questions)) {
+    console.error("Published project version content shape is invalid.");
+    return fail(500);
+  }
+
   try {
     if (parsed.data.op === "list_videos") {
       const { data: assignments, error: assignmentsError } = await admin
         .from("group_videos")
         .select("video_id")
-        .eq("group_id", group.id);
+        .eq("group_id", group.id)
+        .eq("project_id", group.project_id);
 
       if (assignmentsError) return fail(500);
-      const ids = [...new Set((assignments || []).map((x) => x.video_id).filter(Boolean))];
-      if (!ids.length) {
-        return NextResponse.json({ data: [] }, { headers: { "Cache-Control": "no-store" } });
-      }
+      const assignedIds = new Set(
+        (assignments || []).map((assignment) => assignment.video_id).filter(Boolean)
+      );
+      const data = content.videos
+        .filter((video) =>
+          assignedIds.has(video.id) &&
+          video.project_id === group.project_id &&
+          video.is_active !== false
+        )
+        .sort((a, b) => a.number - b.number)
+        .map(({ id, number, title, category }) => ({ id, number, title, category }));
 
-      const { data, error } = await admin
-        .from("videos")
-        .select("id,number,title,category")
-        .in("id", ids)
-        .eq("project_id", group.project_id)
-        .eq("is_active", true)
-        .order("number");
-
-      if (error) return fail(500);
-      return NextResponse.json({ data: data || [] }, { headers: { "Cache-Control": "no-store" } });
+      return NextResponse.json({ data }, { headers: { "Cache-Control": "no-store" } });
     }
 
     const { vid } = parsed.data.args;
-    const videoResult = await loadAssignedVideo(group.id, group.project_id, vid);
+    const videoResult = await loadAssignedVideo(group.id, group.project_id, vid, content);
     if (videoResult.error) {
       console.error("Student assignment video lookup failed:", videoResult.error.message);
       return fail(500);
@@ -200,26 +258,17 @@ export async function POST(req: Request) {
     if (!videoResult.data) return fail(404);
 
     if (parsed.data.op === "video_detail") {
-      const questionsResult = await loadQuestions(videoResult.data.project_id, "see");
-      if (questionsResult.error) {
-        console.error("Student SEE question lookup failed:", questionsResult.error.message);
-        return fail(500);
-      }
+      const questionsResult = loadQuestions(content, "see");
       // Do not expose the group record or access code in this response.
       return NextResponse.json(
-        { data: { video: videoResult.data, questions: questionsResult.data || [] } },
+        { data: { video: videoResult.data, questions: questionsResult.data } },
         { headers: { "Cache-Control": "no-store" } }
       );
     }
 
-    const questionsResult = await loadQuestions(videoResult.data.project_id);
-    if (questionsResult.error) {
-      console.error("Student analysis question lookup failed:", questionsResult.error.message);
-      return fail(500);
-    }
-
+    const questionsResult = loadQuestions(content);
     return NextResponse.json(
-      { data: questionsResult.data || [] },
+      { data: questionsResult.data },
       { headers: { "Cache-Control": "no-store" } }
     );
   } catch (error) {
