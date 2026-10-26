@@ -71,7 +71,7 @@ Pull request ke `main` dan push ke `main` menjalankan GitHub Actions untuk memas
 
 ## 11. Pemetaan kebutuhan dan keberlanjutan sistem
 
-Gunakan [docs/system-sustainability-audit.md](docs/system-sustainability-audit.md) sebagai pemetaan lintas area untuk dashboard admin, pengelolaan proyek, konfigurasi PBL, LKPD, rubrik, keamanan, operasi, dan gerbang rilis. Status audit source dibedakan dari verifikasi browser/staging; keputusan Production tetap NO-GO sampai seluruh gerbang wajib memiliki bukti pada SHA kandidat yang sama.
+Gunakan [docs/system-sustainability-audit.md](docs/system-sustainability-audit.md) sebagai pemetaan lintas area untuk dashboard admin, pengelolaan proyek, konfigurasi PBL, LKPD, rubrik, keamanan, operasi, dan gerbang rilis. Status audit source dibedakan dari verifikasi browser/staging; keputusan Production tetap NO-GO sampai seluruh gerbang wajib memiliki bukti pada SHA kandidat yang sama. Untuk alur draft–pratinjau–validasi–publish dan model versi immutable, lihat [docs/project-versioning.md](docs/project-versioning.md); implementasinya harus diuji pada staging sebelum dirilis.
 
 ## 10. PBL editor, security audit, and regression checklist
 
