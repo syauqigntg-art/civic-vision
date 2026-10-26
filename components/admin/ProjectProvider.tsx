@@ -21,6 +21,7 @@ export type AdminProject = {
   phase?: string | null;
   duration?: string | null;
   is_active: boolean | null;
+  active_version_id?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
 };
