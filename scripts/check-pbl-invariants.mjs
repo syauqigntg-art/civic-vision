@@ -157,7 +157,7 @@ assert.match(studentContent, /assignedIds = new Set\(\[submission\.video_id\]\)/
 console.log("CIVIC VISION PBL/security/versioning source invariants: PASS");
 
 
-const questionVersionHotfix = read("../supabase/migrations/20261026100000_allow_versioned_question_edits.sql");
+const questionVersionHotfix = read("../supabase/migrations/20261026112425_allow_versioned_question_edits.sql");
 const questionVersionHotfixTest = read("../supabase/p1-question-versioning-hotfix-test.sql");
 const versioningErrors = read("../lib/utils/versioning-error.ts");
 assert.match(questionVersionHotfix, /private\.is_admin\(\)/, "Question edit hotfix retains the admin guard");
