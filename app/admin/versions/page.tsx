@@ -205,18 +205,46 @@ export default function ProjectVersionsPage() {
       return;
     }
 
-    const label = "v" + draft.version_number + " — " + (draft.content?.project?.title || project?.title || "Proyek");
-    const confirmation =
-      "Terbitkan " + label + "?\n\n" +
-      "Versi ini menjadi versi aktif bagi kelompok yang memulai pengerjaan baru. " +
-      "Draft/submission yang sudah berjalan tetap terhubung ke versi sebelumnya. " +
-      "Publikasi tidak dapat diedit.";
-    if (!window.confirm(confirmation)) return;
-
     setBusy(true);
     setErrorMessage("");
     setMessage("");
     try {
+      // Refresh the snapshot from the working tables before publication. The
+      // SQL RPC only advances updated_at if its content actually changed.
+      const { data: currentDraftId, error: saveError } = await sb.rpc("admin_save_project_version_draft", {
+        p_project_id: projectId,
+      });
+      if (saveError) throw saveError;
+      if (currentDraftId !== draft.id) {
+        throw new Error("Draft berubah selama proses. Muat ulang, pratinjau, dan validasi ulang sebelum menerbitkan.");
+      }
+
+      const { data: latestDraft, error: readError } = await sb
+        .from("project_versions")
+        .select("id,updated_at")
+        .eq("project_id", projectId)
+        .eq("id", draft.id)
+        .maybeSingle();
+      if (readError) throw readError;
+      if (!latestDraft) throw new Error("Snapshot draft tidak lagi tersedia.");
+
+      if (latestDraft.updated_at !== draft.updated_at) {
+        await loadVersions();
+        setValidation(null);
+        setValidatedVersionId("");
+        setShowPreview(true);
+        setMessage("Materi kerja berubah sejak validasi. Snapshot draft diperbarui; tinjau pratinjau dan validasi ulang sebelum menerbitkan.");
+        return;
+      }
+
+      const label = "v" + draft.version_number + " — " + (draft.content?.project?.title || project?.title || "Proyek");
+      const confirmation =
+        "Terbitkan " + label + "?\n\n" +
+        "Versi ini menjadi versi aktif bagi kelompok yang memulai pengerjaan baru. " +
+        "Draft/submission yang sudah berjalan tetap terhubung ke versi sebelumnya. " +
+        "Publikasi tidak dapat diedit.";
+      if (!window.confirm(confirmation)) return;
+
       const { data, error } = await sb.rpc("admin_publish_project_version", {
         p_project_id: projectId,
         p_version_id: draft.id,
