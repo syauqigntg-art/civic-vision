@@ -174,6 +174,7 @@ assert.match(questionVersionHotfixTest, /question v1/i, "SQL regression preserve
 assert.match(questionVersionHotfixTest, /v2 accepted a choice that exists only in v1/, "SQL regression validates new answers against v2 options");
 assert.match(questionVersionHotfixTest, /stale validated draft was published/, "SQL regression covers stale publication rejection");
 assert.match(questionVersionHotfixTest, /non-admin called admin_save_question/, "SQL regression preserves non-admin RPC denial");
+assert.match(questionVersionHotfixTest, /non-admin called admin_delete_question/, "SQL regression preserves non-admin deletion denial");
 assert.match(questionVersionHotfixTest, /ROLLBACK;/, "SQL regression rolls back synthetic fixtures");
 assert.match(versioningErrors, /table_missing[\s\S]*table_schema_cache[\s\S]*rpc_unavailable[\s\S]*schema_cache_mismatch[\s\S]*permission[\s\S]*network/, "Versioning UI distinguishes database failure classes");
 assert.match(submissionResults, /if \(!Array\.isArray\(snapshot\)\) return \[\];/, "Historical results fail closed when the pinned snapshot is unavailable");
