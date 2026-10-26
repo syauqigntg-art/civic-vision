@@ -82,6 +82,7 @@ assert.match(answerSaveMigration, /v_submission_status IS DISTINCT FROM 'draft'/
 assert.match(submitGroupMigration, /SET status = 'submitted'[\s\S]*?WHERE id = v_submission_id\s+AND status = 'draft'/, "Submit transitions only a draft submission");
 
 const versioningMigration = read("../supabase/migrations/20261026090535_add_project_content_versioning.sql");
+const versioningCasMigration = read("../supabase/migrations/20261026093943_version_publish_compare_and_swap.sql");
 const versionManager = read("../app/admin/versions/page.tsx");
 const submissionResults = read("../app/admin/submissions/page.tsx");
 const studentResults = read("../app/lkpd/hasil/page.tsx");
@@ -106,6 +107,14 @@ assert.match(draftRpcDefinition, /SECURITY DEFINER[\s\S]*?SET search_path = ''/,
 assert.match(publishRpcDefinition, /SECURITY DEFINER[\s\S]*?SET search_path = ''/, "Publication writes are mediated by a fixed-search-path SECURITY DEFINER RPC");
 assert.match(versioningMigration, /CREATE OR REPLACE FUNCTION private\.guard_active_project_version_pointer\(\)[\s\S]*?active_project_version_must_use_publish_rpc[\s\S]*?active_project_version_must_be_published_for_project/, "Active version pointer only moves through the official publication RPC to a same-project published version");
 assert.match(versioningMigration, /CREATE TRIGGER projects_active_version_publish_guard[\s\S]*?BEFORE UPDATE OF active_version_id ON public\.projects/, "Project active-version pointer guard is installed");
+assert.match(versioningCasMigration, /ALTER COLUMN project_id SET NOT NULL/, "Submission project_id is required so composite FKs cannot be bypassed with NULL");
+assert.match(versioningCasMigration, /project_version_validation_stale/, "Publication rejects a draft modified after validation");
+assert.match(versioningCasMigration, /p_expected_updated_at timestamptz/, "Publication RPC requires the validated draft timestamp");
+assert.match(versioningCasMigration, /updated_at = p_expected_updated_at/, "Publication uses compare-and-swap to ensure it publishes the validated snapshot");
+assert.match(versioningCasMigration, /admin_publish_project_version\(uuid,uuid,timestamptz\)/, "Pointer guard resolves the CAS-protected publication RPC signature");
+assert.match(versioningSecurityTest, /stale validated draft publication rejected/, "SQL integration test attempts to publish a stale validated draft");
+assert.match(versionManager, /p_expected_updated_at: latestDraft\.updated_at/, "Admin UI sends the draft timestamp it checked to the publish RPC");
+assert.match(versionManager, /project_version_validation_stale/, "Admin UI reports a stale-draft CAS rejection and asks for revalidation");
 const versioningSecurityTest = read("../supabase/p1-versioning-security-test.sql");
 assert.match(versioningSecurityTest, /direct published INSERT was accepted/, "SQL negative test attempts to forge a published version");
 assert.match(versioningSecurityTest, /direct project_versions UPDATE was accepted/, "SQL negative test attempts direct version mutation");
