@@ -117,5 +117,10 @@ assert.doesNotMatch(studentContent, /from\("questions"\)/, "Student content does
 assert.doesNotMatch(studentContent, /from\("videos"\)/, "Student content does not read mutable live video rows");
 assert.match(videoAdmin, /update\(\{ is_active: false/, "Video removal archives working content instead of deleting historical media");
 assert.doesNotMatch(videoAdmin, /storage\.from\("videos"\)\.remove\(paths\)/, "Video archive does not remove file storage needed by old snapshots");
+assert.match(versionManager, /admin_save_project_version_draft[\s\S]*?admin_validate_project_version/, "Draft snapshot is refreshed before validation");
+assert.match(versioningMigration, /FOR UPDATE OF p/, "Starting new work serializes with version publication");
+assert.match(versioningMigration, /submission_video_already_pinned/, "A submission cannot silently switch to a different video");
+assert.match(studentContent, /pinnedVideoId !== videoId/, "Existing submissions cannot switch to another video's content");
+assert.match(studentContent, /assignedIds = new Set\(\[submission\.video_id\]\)/, "Existing work remains discoverable if live assignment changes");
 console.log("CIVIC VISION PBL/security/versioning source invariants: PASS");
 
