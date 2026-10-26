@@ -71,3 +71,10 @@ Live function metadata/SQL lock inspection is not a runtime concurrency test. Do
 | Browser UX behavior | Blocked / not tested | Waiting for verified Preview→staging environment. |
 | Autosave/submit runtime concurrency | Blocked / not tested | Must use synthetic data in verified staging; not proved by source audit. |
 | Production release | Not approved | PR #6 and PR #7 remain Draft; no merge/release from this task. |
+
+
+## Rujukan checklist pedagogis kanonis (audit 2026-10-26)
+
+Gunakan [Checklist validasi pedagogis PBL — A.1–A.7](phase3-learning-ux-audit.md#kanonis--checklist-validasi-pedagogis-pbl-audit-2026-10-26) sebagai satu-satunya sumber kriteria pedagogis. Ledger ini tetap menjadi sumber bukti teknis untuk dependency, Preview/staging, browser, dan concurrency; hasil teknis tidak otomatis mengubah status pedagogis menjadi PASS.
+
+Pada audit source terbaru, alur siswa/pertanyaan menyajikan empat label SEE/THINK/CONNECT/ACT. Ini belum membuktikan lima tahap PBL lengkap. A.3 organisasi belajar berstatus NOT IMPLEMENTED; A.1, A.2, A.4, A.5, A.6, dan A.7 berstatus PARTIAL pada checklist kanonis. Verifikasi browser/staging yang belum dilakukan tetap BLOCKED/pending sesuai catatan masing-masing.
