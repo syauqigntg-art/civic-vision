@@ -80,4 +80,42 @@ for (const [name, sql] of [
 }
 assert.match(answerSaveMigration, /v_submission_status IS DISTINCT FROM 'draft'/, "Autosave rejects writes unless the submission remains a draft");
 assert.match(submitGroupMigration, /SET status = 'submitted'[\s\S]*?WHERE id = v_submission_id\s+AND status = 'draft'/, "Submit transitions only a draft submission");
-console.log("CIVIC VISION PBL/security source invariants: PASS");
+
+const versioningMigration = read("../supabase/migrations/20261026022000_add_project_content_versioning.sql");
+const versionManager = read("../app/admin/versions/page.tsx");
+const submissionResults = read("../app/admin/submissions/page.tsx");
+const studentResults = read("../app/lkpd/hasil/page.tsx");
+const videoAdmin = read("../app/admin/videos/page.tsx");
+
+// Project/LKPD publication invariants. These are source-level guards; the
+// migration still requires a reviewed database migration and runtime tests.
+assert.match(versioningMigration, /CREATE TABLE public\.project_versions/, "Version history has a dedicated table");
+assert.match(versioningMigration, /ADD COLUMN active_version_id uuid/, "Projects reference the active published snapshot");
+assert.match(versioningMigration, /ADD COLUMN project_version_id uuid/, "Submissions pin a specific project version");
+assert.match(versioningMigration, /INSERT INTO public\.project_versions[\s\S]*?SELECT p\.id, 1, 'published'/, "Existing projects receive a baseline published snapshot");
+assert.match(versioningMigration, /UPDATE public\.submissions[\s\S]*?SET project_version_id = p\.active_version_id/, "Existing submissions are backfilled to their baseline version");
+assert.match(versioningMigration, /published_project_version_is_immutable/, "Published snapshots cannot be edited or deleted");
+assert.match(versioningMigration, /admin_save_project_version_draft/, "Database exposes draft snapshot workflow");
+assert.match(versioningMigration, /admin_validate_project_version/, "Database exposes server-side version validation");
+assert.match(versioningMigration, /admin_publish_project_version/, "Database exposes server-side publication");
+assert.match(versioningMigration, /INSERT INTO public\.submissions\(project_id, group_id, video_id, project_version_id\)/, "New submissions pin the active version");
+assert.match(versioningMigration, /FOR UPDATE OF s/, "Versioned save/submit functions lock the submission row");
+assert.match(versioningMigration, /jsonb_array_elements\(v_version_content->'questions'\)/, "Submit validation uses the submission's content snapshot");
+assert.match(versioningMigration, /question_referenced_by_published_version_deactivate_instead/, "Published questions are protected against physical deletion");
+assert.match(versioningMigration, /video_referenced_by_published_version_deactivate_instead/, "Published videos are protected against physical deletion");
+
+assert.match(versionManager, /admin_save_project_version_draft/, "Admin UI can save a version draft");
+assert.match(versionManager, /Pratinjau snapshot draft/, "Admin UI previews stored draft snapshot content");
+assert.match(versionManager, /admin_validate_project_version/, "Admin UI invokes server validation");
+assert.match(versionManager, /admin_publish_project_version/, "Admin UI publishes only after validation");
+assert.match(versionManager, /VERSI AKTIF/, "Admin UI distinguishes current and historical versions");
+assert.match(submissionResults, /project_version_id/, "Teacher result view loads each submission's pinned version");
+assert.match(submissionResults, /Versi LKPD/, "Teacher result view displays and exports the version label");
+assert.match(studentResults, /project_version_number/, "Student result page identifies its historical LKPD version");
+assert.match(studentContent, /from\("project_versions"\)/, "Student content reads the published snapshot");
+assert.doesNotMatch(studentContent, /from\("questions"\)/, "Student content does not read mutable live question rows");
+assert.doesNotMatch(studentContent, /from\("videos"\)/, "Student content does not read mutable live video rows");
+assert.match(videoAdmin, /update\(\{ is_active: false/, "Video removal archives working content instead of deleting historical media");
+assert.doesNotMatch(videoAdmin, /storage\.from\("videos"\)\.remove\(paths\)/, "Video archive does not remove file storage needed by old snapshots");
+console.log("CIVIC VISION PBL/security/versioning source invariants: PASS");
+
