@@ -313,6 +313,13 @@ BEGIN
   EXCEPTION WHEN SQLSTATE '42501' THEN
     IF SQLERRM <> 'admin_required' THEN RAISE; END IF;
   END;
+
+  BEGIN
+    PERFORM public.admin_delete_question(q,p);
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: non-admin called admin_delete_question';
+  EXCEPTION WHEN SQLSTATE '42501' THEN
+    IF SQLERRM <> 'admin_required' THEN RAISE; END IF;
+  END;
 END;
 $non_admin$;
 
@@ -367,4 +374,4 @@ END;
 $final_integrity$;
 
 ROLLBACK;
-SELECT 'PASS: snapshot-safe question editing, v1/v2 validation, stale CAS, soft-delete, non-admin denial and fixture rollback' AS test_result;
+SELECT 'PASS: snapshot-safe question editing, v1/v2 validation, stale CAS, soft-delete, non-admin save/delete denial and fixture rollback' AS test_result;
