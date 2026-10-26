@@ -180,3 +180,22 @@ This section records checks performed after the prior Staging integration eviden
 The authorized Vercel project owner must open the `civic-vision` project, select Environment Variables, locate `SUPABASE_SERVICE_ROLE_KEY` for Preview + branch `feature/project-lkpd-versioning-sync`, and replace the empty fail-closed value with the service-role/secret key belonging to Staging project ref `bneqqkvhehrlcjhvvyvv`. Keep it server-only, do not use Production credentials, and never place it in a `NEXT_PUBLIC_*` variable. Redeploy after saving and verify the runtime target without printing any key. Until then, do not run application writes or E2E.
 
 **Decision: NO-GO.** CI #185 and Vercel were successful on `44e2482`, but the credential, full browser/network, independent-review, and Production-impact gates remain blocked or not run. This documentation refresh itself will create a new head and therefore needs its own CI and Vercel checks. Do not merge automatically.
+
+
+## Production impact and migration sequencing — 2026-10-26
+
+**Status: NOT RUN / BLOCKED for approval.** No Production migration, Production secret change, or Production deployment/rollout was executed as part of this Staging verification.
+
+- Vercel project metadata lists the main-branch alias `civic-vision-git-main-uki8.vercel.app`; the current PR candidate deployment is a Preview (`target: null`) and is not a Production deployment. A merge to `main` may trigger the normal Vercel main-branch deployment; the exact production rollout policy and post-merge behavior have not been independently validated in this run.
+- The repository's [Staging setup guide](./staging-setup.md) explicitly warns that Staging migration history was populated through the Supabase migration API and that its generated migration versions do not match all repository filename timestamps. It says **do not run `supabase db push` against Staging until migration history is reconciled**. This is evidence that Production migration automation/order must not be assumed from a green CI or successful Preview.
+- Required before approving Production rollout: independently inspect the Production Supabase migration ledger and current schema; reconcile repository migration ordering/ledger in a controlled release plan; obtain a separate review/backup and rollback plan; apply migrations only through an approved Production change window; verify application deployment compatibility and post-deploy invariants. Do not run those actions as part of this PR's Staging tests.
+- Production-impact approval remains **NOT RUN** until the maintainer records the intended merge-triggered Vercel behavior and the separately approved migration/rollback sequence.
+
+## Current candidate status correction
+
+- CI #185: PASS on SHA `44e24822707b880a207d8bb944a6c13739fac338`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40310215028
+- CI #186: PASS on SHA `0e25888bc67c7b8dc2a3a06fcd52755999f654ad`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40310923010
+- Vercel check: SUCCESS and deployment READY on SHA `0e25888bc67c7b8dc2a3a06fcd52755999f654ad`: https://vercel.com/uki8/civic-vision/1exBwMvRwSNH1NWbnEwzQvB3uBG7
+- The current head has not passed the missing credential, independent SQL review, full browser/network, interactive E2E, or Production-impact gates. The current database test evidence remains historical from `ded990a25ec154cd469a75fd667a33a12cfc26a1`.
+
+**Decision remains NO-GO.** Green CI and READY Preview are necessary but insufficient. The Staging secret, independent review, browser E2E/network evidence, and Production migration/deployment plan must be resolved before the maintainer can make a merge decision.
