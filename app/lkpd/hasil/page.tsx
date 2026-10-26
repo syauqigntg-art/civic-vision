@@ -88,6 +88,11 @@ export default function Hasil() {
             ? "Pengiriman berhasil. Jawaban kelompok telah tersimpan di server dan terkunci. Guru dapat membuka kembali pengerjaan jika diperlukan."
             : "Hasil saat ini masih berupa draft dan belum dikirim. Pastikan semua jawaban tersimpan sebelum melakukan pengiriman akhir."}
         </p>
+        {g.submission?.project_version_number && (
+          <p style={{ fontSize: 13, opacity: .8 }}>
+            Versi LKPD: v{g.submission.project_version_number}. Jawaban ini tetap ditafsirkan berdasarkan materi dan pertanyaan dari versi tersebut.
+          </p>
+        )}
       </section>
       {error && <section className="glass"><div role="alert" className="warn">{error}</div></section>}
       <section className="glass">
