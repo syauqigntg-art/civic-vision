@@ -155,3 +155,27 @@ assert.match(versioningMigration, /submission_video_already_pinned/, "A submissi
 assert.match(studentContent, /pinnedVideoId !== videoId/, "Existing submissions cannot switch to another video's content");
 assert.match(studentContent, /assignedIds = new Set\(\[submission\.video_id\]\)/, "Existing work remains discoverable if live assignment changes");
 console.log("CIVIC VISION PBL/security/versioning source invariants: PASS");
+
+
+const questionVersionHotfix = read("../supabase/migrations/20261026100000_allow_versioned_question_edits.sql");
+const questionVersionHotfixTest = read("../supabase/p1-question-versioning-hotfix-test.sql");
+const versioningErrors = read("../lib/utils/versioning-error.ts");
+assert.match(questionVersionHotfix, /private\.is_admin\(\)/, "Question edit hotfix retains the admin guard");
+assert.match(questionVersionHotfix, /WHERE p\.id = p_project_id\s+FOR UPDATE/, "Question edits serialize with snapshot creation/publication on the project row");
+assert.match(questionVersionHotfix, /project_archived/, "Question edit hotfix retains archived-project protection");
+assert.match(questionVersionHotfix, /invalid_question_fields/, "Question edit hotfix retains payload validation");
+assert.match(questionVersionHotfix, /duplicate_question_options/, "Question edit hotfix retains duplicate-option validation");
+assert.match(questionVersionHotfix, /question_has_unversioned_answers/, "Question edits fail closed when any historical answer lacks snapshot coverage");
+assert.match(questionVersionHotfix, /project_versions[\s\S]*?pv\.status = 'published'[\s\S]*?item\.value->>'id' = p_id::text/, "Question edits require published snapshots containing the answered question");
+assert.doesNotMatch(questionVersionHotfix, /DELETE\s+FROM\s+public\.answers/i, "Question edit hotfix never deletes historical answers");
+assert.match(questionVersionHotfix, /OR EXISTS \([\s\S]*?project_versions[\s\S]*?RETURN 'deactivated'/, "Question deletion archives content referenced by published snapshots");
+assert.match(questionVersionHotfixTest, /resaving an unchanged draft created a duplicate/, "SQL regression covers resaving a draft");
+assert.match(questionVersionHotfixTest, /question v1/i, "SQL regression preserves v1 historical question text");
+assert.match(questionVersionHotfixTest, /v2 accepted a choice that exists only in v1/, "SQL regression validates new answers against v2 options");
+assert.match(questionVersionHotfixTest, /stale validated draft was published/, "SQL regression covers stale publication rejection");
+assert.match(questionVersionHotfixTest, /non-admin called admin_save_question/, "SQL regression preserves non-admin RPC denial");
+assert.match(questionVersionHotfixTest, /ROLLBACK;/, "SQL regression rolls back synthetic fixtures");
+assert.match(versioningErrors, /table_missing[\s\S]*table_schema_cache[\s\S]*rpc_unavailable[\s\S]*schema_cache_mismatch[\s\S]*permission[\s\S]*network/, "Versioning UI distinguishes database failure classes");
+assert.match(submissionResults, /if \(!Array\.isArray\(snapshot\)\) return \[\];/, "Historical results fail closed when the pinned snapshot is unavailable");
+assert.doesNotMatch(submissionResults, /Array\.isArray\(snapshot\) \? snapshot : qs/, "Historical results never fall back to mutable current questions");
+assert.match(submissionResults, /s \? historicalVideo : vs\.find/, "Historical submissions never fall back to the current video row");
