@@ -16,7 +16,7 @@
 
 - `public.project_versions`: identitas versi, nomor urut dalam proyek, status draft/terbit, snapshot JSON konten, relasi `based_on_version_id`, pembuat, penerbit, dan timestamp.
 - `public.projects.active_version_id`: menunjuk versi terbit yang dipakai ketika kelompok **memulai pengerjaan baru**.
-- `public.submissions.project_version_id`: pin versi yang dipakai submission itu. FK komposit memastikan versi tersebut berasal dari proyek yang sama.
+- `public.submissions.project_version_id`: pin versi yang dipakai submission itu. Kolom `submissions.project_id` dan `project_version_id` wajib `NOT NULL`, lalu FK komposit memastikan versi tersebut berasal dari proyek yang sama; nilai `NULL` tidak dapat dipakai untuk melewati pemeriksaan relasi.
 - Snapshot memuat identitas proyek, metadata video, pertanyaan, fase PBL, tipe/ketentuan wajib, urutan, serta teks dan urutan opsi. Jawaban tetap memakai ID pertanyaan, sedangkan guru membaca teks pertanyaan historis dari snapshot yang terkait dengan submission.
 
 Migration membuat **versi terbit baseline v1** untuk setiap proyek yang sudah ada dan mengikat submission lama ke baseline tersebut. Ini penting supaya pekerjaan yang dibuat sebelum fitur versioning tetap punya satu versi rujukan yang jelas setelah migration diterapkan.
@@ -29,6 +29,7 @@ Migration membuat **versi terbit baseline v1** untuk setiap proyek yang sudah ad
 - Penyimpanan jawaban dan finalisasi tetap mengunci baris submission yang sama. Penyimpanan ditolak bila submission sudah dikirim.
 - Penghapusan fisik video/pertanyaan yang direferensikan versi terbit dicegah. Video di UI admin diarahkan untuk diarsipkan, bukan menghapus file Storage yang mungkin dibutuhkan oleh snapshot lama.
 - Tabel versi memakai RLS admin, tetapi peran `authenticated` dan `service_role` hanya mendapat hak baca langsung. `INSERT`/`UPDATE`/`DELETE` versi harus melewati RPC resmi; `admin_save_project_version_draft` dan `admin_publish_project_version` memakai `SECURITY DEFINER`, `search_path` kosong, serta pemeriksaan `private.is_admin()`.
+- RPC publikasi kini menerima `p_expected_updated_at` dari snapshot yang tervalidasi, mengunci proyek dan draft, membandingkan timestamp itu di server, lalu memvalidasi ulang sebelum menggeser pointer. Jika draft berubah setelah validasi, server mengembalikan `project_version_validation_stale` dan versi aktif tidak berubah. `updated_at` draft memakai `clock_timestamp()` pada perubahan konten agar compare-and-swap tidak hanya mengandalkan pemeriksaan UI.
 - Trigger `projects_active_version_publish_guard` menolak perubahan langsung pada `projects.active_version_id`, termasuk dari peran `service_role`, kecuali perubahan yang dijalankan sebagai pemilik RPC publikasi dan menunjuk snapshot terbit milik proyek yang sama. Ini menutup jalur tabel langsung tanpa mengambil hak metadata proyek dari editor admin.
 
 Ini adalah jaminan desain/source. Jaminan runtime baru boleh dinyatakan lulus setelah migration dan tes integrasi diterapkan pada staging yang terverifikasi.
@@ -46,7 +47,7 @@ Tahap lanjut disarankan menambahkan `rubric_versions` dengan draft/published sna
 ## Gerbang verifikasi sebelum rilis
 
 1. Tinjau SQL migration dan pastikan urutannya cocok dengan history database target.
-2. Terapkan hanya ke project staging yang benar melalui alur migration yang disetujui; jangan `db push` ke Production. Setelah migration, jalankan `supabase/p1-versioning-security-test.sql` di SQL Editor Staging sebagai database owner. Skrip memeriksa penolakan direct DML, bypass pointer, RPC simpan draft, dan penolakan publish untuk draft invalid; skrip melakukan rollback atas fixture sintetis.
+2. Terapkan hanya ke project staging yang benar melalui alur migration yang disetujui; jangan `db push` ke Production. Setelah migration, jalankan `supabase/p1-versioning-security-test.sql` di SQL Editor Staging sebagai database owner. Skrip memeriksa penolakan direct DML, bypass pointer, RPC simpan draft, publikasi valid, publikasi invalid, dan stale-validation compare-and-swap; skrip melakukan rollback atas fixture sintetis.
 3. Jalankan tes dengan fixture sintetis: baseline existing, simpan draft, edit working table setelah draft, preview harus tetap stabil, validasi gagal/lulus, publish v2, v1 tetap immutable, submission baru memakai v2, submission lama tetap di v1, save/submit mengacu pertanyaan v1/v2 yang benar, serta isolasi lintas proyek.
 4. Uji jalur browser guru dan siswa pada deployment dari SHA yang sama dengan target staging. Pastikan URL, anon key, dan server-side service-role credential semua menunjuk staging; jangan mengubah konfigurasi Production.
 5. Uji kompatibilitas terhadap proyek/submission pra-migrasi, baca hasil lama dan ekspor, nonaktifkan konten secara aman, serta jalankan backup/restore rehearsal.
@@ -58,6 +59,7 @@ Staging Supabase `civic-vision-staging` (ref `bneqqkvhehrlcjhvvyvv`) sudah menja
 
 - `20261026090535_add_project_content_versioning`: baseline v1, kolom versi, fungsi/RPC, RLS, dan trigger.
 - `20261026091333_add_project_version_fk_indexes`: indeks untuk foreign key versi baru.
+- `20261026093943_version_publish_compare_and_swap`: membuat `submissions.project_id` `NOT NULL` setelah guard pemeriksaan, mengganti publish RPC dua argumen dengan RPC compare-and-swap tiga argumen, dan memperbarui owner lookup pada trigger pointer.
 
 Bukti yang dijalankan langsung di database:
 
