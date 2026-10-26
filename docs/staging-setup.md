@@ -23,6 +23,7 @@ Last checked: 2026-10-26 (Asia/Jakarta)
 7. Staging-specific hardening for the `auth.users` trigger function `public.handle_new_user()`: empty search path and no EXECUTE grant to `anon` or `authenticated`.
 8. `20261026090535_add_project_content_versioning`: project/LKPD snapshots, immutable published baseline, submission version pinning, guarded publication RPCs, and backfill.
 9. `20261026091333_add_project_version_fk_indexes`: supporting indexes for the new version-related foreign keys.
+10. `20261026093943_version_publish_compare_and_swap`: `submissions.project_id NOT NULL`, publication compare-and-swap using the exact `updated_at` timestamp checked by the admin UI, and pointer-guard owner lookup updated to the three-argument RPC.
 
 The staging migration history was populated through the Supabase migration API. Its generated staging versions do not match every pre-existing filename timestamp under `supabase/migrations`. This was not a data clone or a Production migration. **Do not run `supabase db push` against this staging project until migration history is reconciled with repository versions**; the current environment was bootstrapped for isolated runtime testing.
 
@@ -41,10 +42,10 @@ The staging migration history was populated through the Supabase migration API. 
 ## Current readiness and audit findings (2026-10-26)
 
 - Supabase Staging is `civic-vision-staging`, ref `bneqqkvhehrlcjhvvyvv`, URL `https://bneqqkvhehrlcjhvvyvv.supabase.co`. No Production migration or write test was run.
-- PR #20 at candidate SHA `c861db8f0c940be913fc9d5a5761636889dd37ba` applies the versioning migration as staging ledger version `20261026090535` and FK index migration as `20261026091333`. Their recorded migration names now match the corresponding repository filenames.
+- PR #20 has applied these versioning migrations to this Staging target: `20261026090535 add_project_content_versioning`, `20261026091333 add_project_version_fk_indexes`, and `20261026093943 version_publish_compare_and_swap`. These recorded names match their source filenames. The CAS follow-up sets `submissions.project_id NOT NULL` after a guard check, removes the old two-argument publication RPC, and requires the `updated_at` timestamp observed at validation; a stale timestamp is rejected with `project_version_validation_stale`.
 - One synthetic legacy project/submission/answer was used to verify backfill: 1 baseline v1, 1 pinned submission, 1 unchanged answer, 0 submissions missing a version. A deliberately invalid submission caused the migration's transaction to fail with `project_version_backfill_failed`; the invalid row was then removed and the valid backfill completed.
-- The expanded `supabase/p1-versioning-security-test.sql` completed without SQL error and rolled back temporary users/test records. The separate v1/v2 SQL scenario verified old Group A remains on v1 and a newly started Group B pins to v2; the transaction was rolled back to preserve the reusable baseline fixture.
-- Supabase privilege checks confirmed: `anon` has no privileges on `project_versions`; `authenticated` and `service_role` have SELECT only; table RLS is enabled; both admin RPCs are SECURITY DEFINER; the active-version guard trigger exists.
+- The expanded `supabase/p1-versioning-security-test.sql` completed with an explicit PASS sentinel after the CAS migration. It verifies grants, admin/non-admin/anon RPC behavior, immutable published snapshots, valid/invalid publication, and stale publication after a working-question edit. All temporary users and test records were rolled back. The separate v1/v2 SQL scenario verified old Group A remains on v1 and a newly started Group B pins to v2; the transaction was rolled back to preserve the reusable baseline fixture.
+- Supabase privilege checks confirmed: `anon` has no privileges on `project_versions`; `authenticated` and `service_role` have SELECT only; table RLS is enabled; the draft-save RPC and three-argument compare-and-swap publication RPC are SECURITY DEFINER; the old two-argument publish RPC is absent; the active-version guard trigger exists. Read-only checks confirm `submissions.project_id` and `project_version_id` are both NOT NULL and no submissions lack either relationship.
 - Security Advisor still flags the two authenticated-callable SECURITY DEFINER admin RPCs. Their body checks `private.is_admin()` and the non-admin/no-UID cases passed in the SQL test, but an independent reviewer must explicitly accept or require changes. Advisor also reports the pre-existing informational RLS-without-policy notice on `api_rate_limits`.
 - Performance Advisor no longer reports missing covering indexes for the new foreign keys. It reports the new indexes as unused because the staging database is tiny; do not remove them solely on that signal without workload review.
 - Preview URL and anon key have branch-specific overrides for `feature/project-lkpd-versioning-sync` and have been compared with the Staging project (host/ref and legacy anon key match). To prevent accidental use of the shared cross-environment secret, branch-specific `SUPABASE_SERVICE_ROLE_KEY` is currently a fail-closed placeholder. It is **not** a working staging key.
@@ -89,8 +90,21 @@ The migration API assigned staging-specific version identifiers at apply time. T
 | `20261023011518` | `serialize_answer_saves_with_submission` | `supabase/migrations/20261023010223_serialize_answer_saves_with_submission.sql` |
 | `20261023011552` | `staging_harden_auth_user_trigger` | Staging-only hardening of `public.handle_new_user()`; do not blindly replay against Production |
 | `20261023023649` | `serialize_submit_group_with_answer_saves` | `supabase/migrations/20261023030000_serialize_submit_group_with_answer_saves.sql` |
+| `20261026090535` | `add_project_content_versioning` | `supabase/migrations/20261026090535_add_project_content_versioning.sql` |
+| `20261026091333` | `add_project_version_fk_indexes` | `supabase/migrations/20261026091333_add_project_version_fk_indexes.sql` |
+| `20261026093943` | `version_publish_compare_and_swap` | `supabase/migrations/20261026093943_version_publish_compare_and_swap.sql` |
 
 The mapping above reconciles the **recorded migration names to their intended source/origin** without rewriting provider-generated version IDs. New staging changes are to be applied through the controlled Supabase migration API, then the returned migration version and live function definition must be recorded below. This does not authorize `db push`.
+
+The mapping above reconciles the **recorded migration names to their intended source/origin** without rewriting provider-generated version IDs. New staging changes are to be applied through the controlled Supabase migration API, then the returned migration version and live function definition must be recorded below. This does not authorize `db push`.
+
+## PR #20 CAS follow-up — 2026-10-26
+
+- The stale-publish guard was applied to Staging as ledger version `20261026093943`.
+- A read-only PostgreSQL query confirmed `submissions.project_id IS NOT NULL`, `submissions.project_version_id IS NOT NULL`, zero submissions missing either reference, the old two-argument publish RPC absent, and the three-argument CAS RPC present/executable by `authenticated` but not `anon`.
+- `supabase/p1-versioning-security-test.sql` was rerun after this migration and returned an explicit PASS sentinel, including the stale-draft race test. Temporary auth/user/group fixtures were rolled back; no Production database was touched.
+- Supabase Security Advisor continues to flag the intentionally authenticated-callable `SECURITY DEFINER` admin RPCs. The body checks `private.is_admin()`; this must still be explicitly accepted or changed by an independent reviewer.
+- Browser E2E is still blocked because the branch-specific Preview `SUPABASE_SERVICE_ROLE_KEY` is a fail-closed placeholder. Replace it privately in Vercel with a secret from this same Staging project, redeploy exact final SHA, then run/record browser tests. Do not use the shared cross-environment key or run Preview write tests before this.
 
 ## P0 submission/autosave audit
 
