@@ -112,3 +112,44 @@ No Production environment settings or secrets were changed. No database migratio
 The environment override has been configured for branch `fix/p0-sustainability-hardening` only. Vercel's deployment list still shows the previous Ready deployment SHA `11a68bb38c9a503b7b5d734f6081edd23ed8b10f` and does not yet show a deployment created after those overrides. The override itself is therefore **not yet verified at runtime**.
 
 A separate tracking change is being prepared from main; it does not deploy or alter the application. Do not run browser writes until Vercel creates a fresh deployment containing the override and its exact Git SHA / backend reference have been checked.
+
+## Executed staging database verification — 2026-10-26
+
+### Environment and source identity
+- Supabase staging project `civic-vision-staging` (`bneqqkvhehrlcjhvvyvv`) is `ACTIVE_HEALTHY`; read-only migration ledger contains the expected 13 migration records.
+- Vercel deployment `dpl_ACR7b8bqc94WB8sK8VNNHYW9R7qW` is `READY`, target `staging`, source SHA `a2f5d1d11e49667f3f0cccca3f85b5b4b71b8494` (the PR #18 merge commit). URL: https://civic-vision-agxkuwu59-uki8.vercel.app
+- Branch-specific Preview variables exist for `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`, restricted to branch `fix/p0-sustainability-hardening`. The project-level `SUPABASE_SERVICE_ROLE_KEY` remains shared across Production/Preview/Development and has no branch-specific staging override. Its value was not read or disclosed. Because the server credential has not been verified as belonging to the staging project, app-server writes remain **BLOCKED** until a staging-specific service-role credential is configured for this branch through the secret manager/Vercel UI and then runtime-tested.
+- The deployed Preview URL could not be opened by the available browser retrieval path; Vercel project SSO protection is enabled. No interactive browser session or browser automation was executed in this check.
+
+### Read-only staging security observations
+- All 11 public application tables have RLS enabled; all were empty before fixtures were created.
+- No `anon` table grants were present for public application tables. `anon` and `authenticated` do not have CREATE privilege on schema `public`, and anonymous direct SELECT on `public.projects` is denied by privilege checks.
+- Student/admin RPCs inspected (`get_group`, `get_answers`, `save_identity`, `begin_submission`, `save_answer`, `submit_group`, `student_rate_limit`, `stats`) denied EXECUTE to `anon` and `authenticated`; EXECUTE is granted to `service_role`.
+- The videos Storage bucket is private with a 50 MiB file-size limit and explicit MIME types.
+- Security Advisor has one informational notice on `public.api_rate_limits` having RLS enabled without policies. This remains intentional only while client-role table privileges stay revoked.
+- A subset of older SECURITY DEFINER helpers still declares `search_path=public` rather than an empty path. No anon/authenticated CREATE privilege exists on `public`, but replacing unqualified name resolution with an empty path is a separate hardening follow-up; this task did not apply schema changes.
+
+### Synthetic staging database tests — executed and cleaned up
+
+Only synthetic fixtures were inserted into the isolated staging project. The tests called the live database RPCs through the Supabase SQL connection; they are **database-level tests**, not application API or browser tests.
+
+| Scenario | Observed result |
+|---|---|
+| Valid first answer save | `save_answer` returned `true` |
+| Group A attempts to save a question belonging to another project | Returned `false` |
+| Group B attempts to save Group A's project question | Returned `false` |
+| Two sequential saves of the same answer in a draft | Both returned `true`; direct read showed the second/latest value |
+| Valid final submit | `submit_group` returned `ok` |
+| Duplicate submit after finalization | Returned `sudah terkirim` |
+| Save after submission | Returned `false`; the persisted answer remained unchanged |
+| Save racing with submission under an explicit submission-row lock and delay | Submit returned `ok`; competing save returned `false`; the prior confirmed value remained unchanged |
+| Isolation between two groups in the same project | Group C initially saw an empty answer object while Group A's answer existed; after C saved its own answer, A's answer remained unchanged and C saw only its own answer |
+| Post-submit save after the concurrent test | Returned `false` |
+
+All temporary IDs were explicitly deleted. A follow-up query returned zero remaining rows for the synthetic projects, videos, groups, members, video assignments, questions, submissions, and answers. No Production write test, Production configuration change, database migration, schema change, or Production deploy/promotion was performed.
+
+### Still not closed
+- **BLOCKED:** end-to-end application/API tests until a staging-specific `SUPABASE_SERVICE_ROLE_KEY` is set for this branch and verified without revealing its value.
+- **NOT TESTED:** browser autosave UI, offline/reconnect local queue, actual website route access, network traces, and browser-level cross-group access. The DB RPC tests above do not replace them.
+- **NOT TESTED:** backup/restore rehearsal.
+- Release decision remains **NO-GO** until the service credential is isolated and browser/API tests run against this exact staging target and SHA.
