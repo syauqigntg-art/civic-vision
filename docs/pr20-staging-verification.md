@@ -1,6 +1,6 @@
 # PR #20 — Staging Verification Evidence
 
-Last checked: 2026-10-26 (Asia/Jakarta)
+Last checked: 2026-10-26 (Asia/Jakarta)\n\nDocumentation candidate before this follow-up: `d4a341d71c7a78cfb33dd21fb77323b3d798567d`. CI run #169 passed on that candidate; this follow-up changes only verification documentation.
 
 ## Candidate and target
 
@@ -64,8 +64,9 @@ This verifies DB-level pinning in a transaction; it does not replace browser E2E
 - Branch-specific `NEXT_PUBLIC_SUPABASE_ANON_KEY` was compared with the legacy anon key returned for the same Supabase Staging project; it matched. No key value is recorded here.
 - Branch-specific `SUPABASE_SERVICE_ROLE_KEY` is intentionally a fail-closed placeholder, not a working credential. The platform's environment-variable API did not reveal the existing sensitive value, and the Staging service-role secret was not available through the Supabase connector. This prevents the Preview branch from inheriting the shared cross-environment key. Replace the placeholder directly in Vercel with the Staging project's service-role/secret key; never paste it into chat, source, logs, HTML or any `NEXT_PUBLIC_*` variable.
 - Code check: `lib/supabase/admin.ts` imports `server-only` and reads `SUPABASE_SERVICE_ROLE_KEY` only in server-side code. No client-side environment prefix is used.
-- A new deployment was built from SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`: https://civic-vision-jua31xt9u-uki8.vercel.app (READY).
-- Read-only HTTP smoke checks: `GET /` = 200; `GET /admin/versions` = 200; `GET /api/student-content` = 405 (POST-only route). The smoke checks did not invoke student writes or reveal credentials.
+- Deployment `https://civic-vision-jua31xt9u-uki8.vercel.app` is READY from source SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`, the SQL-test candidate.
+- The most recent doc candidate deployment `https://civic-vision-n4rvqgxmn-uki8.vercel.app` is also READY from SHA `d4a341d71c7a78cfb33dd21fb77323b3d798567d`. Read-only HTTP smoke checks on that deployment: `GET /` = 200; `GET /admin/versions` = 200. `GET /api/student-content` on the earlier same-source candidate returned 405 as expected for a POST-only route. No student write request was sent.
+- Eleven initial client JavaScript chunks linked by the home/admin HTML were fetched (one needed a retry). None contained the `SUPABASE_SERVICE_ROLE_KEY` identifier or fail-closed placeholder string. This is a useful initial-bundle check, not a complete dynamic-chunk/network scan; the full browser check remains pending.
 
 **Environment gate remains BLOCKED.** The URL and anon key are verified, but the runtime service-role key is not yet a Staging key. Do not run application write tests until the placeholder is privately replaced and a fresh deployment is verified. A complete browser bundle/network leakage scan remains part of that browser gate.
 
@@ -85,6 +86,7 @@ This verifies DB-level pinning in a transaction; it does not replace browser E2E
 - [x] Preview URL and anon key branch-scoped to Staging.
 - [x] Read-only Preview HTTP smoke checks succeeded.
 - [x] CI run #166 passed on SQL candidate SHA `c861db8f0c940be913fc9d5a5761636889dd37ba`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40297962828
+- [x] CI run #169 passed on documentation candidate SHA `d4a341d71c7a78cfb33dd21fb77323b3d798567d`: https://github.com/syauqigntg-art/civic-vision/actions/runs/40300077820. This follow-up changes only verification documentation, and a new CI run is still required on the resulting final head.
 - [ ] Staging service-role key privately configured for this Preview branch, then runtime/key-ref verified.
 - [ ] Full browser bundle/network check confirms no secret leaked.
 - [ ] Independent SQL review submitted by a reviewer other than the PR author.
