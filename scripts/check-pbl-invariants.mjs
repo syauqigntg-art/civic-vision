@@ -62,8 +62,8 @@ assert.match(orderMigration, /invalid_question_order/, "Question order input is 
 // Source-level guardrails for the P0 autosave/submit serialization protocol.
 // These checks catch accidental migration edits; they do not replace a staging
 // database concurrency test against the exact deployed functions.
-assert.match(answerSaveMigration, /CREATE OR REPLACE FUNCTION public\\.save_answer\\(code text, qid uuid, val text\\)/, "Autosave migration defines the expected RPC");
-assert.match(submitGroupMigration, /CREATE OR REPLACE FUNCTION public\\.submit_group\\(code text\\)/, "Submit migration defines the expected RPC");
+assert.match(answerSaveMigration, /CREATE OR REPLACE FUNCTION public\.save_answer\(code text, qid uuid, val text\)/, "Autosave migration defines the expected RPC");
+assert.match(submitGroupMigration, /CREATE OR REPLACE FUNCTION public\.submit_group\(code text\)/, "Submit migration defines the expected RPC");
 for (const [name, sql] of [
   ["save_answer", answerSaveMigration],
   ["submit_group", submitGroupMigration],
@@ -72,12 +72,12 @@ for (const [name, sql] of [
   assert.match(sql, /SET search_path = ''/, `${name} uses an empty search_path`);
   assert.match(
     sql,
-    /FROM public\\.submissions AS s[\\s\\S]*?WHERE s\\.group_id = v_group_id\\s+AND s\\.project_id = v_project_id\\s+FOR UPDATE;/,
+    /FROM public\.submissions AS s[\s\S]*?WHERE s\.group_id = v_group_id\s+AND s\.project_id = v_project_id\s+FOR UPDATE;/,
     `${name} locks the submission row for the same group and project`,
   );
-  assert.match(sql, /REVOKE ALL ON FUNCTION public\\./, `${name} revokes default function execution`);
-  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\\.[\\s\\S]*?TO service_role;/, `${name} grants execution only to the server role`);
+  assert.match(sql, /REVOKE ALL ON FUNCTION public\./, `${name} revokes default function execution`);
+  assert.match(sql, /GRANT EXECUTE ON FUNCTION public\.[\s\S]*?TO service_role;/, `${name} grants execution only to the server role`);
 }
 assert.match(answerSaveMigration, /v_submission_status IS DISTINCT FROM 'draft'/, "Autosave rejects writes unless the submission remains a draft");
-assert.match(submitGroupMigration, /SET status = 'submitted'[\\s\\S]*?WHERE id = v_submission_id\\s+AND status = 'draft'/, "Submit transitions only a draft submission");
+assert.match(submitGroupMigration, /SET status = 'submitted'[\s\S]*?WHERE id = v_submission_id\s+AND status = 'draft'/, "Submit transitions only a draft submission");
 console.log("CIVIC VISION PBL/security source invariants: PASS");
