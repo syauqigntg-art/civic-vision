@@ -1,10 +1,32 @@
-// Dijalankan otomatis sebelum "npm run build" (prebuild). Memberi pesan jelas jika variabel Supabase belum benar.
+// Strict operational readiness check. This is intentionally not a build lifecycle hook.
+// Run explicitly with: npm run check:env
 try { process.loadEnvFile(".env.local"); } catch {}
-const need = [["NEXT_PUBLIC_SUPABASE_URL", "alamat project, contoh https://abcdefgh.supabase.co"], ["NEXT_PUBLIC_SUPABASE_ANON_KEY", "kunci anon / public"], ["SUPABASE_SERVICE_ROLE_KEY", "kunci service_role (rahasia)"]];
-const errs = [];
-for (const [k, hint] of need) { const v = (process.env[k] || "").trim();
-  if (!v) errs.push(`- ${k}: BELUM DIISI (${hint})`);
-  else if (k === "NEXT_PUBLIC_SUPABASE_URL" && !/^https:\/\/[^\s"'=]+$/.test(v)) errs.push(`- ${k}: harus satu alamat yang diawali https:// tanpa tanda kutip, spasi, atau nama variabel. Terbaca: "${v.slice(0, 40)}"`);
-  else if (k !== "NEXT_PUBLIC_SUPABASE_URL" && v.length < 20) errs.push(`- ${k}: terlalu pendek, kemungkinan salah tempel (${hint})`); }
-if (errs.length) { console.error("\n[CIVIC VISION] Environment Variables belum benar:\n" + errs.join("\n") + "\n\nPerbaiki di Vercel: Settings → Environment Variables, lalu Redeploy. Lokal: isi .env.local.\n"); process.exit(1); }
-console.log("[CIVIC VISION] Environment Variables OK.");
+
+const required = [
+  ["NEXT_PUBLIC_SUPABASE_URL", "HTTPS project URL"],
+  ["NEXT_PUBLIC_SUPABASE_ANON_KEY", "public/anon key"],
+  ["SUPABASE_SERVICE_ROLE_KEY", "server-only service role key"],
+];
+const errors = [];
+
+for (const [key, description] of required) {
+  const value = (process.env[key] || "").trim();
+  if (!value) {
+    errors.push(`- ${key}: missing (${description})`);
+    continue;
+  }
+  if (key === "NEXT_PUBLIC_SUPABASE_URL" && !/^https:\/\/[^\s"'=]+$/.test(value)) {
+    errors.push(`- ${key}: must be a valid HTTPS URL`);
+  } else if (key !== "NEXT_PUBLIC_SUPABASE_URL" && value.length < 20) {
+    errors.push(`- ${key}: value is too short to be a valid key`);
+  }
+}
+
+if (errors.length) {
+  console.error("\n[CIVIC VISION] Backend runtime configuration is not ready:\n" +
+    errors.join("\n") +
+    "\n\nSet the required values in the deployment environment or local .env.local. Values are never printed.\n");
+  process.exitCode = 1;
+} else {
+  console.log("[CIVIC VISION] Backend runtime configuration is present.");
+}

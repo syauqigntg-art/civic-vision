@@ -6,8 +6,8 @@
     "seed": "node --env-file=.env.local scripts/seed.mjs",
     "build": "next build",
     "start": "next start",
-    "prebuild": "node scripts/check-env.mjs",
-    "test:unit": "node --experimental-strip-types --test scripts/pbl-ux-validation.test.mjs scripts/admin-copy-accessibility.test.mjs"
+    "check:env": "node scripts/check-env.mjs",
+    "test:unit": "node --experimental-strip-types --test scripts/pbl-ux-validation.test.mjs scripts/admin-copy-accessibility.test.mjs scripts/supabase-config.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
