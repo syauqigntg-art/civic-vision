@@ -5,6 +5,7 @@ import test from "node:test";
 import { isRuntimeBackendConfigured } from "../lib/supabase/runtime-status.ts";
 import { isPublicSupabaseConfigured, readPublicSupabaseConfig } from "../lib/supabase/public-config.ts";
 import { createUnavailableSupabaseClient } from "../lib/supabase/client.ts";
+import { safeSupabaseDiagnostic } from "../lib/supabase/diagnostics.ts";
 
 test("public Supabase configuration is reported unavailable when values are absent", () => {
   assert.equal(isPublicSupabaseConfigured({}), false);
@@ -81,4 +82,31 @@ test("runtime backend readiness fails closed when public or server configuration
     NEXT_PUBLIC_SUPABASE_ANON_KEY: undefined,
     SUPABASE_SERVICE_ROLE_KEY: undefined,
   }), false);
+});
+
+
+test("project version diagnostics distinguish schema mismatch from query failure without exposing messages", () => {
+  const secretLikeMessage = "access_code=DO_NOT_LOG service_role_secret";
+  assert.deepEqual(safeSupabaseDiagnostic({ code: "42703", message: secretLikeMessage }), {
+    category: "schema_mismatch",
+    code: "42703",
+  });
+  assert.deepEqual(safeSupabaseDiagnostic({ code: "PGRST204", message: secretLikeMessage }), {
+    category: "schema_mismatch",
+    code: "PGRST204",
+  });
+  assert.deepEqual(safeSupabaseDiagnostic({ code: "42501", message: secretLikeMessage }), {
+    category: "query_failed",
+    code: "42501",
+  });
+  assert.doesNotMatch(JSON.stringify(safeSupabaseDiagnostic({ code: "42501", message: secretLikeMessage })), /DO_NOT_LOG|service_role_secret/);
+});
+
+test("student content version lookup explicitly checks current project and submission version columns", async () => {
+  const route = await readFile(new URL("../app/api/student-content/route.ts", import.meta.url), "utf8");
+  assert.match(route, /select\("is_active,active_version_id"\)/);
+  assert.match(route, /select\("status,project_version_id,video_id"\)/);
+  assert.match(route, /category: "project_not_found"/);
+  assert.match(route, /safeSupabaseDiagnostic\(projectResult\.error\)/);
+  assert.match(route, /safeSupabaseDiagnostic\(submissionResult\.error\)/);
 });
