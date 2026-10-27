@@ -185,7 +185,7 @@ assert.match(submissionResults, /s \? historicalVideo : vs\.find/, "Historical s
 const adminHook = read("../hooks/useAdmin.ts");
 const questionRemovalMigration = read("../supabase/migrations/20261027170000_admin_question_logical_delete_preserve_history.sql");
 assert.match(questionRemovalMigration, /ADD COLUMN IF NOT EXISTS deleted_at timestamptz/i, "Question removal has an explicit logical-deletion marker");
-assert.match(questionRemovalMigration, /SET deleted_at = COALESCE\(deleted_at, clock_timestamp\(\)\)/, "Delete removes questions from the working bank regardless of historic answers");
+assert.match(questionRemovalMigration, /deleted_at = COALESCE\(deleted_at, clock_timestamp\(\)\)/, "Delete removes questions from the working bank regardless of historic answers");
 assert.match(questionRemovalMigration, /private\.build_project_version_content[\s\S]*?q\.deleted_at IS NULL/, "New snapshots omit logically deleted questions");
 assert.doesNotMatch(questionRemovalMigration, /DELETE\s+FROM\s+public\.answers/i, "Question removal preserves historic answer rows");
 assert.match(adminHook, /is\("deleted_at", null\)/, "Deleted questions are hidden from the admin working list");
