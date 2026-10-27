@@ -2,7 +2,10 @@ import { createBrowserClient } from "@supabase/ssr";
 import { SupabaseConfigurationError } from "./config-error.ts";
 import { readPublicSupabaseConfig } from "./public-config.ts";
 
-type BrowserClient = ReturnType<typeof createBrowserClient>;
+function createConfiguredBrowserClient(url: string, anonKey: string) {
+  return createBrowserClient(url, anonKey);
+}
+type BrowserClient = ReturnType<typeof createConfiguredBrowserClient>;
 let client: BrowserClient | undefined;
 
 export function getBrowserClient(): BrowserClient {
@@ -11,7 +14,7 @@ export function getBrowserClient(): BrowserClient {
     NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   });
-  client = createBrowserClient(url, anonKey);
+  client = createConfiguredBrowserClient(url, anonKey);
   return client;
 }
 
@@ -20,7 +23,8 @@ export function getBrowserClient(): BrowserClient {
 export function createUnavailableSupabaseClient(): BrowserClient {
   const error = new SupabaseConfigurationError();
   const result = { data: null, error: { name: error.name, message: error.message } };
-  const query = new Proxy(function () {}, {
+  let query: any;
+  query = new Proxy(function () {}, {
     get(_target, property) {
       if (property === "then") {
         return (resolve: (value: unknown) => unknown, reject?: (reason: unknown) => unknown) =>
