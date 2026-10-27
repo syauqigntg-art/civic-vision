@@ -1,9 +1,51 @@
-"use client"; import { useEffect, useState } from "react"; import { sb } from "@/lib/supabase";
+"use client";
+import { useEffect, useState } from "react";
+import { sb } from "@/lib/supabase";
+
 export default function Login() {
-  const [em, setEm] = useState(""); const [pw, setPw] = useState(""); const [err, setErr] = useState(""); const [busy, setBusy] = useState(false);
-  useEffect(() => { if (location.search.includes("denied")) setErr("Akun ini tidak memiliki akses guru."); }, []);
-  const go = async () => { if (!em.trim() || !pw) return setErr("Isi email dan kata sandi."); setBusy(true); const { error } = await sb.auth.signInWithPassword({ email: em.trim(), password: pw });
-    if (error) { setBusy(false); return setErr("Email atau kata sandi salah."); } location.href = "/admin"; };
-  return (<section className="glass" style={{ maxWidth: 440, margin: "40px auto" }}><h2>Login guru</h2>{err && <div className="warn" role="alert">{err}</div>}<label htmlFor="em">Email</label><input id="em" type="email" value={em} onChange={e => setEm(e.target.value)} />
-    <label htmlFor="pw">Kata sandi</label><input id="pw" type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && go()} /><div className="row"><button className="btn" disabled={busy} onClick={go}>{busy ? "Memeriksa..." : "MASUK →"}</button></div></section>);
+  const [em, setEm] = useState("");
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    const query = new URLSearchParams(location.search);
+    if (query.has("denied")) setErr("Akun ini tidak memiliki akses guru.");
+    if (query.get("config") === "unavailable") {
+      setErr("Layanan backend belum dikonfigurasi. Login tidak tersedia saat ini.");
+    }
+  }, []);
+
+  const go = async () => {
+    if (!em.trim() || !pw) return setErr("Isi email dan kata sandi.");
+    setBusy(true);
+    try {
+      const { error } = await sb.auth.signInWithPassword({ email: em.trim(), password: pw });
+      if (error) {
+        setBusy(false);
+        if (error.message === "Backend configuration is unavailable.") {
+          return setErr("Layanan backend belum dikonfigurasi. Login tidak tersedia saat ini.");
+        }
+        return setErr("Email atau kata sandi salah.");
+      }
+      location.href = "/admin";
+    } catch {
+      setBusy(false);
+      setErr("Layanan backend belum dapat dihubungi. Coba lagi nanti.");
+    }
+  };
+
+  return (
+    <section className="glass" style={{ maxWidth: 440, margin: "40px auto" }}>
+      <h2>Login guru</h2>
+      {err && <div className="warn" role="alert">{err}</div>}
+      <label htmlFor="em">Email</label>
+      <input id="em" type="email" value={em} onChange={e => setEm(e.target.value)} />
+      <label htmlFor="pw">Kata sandi</label>
+      <input id="pw" type="password" value={pw} onChange={e => setPw(e.target.value)} onKeyDown={e => e.key === "Enter" && go()} />
+      <div className="row">
+        <button className="btn" disabled={busy} onClick={go}>{busy ? "Memeriksa..." : "MASUK →"}</button>
+      </div>
+    </section>
+  );
 }

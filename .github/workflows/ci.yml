@@ -54,12 +54,42 @@ jobs:
       - name: PBL and security regression invariants
         run: node scripts/check-pbl-invariants.mjs
 
-      - name: Next.js production build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://civic-vision-ci.invalid.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-only-placeholder-anon-key-000000
-          SUPABASE_SERVICE_ROLE_KEY: ci-build-only-placeholder-service-key-000000
-        run: npm run build
+      - name: Next.js production build (without Supabase runtime configuration)
+        run: |
+          unset NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY
+          npm run build
+
+      - name: Runtime smoke tests without Supabase runtime configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY
+          npm run start -- --hostname 127.0.0.1 > /tmp/civic-vision-start.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 30); do
+            if curl --silent --show-error --fail http://127.0.0.1:3000/ -o /tmp/civic-vision-home.html; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          test "$ready" -eq 1
+          grep -q "Layanan backend belum dikonfigurasi" /tmp/civic-vision-home.html
+
+          login_status=$(curl --silent --show-error -o /tmp/civic-vision-login.html -w '%{http_code}' http://127.0.0.1:3000/admin/login)
+          test "$login_status" = "200"
+          grep -q "Login guru" /tmp/civic-vision-login.html
+          grep -q "Layanan backend belum dikonfigurasi" /tmp/civic-vision-login.html
+
+          admin_status=$(curl --silent --show-error -D /tmp/civic-vision-admin.headers -o /tmp/civic-vision-admin.body -w '%{http_code}' http://127.0.0.1:3000/admin/versions)
+          test "$admin_status" = "307"
+          grep -qi 'location: .*admin/login?config=unavailable' /tmp/civic-vision-admin.headers
+
+          api_status=$(curl --silent --show-error -o /tmp/civic-vision-api.json -w '%{http_code}' -X POST http://127.0.0.1:3000/api/student-content -H 'content-type: application/json' --data '{"op":"list_videos","args":{"code":"NOTREAL"}}')
+          test "$api_status" = "503"
+          grep -q "Layanan backend belum dikonfigurasi" /tmp/civic-vision-api.json
 
       - name: Report production dependency advisories
         # Production dependency vulnerabilities must block CI until fixed.

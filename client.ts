@@ -1,2 +1,2 @@
-import { createBrowserClient } from "@supabase/ssr";
-export const sb = createBrowserClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!); // sesi di cookie agar middleware bisa memeriksanya
+// Legacy import path retained for existing callers; the canonical client initializes on first use.
+export { sb, getBrowserClient, createUnavailableSupabaseClient } from "@/lib/supabase/client";
