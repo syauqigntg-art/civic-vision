@@ -187,6 +187,15 @@ assert.match(submissionResults, /s \? historicalVideo : vs\.find/, "Historical s
 const adminHook = read("../hooks/useAdmin.ts");
 const questionRemovalMigration = read("../supabase/migrations/20261027170000_admin_question_logical_delete_preserve_history.sql");
 const permanentDeleteMigration = read("../supabase/migrations/20261027210000_admin_question_permanent_delete.sql");
+const hardDeleteGuardMigration = read("../supabase/migrations/20261027230000_admin_question_hard_delete_archive_guard.sql");
+assert.match(hardDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.admin_delete_question\(p_id uuid, p_project_id uuid\)[\s\S]*?SECURITY DEFINER[\s\S]*?private\.is_admin\(\)/, "Compatibility hard-delete RPC preserves admin authorization");
+assert.match(hardDeleteGuardMigration, /DELETE FROM public\.answers[\s\S]*?DELETE FROM public\.question_options[\s\S]*?DELETE FROM public\.questions/i, "Compatibility hard-delete removes related rows in transaction order");
+assert.match(hardDeleteGuardMigration, /current_setting\('civic_vision\.admin_question_hard_delete', true\)[\s\S]*?current_user = \([\s\S]*?admin_delete_question\(uuid,uuid\)/, "Archive-guard bypass is scoped to the SECURITY DEFINER hard-delete RPC");
+assert.match(hardDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.reject_archived_project_write\(\)/, "Archive guard is preserved for ordinary writes");
+assert.match(hardDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.guard_active_parent_project\(\)/, "Parent-project guard is preserved for ordinary writes");
+assert.match(hardDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.guard_active_project_row\(\)/, "Question-project guard is preserved for ordinary writes");
+assert.match(hardDeleteGuardMigration, /DROP TRIGGER IF EXISTS questions_published_version_delete_guard/i, "Only the question snapshot-delete guard is removed");
+assert.doesNotMatch(hardDeleteGuardMigration, /UPDATE public\.project_versions|DELETE FROM public\.project_versions|admin_publish_project_version|admin_save_project_version_draft/i, "Compatibility hard-delete does not mutate or republish snapshots");
 assert.match(permanentDeleteMigration, /DELETE FROM public\.answers[\s\S]*?DELETE FROM public\.question_options[\s\S]*?DELETE FROM public\.questions/i, "Permanent deletion removes answers, options, then the question in one RPC transaction");
 assert.match(permanentDeleteMigration, /private\.is_admin\(\)/, "Permanent deletion validates admin identity");
 assert.match(permanentDeleteMigration, /WHERE q\.id = p_id\s+AND q\.project_id = p_project_id\s+FOR UPDATE/i, "Permanent deletion locks and scopes the question to the selected project");
