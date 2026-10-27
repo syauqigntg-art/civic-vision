@@ -258,7 +258,7 @@ export default function Questions() {
         const message = error.message.toLowerCase();
         if (message.includes("project_not_found")) {
           setErr("Proyek tidak ditemukan. Pilih ulang proyek lalu coba lagi.");
-        } else if (message.includes("admin_required") || message.includes("permission denied") || message.includes("jwt expired")) {
+        } else if (message.includes("admin_required") || message.includes("permission denied") || message.includes("jwt") || message.includes("unauthorized")) {
           setErr("Akses ditolak. Masuk kembali menggunakan akun guru/admin.");
         } else {
           setErr("Pertanyaan gagal dihapus. Belum ada perubahan yang dikonfirmasi; periksa apakah migration penghapusan sudah diterapkan pada database.");
@@ -273,7 +273,7 @@ export default function Questions() {
       } else {
         setErr("");
         await load();
-        setSuccessMessage(error ? "" : "Pertanyaan, pilihan jawaban, dan jawaban terkait telah dihapus permanen. Snapshot lama tidak diubah.");
+        setSuccessMessage("Pertanyaan, pilihan jawaban, dan jawaban terkait telah dihapus permanen. Snapshot lama tidak diubah.");
       }
     } catch {
       setErr("Koneksi gagal saat menghapus pertanyaan. Muat ulang daftar untuk memastikan status terakhir.");
