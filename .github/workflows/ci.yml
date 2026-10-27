@@ -54,12 +54,10 @@ jobs:
       - name: PBL and security regression invariants
         run: node scripts/check-pbl-invariants.mjs
 
-      - name: Next.js production build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: https://civic-vision-ci.invalid.supabase.co
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-build-only-placeholder-anon-key-000000
-          SUPABASE_SERVICE_ROLE_KEY: ci-build-only-placeholder-service-key-000000
-        run: npm run build
+      - name: Next.js production build (without Supabase runtime configuration)
+        run: |
+          unset NEXT_PUBLIC_SUPABASE_URL NEXT_PUBLIC_SUPABASE_ANON_KEY SUPABASE_SERVICE_ROLE_KEY
+          npm run build
 
       - name: Report production dependency advisories
         # Production dependency vulnerabilities must block CI until fixed.
