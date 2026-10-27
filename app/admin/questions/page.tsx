@@ -206,7 +206,9 @@ export default function Questions() {
       if (error) {
         const message = error.message.toLowerCase();
         if (message.includes("question_has_answers_create_new_version")) {
-          setErr("Pertanyaan ini sudah memiliki jawaban siswa. Untuk melindungi hasil lama, teks, fase, tipe, dan opsi tidak dapat diubah. Buat pertanyaan baru, lalu nonaktifkan pertanyaan lama.");
+          setErr("Perubahan ditolak karena database belum memastikan jawaban ini terlindungi oleh snapshot historis. Jawaban tidak dihapus. Periksa status migration versioning sebelum mencoba lagi.");
+        } else if (message.includes("question_has_unversioned_answers")) {
+          setErr("Perubahan ditolak karena setidaknya satu jawaban belum dapat dipastikan terikat ke snapshot historis yang valid. Tidak ada jawaban yang dihapus; minta maintainer memeriksa relasi submission/version.");
         } else if (message.includes("duplicate_question_options")) {
           setErr("Pilihan jawaban tidak boleh duplikat.");
         } else if (message.includes("invalid_question_options")) {
@@ -216,8 +218,7 @@ export default function Questions() {
         } else if (message.includes("admin_required") || message.includes("permission denied")) {
           setErr("Akses ditolak. Masuk kembali menggunakan akun guru/admin.");
         } else {
-          console.error("Transactional question save failed:", error.message);
-          setErr("Pertanyaan gagal disimpan. Perubahan belum diterapkan; periksa isian dan coba lagi.");
+          setErr("Pertanyaan gagal disimpan. Perubahan belum dikonfirmasi; periksa isian, akses admin, dan status database sebelum mencoba lagi.");
         }
         return;
       }
@@ -288,7 +289,8 @@ export default function Questions() {
     await load();
   };
   const bump = (i: number, d: number) => { const t = qs[i + d]; if (t) reorder(qs[i].id, t.id); };
-  if (f) return (<section className="glass"><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+  if (f) return (<section className="glass">
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Perubahan soal masuk ke snapshot berikutnya setelah guru menyimpan, memvalidasi, dan menerbitkan versi. Pekerjaan siswa yang sudah berjalan tetap memakai snapshot yang dipin; jawaban historis tidak dihapus.</p><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
     <label>Pertanyaan</label><textarea value={f.question_text} onChange={e => set("question_text", e.target.value)} />
     <label>Kategori</label><select value={f.category} onChange={e => set("category", e.target.value)}><option value="">Pilih kategori</option>{cats.map(c => <option key={c}>{c}</option>)}<option value="__new">+ Kategori baru...</option></select>
     {f.category === "__new" && <input style={{ marginTop: 8 }} placeholder="Nama kategori baru" value={f.newCat} onChange={e => set("newCat", e.target.value)} />}
@@ -322,6 +324,7 @@ export default function Questions() {
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Perubahan soal disimpan sebagai materi kerja dan masuk ke snapshot berikutnya setelah guru menyimpan, memvalidasi, lalu menerbitkan versi. Submission yang sudah berjalan tetap menggunakan snapshot yang dipin; jawaban historis tidak dihapus.</p>
       <div className="admin-section-head">
         <div>
           <h2>Daftar pertanyaan</h2>

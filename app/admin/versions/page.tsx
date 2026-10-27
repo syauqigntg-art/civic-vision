@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { sb } from "@/lib/supabase/client";
 import { useProjectContext } from "@/components/admin/ProjectProvider";
+import { versioningErrorMessage } from "@/lib/utils/versioning-error";
 
 type VersionQuestion = {
   id: string;
@@ -98,28 +99,37 @@ export default function ProjectVersionsPage() {
   );
   const archived = project?.is_active === false;
 
-  const loadVersions = useCallback(async () => {
+  const loadVersions = useCallback(async (): Promise<boolean> => {
     if (!projectId) {
       setVersions([]);
       setLoading(false);
-      return;
+      return true;
     }
 
     setLoading(true);
     setErrorMessage("");
-    const { data, error } = await sb
-      .from("project_versions")
-      .select("id,project_id,version_number,status,content,based_on_version_id,created_at,updated_at,published_at")
-      .eq("project_id", projectId)
-      .order("version_number", { ascending: false });
+    try {
+      const { data, error } = await sb
+        .from("project_versions")
+        .select("id,project_id,version_number,status,content,based_on_version_id,created_at,updated_at,published_at")
+        .eq("project_id", projectId)
+        .order("version_number", { ascending: false });
 
-    if (error) {
-      setErrorMessage("Riwayat versi tidak dapat dimuat. Pastikan migrasi versioning sudah diterapkan dan akses admin valid.");
-      setVersions([]);
-    } else {
+      if (error) {
+        setErrorMessage(versioningErrorMessage(error, "load"));
+        setVersions([]);
+        return false;
+      }
+
       setVersions((data || []) as ProjectVersion[]);
+      return true;
+    } catch (error) {
+      setErrorMessage(versioningErrorMessage(error, "load"));
+      setVersions([]);
+      return false;
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [projectId]);
 
   useEffect(() => {
@@ -148,11 +158,13 @@ export default function ProjectVersionsPage() {
       if (typeof data !== "string" || !data) {
         throw new Error("Server tidak mengembalikan ID versi draft.");
       }
-      await loadVersions();
+      const refreshed = await loadVersions();
       setShowPreview(true);
-      setMessage("Snapshot draft terbaru tersimpan. Versi aktif siswa belum berubah.");
+      setMessage(refreshed
+        ? "Snapshot draft terbaru tersimpan. Versi aktif siswa belum berubah."
+        : "Draft tersimpan, tetapi riwayat versi gagal dimuat ulang. Ikuti diagnosis error sebelum mengulangi tindakan.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Draft gagal disimpan.");
+      setErrorMessage(versioningErrorMessage(error, "save"));
     } finally {
       setBusy(false);
     }
@@ -185,7 +197,12 @@ export default function ProjectVersionsPage() {
       if (!result || typeof result.valid !== "boolean" || !Array.isArray(result.errors)) {
         throw new Error("Respons validasi dari server tidak sesuai format.");
       }
-      await loadVersions();
+      const refreshed = await loadVersions();
+      if (!refreshed) {
+        setValidation(null);
+        setValidatedVersionId("");
+        return;
+      }
       setShowPreview(true);
       setValidation(result);
       setValidatedVersionId(versionId);
@@ -193,7 +210,7 @@ export default function ProjectVersionsPage() {
         ? "Draft terbaru berhasil disimpan dan validasi lulus. Snapshot ini siap diterbitkan."
         : "Draft terbaru berhasil disimpan, tetapi validasi menemukan masalah. Perbaiki materi kerja, simpan ulang, lalu validasi kembali.");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "Validasi draft gagal.");
+      setErrorMessage(versioningErrorMessage(error, "validate"));
     } finally {
       setBusy(false);
     }
@@ -255,24 +272,25 @@ export default function ProjectVersionsPage() {
         throw new Error("Server tidak mengonfirmasi versi yang diterbitkan.");
       }
       await refreshProjects();
-      await loadVersions();
+      const refreshed = await loadVersions();
       setValidation(null);
       setValidatedVersionId("");
       setShowPreview(false);
-      setMessage(label + " berhasil diterbitkan. Submission yang sudah ada tidak dipindahkan ke versi baru.");
+      setMessage(refreshed
+        ? label + " berhasil diterbitkan. Submission yang sudah ada tidak dipindahkan ke versi baru."
+        : label + " berhasil diterbitkan, tetapi riwayat versi gagal dimuat ulang. Ikuti diagnosis error sebelum melanjutkan.");
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : String((error as { message?: unknown } | null)?.message ?? error);
-      if (errorMessage.includes("project_version_validation_stale")) {
+      const rawMessage = error && typeof error === "object" && "message" in error
+        ? String((error as { message?: unknown }).message ?? "").toLowerCase()
+        : "";
+      if (rawMessage.includes("project_version_validation_stale")) {
         await loadVersions();
         setValidation(null);
         setValidatedVersionId("");
         setShowPreview(true);
         setErrorMessage("Draft berubah setelah validasi. Pratinjau dan validasi ulang sebelum menerbitkan.");
       } else {
-        setErrorMessage(errorMessage || "Versi gagal diterbitkan.");
+        setErrorMessage(versioningErrorMessage(error, "publish"));
       }
     } finally {
       setBusy(false);
