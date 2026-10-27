@@ -1,4 +1,4 @@
-import { SupabaseConfigurationError } from "@/lib/supabase/config-error";
+import { SupabaseConfigurationError } from "./config-error.ts";
 
 export type PublicSupabaseConfig = { url: string; anonKey: string };
 
