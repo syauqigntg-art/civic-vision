@@ -7,6 +7,7 @@ const studentContent = read("../app/api/student-content/route.ts");
 const autosave = read("../hooks/useAutosave.ts");
 const editor = read("../app/admin/questions/page.tsx");
 const submissionHistory = read("../app/admin/submissions/page.tsx");
+const permanentDeleteRegressionSql = read("../supabase/p1-question-versioning-hotfix-test.sql");
 const phaseBar = read("../components/lkpd/PhaseBar.tsx");
 const analysis = read("../app/lkpd/kasus/[id]/analisis/page.tsx");
 const cases = read("../app/lkpd/kasus/page.tsx");
@@ -204,3 +205,10 @@ assert.match(editor, /onClick=\{\(\) => del\(q\)\} disabled=\{saving\}/, "Delete
 assert.match(submissionHistory, /Jawaban tidak tersedia — pertanyaan ini telah dihapus permanen/, "Historical snapshot renders an explicit missing-answer state after permanent deletion");
 assert.match(submissionHistory, /status pertanyaan saat ini tidak dapat diverifikasi/, "History lookup failures do not falsely claim an answer was deleted");
 assert.match(submissionHistory, /answerFor\(q\.s, q\)|answerFor\(r\.s, q\)/, "Submission history and export use the missing-answer-aware renderer");
+
+assert.match(permanentDeleteRegressionSql, /count\(\*\) FROM public\.answers WHERE question_id=q\) <> 0/, "SQL regression verifies all answers for the deleted question are gone");
+assert.match(permanentDeleteRegressionSql, /content IS DISTINCT FROM current_setting\('cv_hotfix\.v1_content_before'\)::jsonb/, "SQL regression verifies published v1 snapshot remains byte-for-byte equivalent as JSON");
+assert.match(permanentDeleteRegressionSql, /cv_test_forced_delete_failure/, "SQL regression injects a failure to verify atomic rollback");
+assert.match(permanentDeleteRegressionSql, /video_referenced_by_published_version_deactivate_instead/, "SQL regression preserves published-video delete protection");
+assert.match(permanentDeleteRegressionSql, /cross-project question was not rejected/, "SQL regression covers cross-project delete rejection");
+assert.match(permanentDeleteRegressionSql, /UPDATE public\.projects SET is_active=false/, "SQL regression covers permanent deletion from an archived project");
