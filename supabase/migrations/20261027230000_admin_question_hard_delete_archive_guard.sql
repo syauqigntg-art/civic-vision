@@ -31,11 +31,11 @@ BEGIN
   END IF;
 
   IF TG_TABLE_NAME IN ('videos', 'questions', 'groups') THEN
-    pid := CASE WHEN TG_OP = 'DELETE' THEN OLD.project_id ELSE NEW.project_id END;
+    pid := COALESCE(NEW.project_id, OLD.project_id);
   ELSIF TG_TABLE_NAME IN ('group_members', 'group_videos') THEN
     SELECT g.project_id INTO pid
     FROM public.groups AS g
-    WHERE g.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.group_id ELSE NEW.group_id END;
+    WHERE g.id = COALESCE(NEW.group_id, OLD.group_id);
   ELSIF TG_TABLE_NAME = 'question_options' THEN
     SELECT q.project_id INTO pid
     FROM public.questions AS q
