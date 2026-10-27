@@ -82,7 +82,7 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
         case "vs":
           return sb.from("videos").select("*").eq("project_id", projectId).order("number");
         case "qs":
-          return sb.from("questions").select("*,question_options(*)").eq("project_id", projectId).order("display_order");
+          return sb.from("questions").select("*,question_options(*)").eq("project_id", projectId).is("deleted_at", null).order("display_order");
         case "gv":
           return groupIds.length
             ? sb.from("group_videos").select("*").in("group_id", groupIds)

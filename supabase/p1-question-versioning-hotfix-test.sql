@@ -1,5 +1,5 @@
 -- Staging-only regression test for snapshot-safe question edits.
--- Run after the versioning/CAS migrations and 20261026112425_allow_versioned_question_edits.sql.
+-- Run after the versioning/CAS migrations, question-edit hotfix, and 20261027170000_admin_question_logical_delete_preserve_history.sql.
 -- All fixture rows, including temporary Auth identities and answers, are rolled back.
 BEGIN;
 
@@ -335,14 +335,21 @@ DECLARE
   delete_result text;
 BEGIN
   delete_result := public.admin_delete_question(q,p);
-  IF delete_result IS DISTINCT FROM 'deactivated' THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: answered/published question was not deactivated';
+  IF delete_result IS DISTINCT FROM 'deleted' THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: answered/published question was not removed from the working bank';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.questions WHERE id=q AND is_active IS FALSE) THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: question was physically deleted instead of archived';
+  IF NOT EXISTS (SELECT 1 FROM public.questions WHERE id=q AND is_active IS FALSE AND deleted_at IS NOT NULL) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: deleted question is not hidden from the working bank';
   END IF;
   IF (SELECT count(*) FROM public.answers WHERE question_id=q) <> 2 THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: archive removed historical answers';
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: logical delete removed historical answers';
+  END IF;
+  IF EXISTS (
+    SELECT 1
+    FROM pg_catalog.jsonb_array_elements(private.build_project_version_content(p)->'questions') AS item(value)
+    WHERE item.value->>'id'=q::text
+  ) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: deleted question remained in newly-built snapshots';
   END IF;
   IF NOT EXISTS (
     SELECT 1
