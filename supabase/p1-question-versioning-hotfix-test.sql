@@ -1,5 +1,5 @@
 -- Staging-only regression test for snapshot-safe question edits.
--- Run after the versioning/CAS migrations, question-edit hotfix, and 20261027170000_admin_question_logical_delete_preserve_history.sql.
+-- Run after the versioning/CAS migrations, question-edit hotfix, 20261027170000_admin_question_logical_delete_preserve_history.sql, and 20261027210000_admin_question_permanent_delete.sql.
 -- All fixture rows, including temporary Auth identities and answers, are rolled back.
 BEGIN;
 
@@ -10,6 +10,9 @@ DECLARE
   v_project uuid := gen_random_uuid();
   v_video uuid := gen_random_uuid();
   v_question uuid := gen_random_uuid();
+  v_other_question uuid := gen_random_uuid();
+  v_cross_project uuid := gen_random_uuid();
+  v_cross_project_question uuid := gen_random_uuid();
   v_group_a uuid := gen_random_uuid();
   v_group_b uuid := gen_random_uuid();
   v_code_a text := 'CVHF' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 18));
@@ -37,12 +40,19 @@ BEGIN
   INSERT INTO public.questions(
     id,project_id,category,question_text,phase,question_type,is_required,is_active,
     display_order,min_items,placeholder,description,updated_at
-  ) VALUES (
-    v_question,v_project,'Synthetic','Question v1','think','single_select',true,true,
-    1,1,'Choose one','Historical prompt',now()
-  );
+  ) VALUES
+    (v_question,v_project,'Synthetic','Question v1','think','single_select',true,true,
+      1,1,'Choose one','Historical prompt',now()),
+    (v_other_question,v_project,'Synthetic','Other question survives','act','textarea',false,true,
+      2,1,'Optional','Must remain after deletion of the target question',now());
   INSERT INTO public.question_options(question_id,option_text,display_order)
   VALUES(v_question,'A',1),(v_question,'B',2);
+  INSERT INTO public.projects(id,title,is_active)
+  VALUES(v_cross_project,'__cv_hotfix_other_project__',true);
+  INSERT INTO public.questions(
+    id,project_id,category,question_text,phase,question_type,is_required,is_active,
+    display_order,min_items,updated_at
+  ) VALUES (v_cross_project_question,v_cross_project,'Synthetic','Other project question','think','textarea',false,true,1,1,now());
   INSERT INTO public.groups(id,project_id,group_number,group_name,class_name,leader_name,access_code)
   VALUES
     (v_group_a,v_project,990901,'Synthetic Group A','CV HOTFIX','Synthetic Leader A',v_code_a),
@@ -55,6 +65,9 @@ BEGIN
   PERFORM set_config('cv_hotfix.project_id',v_project::text,true);
   PERFORM set_config('cv_hotfix.video_id',v_video::text,true);
   PERFORM set_config('cv_hotfix.question_id',v_question::text,true);
+  PERFORM set_config('cv_hotfix.other_question_id',v_other_question::text,true);
+  PERFORM set_config('cv_hotfix.cross_project_id',v_cross_project::text,true);
+  PERFORM set_config('cv_hotfix.cross_project_question_id',v_cross_project_question::text,true);
   PERFORM set_config('cv_hotfix.code_a',v_code_a,true);
   PERFORM set_config('cv_hotfix.code_b',v_code_b,true);
 END;
@@ -102,6 +115,9 @@ BEGIN
   PERFORM public.begin_submission(current_setting('cv_hotfix.code_a'),current_setting('cv_hotfix.video_id')::uuid);
   IF public.save_answer(current_setting('cv_hotfix.code_a'),current_setting('cv_hotfix.question_id')::uuid,'A') IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'HOTFIX TEST FAILED: Group A answer did not save';
+  END IF;
+  IF public.save_answer(current_setting('cv_hotfix.code_a'),current_setting('cv_hotfix.other_question_id')::uuid,'Other answer A') IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: Group A unrelated answer did not save';
   END IF;
 END;
 $start_a$;
@@ -234,6 +250,9 @@ BEGIN
   IF public.save_answer(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.question_id')::uuid,'["C"]') IS DISTINCT FROM true THEN
     RAISE EXCEPTION 'HOTFIX TEST FAILED: valid v2 answer did not save';
   END IF;
+  IF public.save_answer(current_setting('cv_hotfix.code_b'),current_setting('cv_hotfix.other_question_id')::uuid,'Other answer B') IS DISTINCT FROM true THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: Group B unrelated answer did not save';
+  END IF;
 END;
 $save_b_valid$;
 DO $v2_submit$
@@ -274,7 +293,7 @@ BEGIN
   END IF;
   IF (SELECT count(*) FROM public.answers a
       JOIN public.submissions s ON s.id=a.submission_id
-      WHERE s.group_id=(SELECT id FROM public.groups WHERE access_code=current_setting('cv_hotfix.code_a'))) <> 1 THEN
+      WHERE s.group_id=(SELECT id FROM public.groups WHERE access_code=current_setting('cv_hotfix.code_a'))) <> 2 THEN
     RAISE EXCEPTION 'HOTFIX TEST FAILED: historical answer row was lost';
   END IF;
 END;
