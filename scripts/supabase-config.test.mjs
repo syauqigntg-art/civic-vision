@@ -3,6 +3,7 @@ import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
 import { isPublicSupabaseConfigured, readPublicSupabaseConfig } from "../lib/supabase/public-config.ts";
+import { createUnavailableSupabaseClient } from "../lib/supabase/client.ts";
 
 test("public Supabase configuration is reported unavailable when values are absent", () => {
   assert.equal(isPublicSupabaseConfigured({}), false);
@@ -55,4 +56,18 @@ test("protected admin and API requests fail closed without public config", async
   assert.match(proxy, /if \(isApi\)[\s\S]*?if \(!hasPublicConfig \|\| !hasServiceRole\) return unavailable\(\)/);
   assert.match(proxy, /if \(!isPublicSupabaseConfigured\(process\.env\)\)\s*\{\s*return toLogin\("\?config=unavailable"\)/);
   assert.match(proxy, /profile\?\.role !== "admin"/);
+});
+
+test("unavailable browser client never claims a user or successful query", async () => {
+  const client = createUnavailableSupabaseClient();
+  const query = await client.from("projects").select("*");
+  assert.equal(query.data, null);
+  assert.equal(query.error.message, "Backend configuration is unavailable.");
+
+  const auth = await client.auth.getUser();
+  assert.equal(auth.data.user, null);
+  assert.equal(auth.error.message, "Backend configuration is unavailable.");
+
+  const signIn = await client.auth.signInWithPassword({ email: "", password: "" });
+  assert.equal(signIn.error.message, "Backend configuration is unavailable.");
 });
