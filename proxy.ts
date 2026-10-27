@@ -1,13 +1,61 @@
-import { createServerClient } from "@supabase/ssr"; import { NextResponse, type NextRequest } from "next/server";
-// Penjaga server: /admin/* hanya untuk pengguna login dengan role admin (selain /admin/login).
+import { createServerClient } from "@supabase/ssr";
+import { NextResponse, type NextRequest } from "next/server";
+import { isPublicSupabaseConfigured, readPublicSupabaseConfig } from "@/lib/supabase/public-config";
+
+const unavailable = () =>
+  NextResponse.json({ error: "Layanan backend belum dikonfigurasi." }, { status: 503 });
+
+// Protected routes fail closed when runtime configuration is missing or the
+// identity/role check cannot be completed. No configuration failure grants access.
 export async function proxy(req: NextRequest) {
-  let res = NextResponse.next({ request: req });
-  const s = createServerClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!, { cookies: { getAll: () => req.cookies.getAll(),
-    setAll: l => { l.forEach(({ name, value }) => req.cookies.set(name, value)); res = NextResponse.next({ request: req }); l.forEach(({ name, value, options }) => res.cookies.set(name, value, options)); } } });
-  const p = req.nextUrl.pathname; if (p === "/admin/login") return res;
-  const { data: { user } } = await s.auth.getUser(); const to = (q = "") => NextResponse.redirect(new URL("/admin/login" + q, req.url));
-  if (!user) return to();
-  const { data } = await s.from("users").select("role").eq("id", user.id).single(); if (data?.role !== "admin") return to("?denied=1");
-  return res;
+  const path = req.nextUrl.pathname;
+  const isApi = path.startsWith("/api/");
+  const isLogin = path === "/admin/login";
+
+  if (isApi) {
+    const hasPublicConfig = isPublicSupabaseConfigured(process.env);
+    const hasServiceRole = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim().length >= 20;
+    if (!hasPublicConfig || !hasServiceRole) return unavailable();
+    return NextResponse.next();
+  }
+
+  if (isLogin) return NextResponse.next();
+
+  const toLogin = (query = "") =>
+    NextResponse.redirect(new URL("/admin/login" + query, req.url));
+
+  if (!isPublicSupabaseConfigured(process.env)) {
+    return toLogin("?config=unavailable");
+  }
+
+  let response = NextResponse.next({ request: req });
+  try {
+    const { url, anonKey } = readPublicSupabaseConfig(process.env);
+    const supabase = createServerClient(url, anonKey, {
+      cookies: {
+        getAll: () => req.cookies.getAll(),
+        setAll: (values) => {
+          values.forEach(({ name, value }) => req.cookies.set(name, value));
+          response = NextResponse.next({ request: req });
+          values.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
+        },
+      },
+    });
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) return toLogin();
+
+    const { data: profile, error: roleError } = await supabase
+      .from("users")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (roleError || profile?.role !== "admin") return toLogin("?denied=1");
+    return response;
+  } catch {
+    return toLogin("?config=unavailable");
+  }
 }
-export const config = { matcher: ["/admin/:path*"] };
+
+export const config = { matcher: ["/admin/:path*", "/api/:path*"] };
