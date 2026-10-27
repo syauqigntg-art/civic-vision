@@ -347,28 +347,121 @@ BEGIN
   PERFORM set_config('request.jwt.claim.sub',current_setting('cv_hotfix.admin_id'),true);
 END;
 $set_admin_claim$;
-DO $archive_question$
+
+-- Capture immutable snapshot contents before attempting deletion.
+DO $snapshot_baseline$
+BEGIN
+  PERFORM set_config('cv_hotfix.v1_content_before',
+    (SELECT content::text FROM public.project_versions WHERE id=current_setting('cv_hotfix.v1_id')::uuid),true);
+  PERFORM set_config('cv_hotfix.v2_content_before',
+    (SELECT content::text FROM public.project_versions WHERE id=current_setting('cv_hotfix.v2_id')::uuid),true);
+END;
+$snapshot_baseline$;
+
+-- Cross-project deletion must fail closed without deleting the other project's question.
+DO $cross_project_scope$
+DECLARE
+  result text;
+  other_q uuid := current_setting('cv_hotfix.cross_project_question_id')::uuid;
+  p uuid := current_setting('cv_hotfix.project_id')::uuid;
+BEGIN
+  result := public.admin_delete_question(other_q,p);
+  IF result IS DISTINCT FROM 'not_found' THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: cross-project question was not rejected';
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.questions WHERE id=other_q AND project_id=current_setting('cv_hotfix.cross_project_id')::uuid) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: cross-project question was changed';
+  END IF;
+END;
+$cross_project_scope$;
+
+-- Verify archived projects still permit admin cleanup.
+RESET ROLE;
+UPDATE public.projects SET is_active=false WHERE id=current_setting('cv_hotfix.project_id')::uuid;
+
+-- Force a failure after answer/option DELETEs; the RPC exception must roll
+-- back all of those statements as one transaction.
+CREATE FUNCTION pg_temp.cv_test_fail_question_delete()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $function$
+BEGIN
+  IF OLD.id = current_setting('cv_hotfix.question_id')::uuid THEN
+    RAISE EXCEPTION 'cv_test_forced_delete_failure';
+  END IF;
+  RETURN OLD;
+END;
+$function$;
+CREATE TRIGGER cv_test_fail_question_delete
+  BEFORE DELETE ON public.questions
+  FOR EACH ROW EXECUTE FUNCTION pg_temp.cv_test_fail_question_delete();
+
+SET LOCAL ROLE authenticated;
+DO $atomic_failure$
 DECLARE
   q uuid := current_setting('cv_hotfix.question_id')::uuid;
   p uuid := current_setting('cv_hotfix.project_id')::uuid;
-  delete_result text;
 BEGIN
-  delete_result := public.admin_delete_question(q,p);
-  IF delete_result IS DISTINCT FROM 'deleted' THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: answered/published question was not removed from the working bank';
+  BEGIN
+    PERFORM public.admin_delete_question(q,p);
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: forced trigger failure did not abort deletion';
+  EXCEPTION WHEN SQLSTATE 'P0001' THEN
+    IF SQLERRM <> 'cv_test_forced_delete_failure' THEN RAISE; END IF;
+  END;
+
+  IF NOT EXISTS (SELECT 1 FROM public.questions WHERE id=q AND project_id=p) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: atomic failure removed the question';
   END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.questions WHERE id=q AND is_active IS FALSE AND deleted_at IS NOT NULL) THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: deleted question is not hidden from the working bank';
+  IF (SELECT count(*) FROM public.question_options WHERE question_id=q) <> 2 THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: atomic failure removed question options';
   END IF;
   IF (SELECT count(*) FROM public.answers WHERE question_id=q) <> 2 THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: logical delete removed historical answers';
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: atomic failure left answer deletion partially committed';
+  END IF;
+END;
+$atomic_failure$;
+
+RESET ROLE;
+DROP TRIGGER cv_test_fail_question_delete ON public.questions;
+-- pg_temp function is dropped automatically at transaction end.
+SET LOCAL ROLE authenticated;
+
+DO $permanent_delete$
+DECLARE
+  q uuid := current_setting('cv_hotfix.question_id')::uuid;
+  other_q uuid := current_setting('cv_hotfix.other_question_id')::uuid;
+  p uuid := current_setting('cv_hotfix.project_id')::uuid;
+  result text;
+BEGIN
+  result := public.admin_delete_question(q,p);
+  IF result IS DISTINCT FROM 'deleted' THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: answered/published question was not permanently deleted';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.questions WHERE id=q) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: question row still exists after deletion';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.question_options WHERE question_id=q) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: question options still exist after deletion';
+  END IF;
+  IF EXISTS (SELECT 1 FROM public.answers WHERE question_id=q) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: answers for deleted question still exist';
+  END IF;
+  IF (SELECT count(*) FROM public.answers WHERE question_id=other_q) <> 2 THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: unrelated question answers were deleted';
+  END IF;
+  IF (SELECT count(*) FROM public.submissions WHERE project_id=p) <> 2 THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: submissions were changed by question deletion';
   END IF;
   IF EXISTS (
-    SELECT 1
-    FROM pg_catalog.jsonb_array_elements(private.build_project_version_content(p)->'questions') AS item(value)
-    WHERE item.value->>'id'=q::text
+    SELECT 1 FROM public.project_versions
+    WHERE id=current_setting('cv_hotfix.v1_id')::uuid
+      AND content IS DISTINCT FROM current_setting('cv_hotfix.v1_content_before')::jsonb
+  ) OR EXISTS (
+    SELECT 1 FROM public.project_versions
+    WHERE id=current_setting('cv_hotfix.v2_id')::uuid
+      AND content IS DISTINCT FROM current_setting('cv_hotfix.v2_content_before')::jsonb
   ) THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: deleted question remained in newly-built snapshots';
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: published snapshot content changed';
   END IF;
   IF NOT EXISTS (
     SELECT 1
@@ -378,26 +471,40 @@ BEGIN
       AND item.value->>'id'=q::text
       AND item.value->>'question_text'='Question v1'
   ) THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: historical v1 question disappeared after archive';
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: old snapshot no longer contains its historical question text';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.questions
+    WHERE id=other_q AND project_id=p
+  ) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: unrelated question row was removed';
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM public.questions
+    WHERE id=current_setting('cv_hotfix.cross_project_question_id')::uuid
+      AND project_id=current_setting('cv_hotfix.cross_project_id')::uuid
+  ) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: cross-project question row was removed';
   END IF;
 END;
-$archive_question$;
+$permanent_delete$;
 
--- Verify a failed RPC left no draft content that differs from the last valid snapshot.
+-- Historical snapshots can still name the question while its answer row is gone.
+-- Consumers must render an explicit unavailable-answer state, not invent content.
 DO $final_integrity$
 DECLARE
   p uuid := current_setting('cv_hotfix.project_id')::uuid;
   q uuid := current_setting('cv_hotfix.question_id')::uuid;
 BEGIN
   IF EXISTS (SELECT 1 FROM public.project_versions WHERE project_id=p AND status='draft') THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: unexpected inconsistent draft remains after publication';
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: unexpected draft remains after publication';
   END IF;
-  IF (SELECT count(*) FROM public.answers WHERE question_id=q) <> 2 THEN
-    RAISE EXCEPTION 'HOTFIX TEST FAILED: final answer count changed';
+  IF (SELECT count(*) FROM public.answers WHERE question_id=q) <> 0 THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: deleted question answers still exist';
   END IF;
-  RAISE NOTICE 'PASS: snapshot-safe edits, v1/v2 validation, stale CAS, soft-delete, admin denial and rollback invariants';
+  RAISE NOTICE 'PASS: permanent deletion, immutable snapshots, unrelated answers/submissions, cross-project scope, archived cleanup, admin denial and atomic rollback';
 END;
 $final_integrity$;
 
 ROLLBACK;
-SELECT 'PASS: snapshot-safe question editing, v1/v2 validation, stale CAS, soft-delete, non-admin save/delete denial and fixture rollback' AS test_result;
+SELECT 'PASS: versioned question permanent deletion, immutable snapshots, unrelated data retention, cross-project protection, non-admin denial and atomic rollback' AS test_result;
