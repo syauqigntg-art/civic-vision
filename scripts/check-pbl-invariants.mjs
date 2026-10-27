@@ -6,6 +6,7 @@ const student = read("../app/api/student/route.ts");
 const studentContent = read("../app/api/student-content/route.ts");
 const autosave = read("../hooks/useAutosave.ts");
 const editor = read("../app/admin/questions/page.tsx");
+const submissionHistory = read("../app/admin/submissions/page.tsx");
 const phaseBar = read("../components/lkpd/PhaseBar.tsx");
 const analysis = read("../app/lkpd/kasus/[id]/analisis/page.tsx");
 const cases = read("../app/lkpd/kasus/page.tsx");
@@ -199,3 +200,7 @@ assert.match(editor, /Hapus pertanyaan secara permanen/,"Delete confirmation exp
 assert.match(editor, /Snapshot LKPD lama tidak diubah/,"Delete confirmation says existing snapshots are not modified");
 assert.match(editor, /setSuccessMessage\([\s\S]*?dihapus permanen/i, "UI only announces deletion after server confirmation");
 assert.match(editor, /onClick=\{\(\) => del\(q\)\} disabled=\{saving\}/, "Delete remains available for archived projects and non-active questions");
+
+assert.match(submissionHistory, /Jawaban tidak tersedia — pertanyaan ini telah dihapus permanen/, "Historical snapshot renders an explicit missing-answer state after permanent deletion");
+assert.match(submissionHistory, /status pertanyaan saat ini tidak dapat diverifikasi/, "History lookup failures do not falsely claim an answer was deleted");
+assert.match(submissionHistory, /answerFor\(q\.s, q\)|answerFor\(r\.s, q\)/, "Submission history and export use the missing-answer-aware renderer");
