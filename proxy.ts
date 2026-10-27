@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { isPublicSupabaseConfigured, readPublicSupabaseConfig } from "./lib/supabase/public-config.ts";
+import { isRuntimeBackendConfigured } from "./lib/supabase/runtime-status.ts";
 
 const unavailable = () =>
   NextResponse.json({ error: "Layanan backend belum dikonfigurasi." }, { status: 503 });
@@ -13,9 +14,7 @@ export async function proxy(req: NextRequest) {
   const isLogin = path === "/admin/login";
 
   if (isApi) {
-    const hasPublicConfig = isPublicSupabaseConfigured(process.env);
-    const hasServiceRole = (process.env.SUPABASE_SERVICE_ROLE_KEY || "").trim().length >= 20;
-    if (!hasPublicConfig || !hasServiceRole) return unavailable();
+    if (!isRuntimeBackendConfigured(process.env)) return unavailable();
     return NextResponse.next();
   }
 
