@@ -1,6 +1,6 @@
 import { createBrowserClient } from "@supabase/ssr";
-import { SupabaseConfigurationError } from "@/lib/supabase/config-error";
-import { readPublicSupabaseConfig } from "@/lib/supabase/public-config";
+import { SupabaseConfigurationError } from "./config-error.ts";
+import { readPublicSupabaseConfig } from "./public-config.ts";
 
 type BrowserClient = ReturnType<typeof createBrowserClient>;
 let client: BrowserClient | undefined;
