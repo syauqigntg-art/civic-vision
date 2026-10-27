@@ -15,6 +15,9 @@ export default function Submissions() {
   const answerFor = (submission: any, question: any) => {
     const raw = rawOf(ans, submission.id, question.id);
     if (raw != null) return show(question, raw);
+    if (error) {
+      return "Jawaban tidak tersedia — status pertanyaan saat ini tidak dapat diverifikasi. Snapshot lama tetap memuat teks pertanyaan.";
+    }
     const stillInWorkingBank = currentQuestions.some((current: any) => current.id === question.id);
     if (!stillInWorkingBank) {
       return "Jawaban tidak tersedia — pertanyaan ini telah dihapus permanen dari bank saat ini. Snapshot lama tetap memuat teks pertanyaan, tetapi jawaban terkait sudah dihapus.";
