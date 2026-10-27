@@ -92,7 +92,7 @@ function getPlaceholderOptions(category: string, phase: string) {
 }
 
 export default function Questions() {
-  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
+  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [successMessage, setSuccessMessage] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
   const filteredQs = useMemo(() => {
     const query = search.trim().toLowerCase();
     return qs.filter((q: any) => {
@@ -234,18 +234,20 @@ export default function Questions() {
     }
   };
   const del = async (q: Q) => {
-    if (readOnly) {
-      setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan.");
+    if (saving) return;
+    if (!P?.id) {
+      setErr("Proyek belum dipilih atau tidak ditemukan. Pilih proyek sebelum menghapus pertanyaan.");
       return;
     }
     const answerCount = ans.filter((answer: any) => answer.question_id === q.id).length;
     const answerWarning = answerCount > 0
       ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan.`
       : "";
-    const prompt = `Hapus pertanyaan "${q.question_text}" dari bank pertanyaan aktif?${answerWarning}\n\nPertanyaan akan hilang dari dashboard dan tidak masuk ke draft/snapshot baru. Versi yang sudah terbit tetap berlaku sampai guru menerbitkan versi baru. Jawaban siswa dan snapshot lama tetap disimpan untuk menjaga riwayat. Tindakan ini tidak dapat dibatalkan dari dashboard.`;
+    const prompt = `Hapus pertanyaan secara permanen?\n\nPertanyaan: "${q.question_text}"${answerWarning}\n\nPertanyaan, pilihan jawaban, dan seluruh jawaban siswa terkait akan dihapus. Snapshot LKPD lama tidak diubah dan mungkin masih memuat teks pertanyaan ini. Penghapusan tidak dapat dibatalkan melalui dashboard.`;
     if (!confirm(prompt)) return;
 
     setErr("");
+    setSuccessMessage("");
     setSaving(true);
     try {
       const { data, error } = await sb.rpc("admin_delete_question", {
@@ -254,9 +256,9 @@ export default function Questions() {
       });
       if (error) {
         const message = error.message.toLowerCase();
-        if (message.includes("project_archived")) {
-          setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan.");
-        } else if (message.includes("admin_required") || message.includes("permission denied")) {
+        if (message.includes("project_not_found")) {
+          setErr("Proyek tidak ditemukan. Pilih ulang proyek lalu coba lagi.");
+        } else if (message.includes("admin_required") || message.includes("permission denied") || message.includes("jwt") || message.includes("unauthorized")) {
           setErr("Akses ditolak. Masuk kembali menggunakan akun guru/admin.");
         } else {
           setErr("Pertanyaan gagal dihapus. Belum ada perubahan yang dikonfirmasi; periksa apakah migration penghapusan sudah diterapkan pada database.");
@@ -265,12 +267,14 @@ export default function Questions() {
       }
       if (data === "not_found") {
         setErr("Pertanyaan tidak ditemukan pada proyek yang sedang dipilih. Muat ulang daftar.");
-      } else if (data !== "deleted" && data !== "already_deleted") {
-        setErr("Penghapusan belum aktif pada database. Terapkan migration terbaru terlebih dahulu; pertanyaan belum dihapus dari bank.");
+      } else if (data !== "deleted") {
+        setErr("Server tidak mengonfirmasi penghapusan permanen. Daftar tidak dinyatakan berhasil dihapus.");
+        return;
       } else {
         setErr("");
+        await load();
+        setSuccessMessage("Pertanyaan, pilihan jawaban, dan jawaban terkait telah dihapus permanen. Snapshot lama tidak diubah.");
       }
-      await load();
     } catch {
       setErr("Koneksi gagal saat menghapus pertanyaan. Muat ulang daftar untuk memastikan status terakhir.");
     } finally {
@@ -336,7 +340,9 @@ export default function Questions() {
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
-      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Pertanyaan yang dihapus hilang dari bank kerja dan tidak masuk versi baru. Snapshot terbit dan jawaban lama tetap disimpan; perubahan versi baru berlaku setelah guru menyimpan, memvalidasi, lalu menerbitkan versi.</p>
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Hapus menghilangkan pertanyaan, pilihan jawaban, dan jawaban siswa terkait secara permanen. Snapshot lama tidak diubah dan dapat tetap memuat teks pertanyaan tanpa jawaban terkait.</p>
+      {successMessage && <div className="notice" role="status">{successMessage}</div>}
+      {err && <div className="warn" role="alert">{err}</div>}
       <div className="admin-section-head">
         <div>
           <h2>Daftar pertanyaan</h2>
@@ -438,7 +444,7 @@ export default function Questions() {
                   <td>
                     <div className="admin-row-actions">
                       <button className="btn g" type="button" onClick={() => edit(q)} disabled={readOnly}>Edit</button>
-                      <button className="btn g danger" type="button" onClick={() => del(q)} disabled={readOnly || saving}>{saving ? "Menghapus..." : "Hapus"}</button>
+                      <button className="btn g danger" type="button" onClick={() => del(q)} disabled={saving}>{saving ? "Menghapus..." : "Hapus permanen"}</button>
                     </div>
                   </td>
                 </tr>

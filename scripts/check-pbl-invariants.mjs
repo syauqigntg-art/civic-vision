@@ -6,6 +6,8 @@ const student = read("../app/api/student/route.ts");
 const studentContent = read("../app/api/student-content/route.ts");
 const autosave = read("../hooks/useAutosave.ts");
 const editor = read("../app/admin/questions/page.tsx");
+const submissionHistory = read("../app/admin/submissions/page.tsx");
+const permanentDeleteRegressionSql = read("../supabase/p1-question-versioning-hotfix-test.sql");
 const phaseBar = read("../components/lkpd/PhaseBar.tsx");
 const analysis = read("../app/lkpd/kasus/[id]/analisis/page.tsx");
 const cases = read("../app/lkpd/kasus/page.tsx");
@@ -184,9 +186,29 @@ assert.match(submissionResults, /s \? historicalVideo : vs\.find/, "Historical s
 
 const adminHook = read("../hooks/useAdmin.ts");
 const questionRemovalMigration = read("../supabase/migrations/20261027170000_admin_question_logical_delete_preserve_history.sql");
-assert.match(questionRemovalMigration, /ADD COLUMN IF NOT EXISTS deleted_at timestamptz/i, "Question removal has an explicit logical-deletion marker");
-assert.match(questionRemovalMigration, /deleted_at = COALESCE\(deleted_at, clock_timestamp\(\)\)/, "Delete removes questions from the working bank regardless of historic answers");
-assert.match(questionRemovalMigration, /private\.build_project_version_content[\s\S]*?q\.deleted_at IS NULL/, "New snapshots omit logically deleted questions");
-assert.doesNotMatch(questionRemovalMigration, /DELETE\s+FROM\s+public\.answers/i, "Question removal preserves historic answer rows");
-assert.match(adminHook, /is\("deleted_at", null\)/, "Deleted questions are hidden from the admin working list");
-assert.match(editor, /tidak masuk ke draft\/snapshot baru[\s\S]*?Jawaban siswa dan snapshot lama tetap disimpan/, "Delete confirmation explains working-bank removal and historic preservation");
+const permanentDeleteMigration = read("../supabase/migrations/20261027210000_admin_question_permanent_delete.sql");
+assert.match(permanentDeleteMigration, /DELETE FROM public\.answers[\s\S]*?DELETE FROM public\.question_options[\s\S]*?DELETE FROM public\.questions/i, "Permanent deletion removes answers, options, then the question in one RPC transaction");
+assert.match(permanentDeleteMigration, /private\.is_admin\(\)/, "Permanent deletion validates admin identity");
+assert.match(permanentDeleteMigration, /WHERE q\.id = p_id\s+AND q\.project_id = p_project_id\s+FOR UPDATE/i, "Permanent deletion locks and scopes the question to the selected project");
+assert.match(permanentDeleteMigration, /FROM public\.projects AS p[\s\S]*?WHERE p\.id = p_project_id\s+FOR UPDATE/i, "Permanent deletion locks the selected project");
+assert.doesNotMatch(permanentDeleteMigration, /deleted_at|deactivated|already_deleted/i, "Permanent deletion does not use soft-delete state or deactivation results");
+assert.doesNotMatch(permanentDeleteMigration, /UPDATE public\.project_versions|DELETE FROM public\.project_versions|admin_publish_project_version|admin_save_project_version_draft/i, "Permanent deletion never mutates or republishes snapshots");
+assert.match(permanentDeleteMigration, /DROP TRIGGER IF EXISTS questions_published_version_delete_guard/i, "Question snapshot guard is removed without removing the video guard");
+assert.match(permanentDeleteMigration, /TG_TABLE_NAME = 'videos'/i, "Published video deletion remains protected");
+assert.doesNotMatch(permanentDeleteMigration, /project_archived/i, "Admin can permanently delete a question from an archived project");
+assert.doesNotMatch(adminHook, /is\("deleted_at", null\)/, "Previously inactive/deactivated questions remain discoverable for cleanup");
+assert.match(editor, /Hapus pertanyaan secara permanen/,"Delete confirmation explicitly describes permanent deletion");
+assert.match(editor, /Snapshot LKPD lama tidak diubah/,"Delete confirmation says existing snapshots are not modified");
+assert.match(editor, /setSuccessMessage\([\s\S]*?dihapus permanen/i, "UI only announces deletion after server confirmation");
+assert.match(editor, /onClick=\{\(\) => del\(q\)\} disabled=\{saving\}/, "Delete remains available for archived projects and non-active questions");
+
+assert.match(submissionHistory, /Jawaban tidak tersedia — pertanyaan ini telah dihapus permanen/, "Historical snapshot renders an explicit missing-answer state after permanent deletion");
+assert.match(submissionHistory, /status pertanyaan saat ini tidak dapat diverifikasi/, "History lookup failures do not falsely claim an answer was deleted");
+assert.match(submissionHistory, /answerFor\(q\.s, q\)|answerFor\(r\.s, q\)/, "Submission history and export use the missing-answer-aware renderer");
+
+assert.match(permanentDeleteRegressionSql, /count\(\*\) FROM public\.answers WHERE question_id=q\) <> 0/, "SQL regression verifies all answers for the deleted question are gone");
+assert.match(permanentDeleteRegressionSql, /content IS DISTINCT FROM current_setting\('cv_hotfix\.v1_content_before'\)::jsonb/, "SQL regression verifies published v1 snapshot remains byte-for-byte equivalent as JSON");
+assert.match(permanentDeleteRegressionSql, /cv_test_forced_delete_failure/, "SQL regression injects a failure to verify atomic rollback");
+assert.match(permanentDeleteRegressionSql, /video_referenced_by_published_version_deactivate_instead/, "SQL regression preserves published-video delete protection");
+assert.match(permanentDeleteRegressionSql, /cross-project question was not rejected/, "SQL regression covers cross-project delete rejection");
+assert.match(permanentDeleteRegressionSql, /UPDATE public\.projects SET is_active=false/, "SQL regression covers permanent deletion from an archived project");
