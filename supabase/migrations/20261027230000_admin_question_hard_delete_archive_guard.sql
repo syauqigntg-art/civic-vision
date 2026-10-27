@@ -41,9 +41,9 @@ BEGIN
     FROM public.questions AS q
     WHERE q.id = CASE WHEN TG_OP = 'DELETE' THEN OLD.question_id ELSE NEW.question_id END;
   ELSIF TG_TABLE_NAME = 'submissions' THEN
-    pid := CASE WHEN TG_OP = 'DELETE' THEN OLD.project_id ELSE NEW.project_id END;
+    pid := COALESCE(NEW.project_id, OLD.project_id);
   ELSIF TG_TABLE_NAME = 'answers' THEN
-    pid := CASE WHEN TG_OP = 'DELETE' THEN OLD.project_id ELSE NEW.project_id END;
+    pid := COALESCE(NEW.project_id, OLD.project_id);
   END IF;
 
   IF pid IS NOT NULL AND EXISTS (
