@@ -239,31 +239,43 @@ export default function Questions() {
       return;
     }
     const answerCount = ans.filter((answer: any) => answer.question_id === q.id).length;
-    const prompt = answerCount > 0
-      ? `Pertanyaan ini memiliki ${answerCount} jawaban siswa. Sistem akan menonaktifkannya dan mempertahankan jawaban lama. Lanjutkan?`
-      : "Hapus pertanyaan ini secara permanen? Tindakan ini hanya tersedia jika belum ada jawaban siswa.";
+    const answerWarning = answerCount > 0
+      ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan.`
+      : "";
+    const prompt = `Hapus pertanyaan "${q.question_text}" dari bank pertanyaan aktif?${answerWarning}\n\nPertanyaan akan hilang dari dashboard dan tidak masuk ke versi LKPD baru. Jawaban siswa dan snapshot LKPD yang sudah terbit tetap disimpan untuk menjaga riwayat. Tindakan ini tidak dapat dibatalkan dari dashboard.`;
     if (!confirm(prompt)) return;
 
     setErr("");
-    const { data, error } = await sb.rpc("admin_delete_question", {
-      p_id: q.id,
-      p_project_id: P.id,
-    });
-    if (error) {
-      const message = error.message.toLowerCase();
-      setErr(message.includes("project_archived")
-        ? "Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan."
-        : "Pertanyaan gagal dihapus atau dinonaktifkan. Data belum dinyatakan berubah.");
-      return;
+    setSaving(true);
+    try {
+      const { data, error } = await sb.rpc("admin_delete_question", {
+        p_id: q.id,
+        p_project_id: P.id,
+      });
+      if (error) {
+        const message = error.message.toLowerCase();
+        if (message.includes("project_archived")) {
+          setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah pertanyaan.");
+        } else if (message.includes("admin_required") || message.includes("permission denied")) {
+          setErr("Akses ditolak. Masuk kembali menggunakan akun guru/admin.");
+        } else {
+          setErr("Pertanyaan gagal dihapus. Belum ada perubahan yang dikonfirmasi; periksa apakah migration penghapusan sudah diterapkan pada database.");
+        }
+        return;
+      }
+      if (data === "not_found") {
+        setErr("Pertanyaan tidak ditemukan pada proyek yang sedang dipilih. Muat ulang daftar.");
+      } else if (data !== "deleted" && data !== "already_deleted") {
+        setErr("Penghapusan belum aktif pada database. Terapkan migration terbaru terlebih dahulu; pertanyaan belum dihapus dari bank.");
+      } else {
+        setErr("");
+      }
+      await load();
+    } catch {
+      setErr("Koneksi gagal saat menghapus pertanyaan. Muat ulang daftar untuk memastikan status terakhir.");
+    } finally {
+      setSaving(false);
     }
-    if (data === "deactivated") {
-      setErr("Pertanyaan memiliki jawaban lama, sehingga dinonaktifkan dan tidak dihapus.");
-    } else if (data === "not_found") {
-      setErr("Pertanyaan tidak ditemukan pada proyek yang sedang dipilih. Muat ulang daftar.");
-    } else {
-      setErr("");
-    }
-    await load();
   };
   const reorder = async (from: string, to: string) => {
     if (readOnly || !from || from === to || !P?.id) return;
@@ -324,7 +336,7 @@ export default function Questions() {
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
-      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Perubahan soal disimpan sebagai materi kerja dan masuk ke snapshot berikutnya setelah guru menyimpan, memvalidasi, lalu menerbitkan versi. Submission yang sudah berjalan tetap menggunakan snapshot yang dipin; jawaban historis tidak dihapus.</p>
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Pertanyaan yang dihapus hilang dari bank kerja dan tidak masuk versi baru. Snapshot terbit dan jawaban lama tetap disimpan; perubahan versi baru berlaku setelah guru menyimpan, memvalidasi, lalu menerbitkan versi.</p>
       <div className="admin-section-head">
         <div>
           <h2>Daftar pertanyaan</h2>
