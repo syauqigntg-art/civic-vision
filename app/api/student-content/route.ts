@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
+import { safeSupabaseDiagnostic } from "@/lib/supabase/diagnostics";
 import { studentContentReq } from "@/lib/validation/schemas";
 
 export const runtime = "nodejs";
@@ -192,9 +193,28 @@ export async function POST(req: Request) {
     admin.from("projects").select("is_active,active_version_id").eq("id", group.project_id).maybeSingle(),
     admin.from("submissions").select("status,project_version_id,video_id").eq("group_id", group.id).maybeSingle(),
   ]);
-  if (projectResult.error || submissionResult.error || !projectResult.data) {
-    console.error("Project version lookup failed.");
-    return fail(500);
+  if (projectResult.error) {
+    console.error("[student-content] project version lookup failed", {
+      stage: "projects",
+      ...safeSupabaseDiagnostic(projectResult.error),
+    });
+    return fail(503, "Versi proyek belum dapat diverifikasi. Coba lagi nanti.");
+  }
+  if (submissionResult.error) {
+    console.error("[student-content] project version lookup failed", {
+      stage: "submissions",
+      ...safeSupabaseDiagnostic(submissionResult.error),
+    });
+    return fail(503, "Versi proyek belum dapat diverifikasi. Coba lagi nanti.");
+  }
+  if (!projectResult.data) {
+    // A missing row is distinct from a failed query/schema lookup. Do not log
+    // project IDs, group codes, student identity, or database row contents.
+    console.error("[student-content] project version lookup returned no row", {
+      stage: "projects",
+      category: "project_not_found",
+    });
+    return fail(409, "Proyek tidak tersedia. Hubungi guru.");
   }
 
   const project = projectResult.data;
