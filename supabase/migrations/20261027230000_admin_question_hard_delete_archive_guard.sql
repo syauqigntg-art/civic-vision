@@ -6,11 +6,9 @@ BEGIN;
 -- It must run AFTER the existing versioning and permanent-delete migrations when
 -- the complete pending migration history is reconciled.
 
--- Preserve the existing archive protections for ordinary operations. A guard
--- bypass is allowed only inside the owner-executed admin RPC, with a transaction-
+-- Preserve existing archive protections for ordinary operations. The narrowly
+-- scoped bypass is only usable by the owner-executed admin RPC, with a transaction-
 -- local marker, while a DELETE trigger is running.
--- Preserve existing archive protections for ordinary operations. Only the
--- narrow delete context set by the admin RPC above may remove these rows.
 CREATE OR REPLACE FUNCTION public.reject_archived_project_write()
 RETURNS trigger
 LANGUAGE plpgsql
