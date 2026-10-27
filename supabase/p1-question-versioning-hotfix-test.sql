@@ -486,6 +486,19 @@ BEGIN
   ) THEN
     RAISE EXCEPTION 'HOTFIX TEST FAILED: cross-project question row was removed';
   END IF;
+
+  -- The related published-video guard must remain active.
+  BEGIN
+    DELETE FROM public.videos
+    WHERE id=current_setting('cv_hotfix.video_id')::uuid
+      AND project_id=p;
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: published snapshot video was deleted';
+  EXCEPTION WHEN SQLSTATE '22023' THEN
+    IF SQLERRM <> 'video_referenced_by_published_version_deactivate_instead' THEN RAISE; END IF;
+  END;
+  IF NOT EXISTS (SELECT 1 FROM public.videos WHERE id=current_setting('cv_hotfix.video_id')::uuid AND project_id=p) THEN
+    RAISE EXCEPTION 'HOTFIX TEST FAILED: published snapshot video row is missing';
+  END IF;
 END;
 $permanent_delete$;
 
