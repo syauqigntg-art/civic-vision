@@ -6,37 +6,9 @@ BEGIN;
 -- It must run AFTER the existing versioning and permanent-delete migrations when
 -- the complete pending migration history is reconciled.
 
--- Limit the archived-project guard exception to deletes executed from the
--- authenticated, SECURITY DEFINER admin_delete_question RPC itself. A caller
--- cannot use this helper to bypass guards merely by calling it directly.
-CREATE OR REPLACE FUNCTION private.allow_admin_question_hard_delete()
-RETURNS boolean
-LANGUAGE plpgsql
-VOLATILE
-SECURITY INVOKER
-SET search_path = ''
-AS $function$
-DECLARE
-  v_rpc_owner name;
-BEGIN
-  IF pg_catalog.current_setting('civic_vision.admin_question_hard_delete', true)
-       IS DISTINCT FROM 'on'
-     OR pg_catalog.pg_trigger_depth() < 1 THEN
-    RETURN false;
-  END IF;
-
-  SELECT pg_catalog.pg_get_userbyid(p.proowner)
-    INTO v_rpc_owner
-  FROM pg_catalog.pg_proc AS p
-  WHERE p.oid = 'public.admin_delete_question(uuid,uuid)'::regprocedure;
-
-  RETURN v_rpc_owner IS NOT NULL AND current_user = v_rpc_owner;
-END;
-$function$;
-
-REVOKE ALL ON FUNCTION private.allow_admin_question_hard_delete() FROM PUBLIC, anon;
-GRANT EXECUTE ON FUNCTION private.allow_admin_question_hard_delete() TO authenticated, service_role;
-
+-- Preserve the existing archive protections for ordinary operations. A guard
+-- bypass is allowed only inside the owner-executed admin RPC, with a transaction-
+-- local marker, while a DELETE trigger is running.
 -- Preserve existing archive protections for ordinary operations. Only the
 -- narrow delete context set by the admin RPC above may remove these rows.
 CREATE OR REPLACE FUNCTION public.reject_archived_project_write()
@@ -50,7 +22,13 @@ DECLARE
 BEGIN
   IF TG_OP = 'DELETE'
      AND TG_TABLE_NAME IN ('questions', 'question_options', 'answers')
-     AND private.allow_admin_question_hard_delete() THEN
+     AND pg_catalog.current_setting('civic_vision.admin_question_hard_delete', true) = 'on'
+     AND pg_catalog.pg_trigger_depth() > 0
+     AND current_user = (
+       SELECT pg_catalog.pg_get_userbyid(p.proowner)
+       FROM pg_catalog.pg_proc AS p
+       WHERE p.oid = 'public.admin_delete_question(uuid,uuid)'::regprocedure
+     ) THEN
     RETURN OLD;
   END IF;
 
@@ -96,7 +74,13 @@ DECLARE
 BEGIN
   IF TG_OP = 'DELETE'
      AND TG_TABLE_NAME IN ('question_options', 'answers')
-     AND private.allow_admin_question_hard_delete() THEN
+     AND pg_catalog.current_setting('civic_vision.admin_question_hard_delete', true) = 'on'
+     AND pg_catalog.pg_trigger_depth() > 0
+     AND current_user = (
+       SELECT pg_catalog.pg_get_userbyid(p.proowner)
+       FROM pg_catalog.pg_proc AS p
+       WHERE p.oid = 'public.admin_delete_question(uuid,uuid)'::regprocedure
+     ) THEN
     RETURN OLD;
   END IF;
 
@@ -162,7 +146,13 @@ DECLARE
 BEGIN
   IF TG_OP = 'DELETE'
      AND TG_TABLE_NAME = 'questions'
-     AND private.allow_admin_question_hard_delete() THEN
+     AND pg_catalog.current_setting('civic_vision.admin_question_hard_delete', true) = 'on'
+     AND pg_catalog.pg_trigger_depth() > 0
+     AND current_user = (
+       SELECT pg_catalog.pg_get_userbyid(p.proowner)
+       FROM pg_catalog.pg_proc AS p
+       WHERE p.oid = 'public.admin_delete_question(uuid,uuid)'::regprocedure
+     ) THEN
     RETURN OLD;
   END IF;
 
