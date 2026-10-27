@@ -110,3 +110,17 @@ test("student content version lookup explicitly checks current project and submi
   assert.match(route, /safeSupabaseDiagnostic\(projectResult\.error\)/);
   assert.match(route, /safeSupabaseDiagnostic\(submissionResult\.error\)/);
 });
+
+
+test("the shared layout visibly reports when browser Supabase config is absent", async () => {
+  const layout = await readFile(new URL("../app/layout.tsx", import.meta.url), "utf8");
+  assert.match(layout, /publicBackendConfigured/);
+  assert.match(layout, /Layanan backend belum dikonfigurasi/);
+  assert.match(layout, /data tidak akan disimulasikan/);
+});
+
+test("project snapshot query diagnostics avoid raw database error messages", async () => {
+  const route = await readFile(new URL("../app/api/student-content/route.ts", import.meta.url), "utf8");
+  assert.match(route, /stage: "project_versions",[\s\S]*?safeSupabaseDiagnostic\(versionResult\.error\)/);
+  assert.doesNotMatch(route, /Project version snapshot lookup failed:", versionResult\.error\.message/);
+});
