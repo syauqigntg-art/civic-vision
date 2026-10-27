@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isPublicSupabaseConfigured, readPublicSupabaseConfig } from "@/lib/supabase/public-config";
+import { isPublicSupabaseConfigured, readPublicSupabaseConfig } from "./lib/supabase/public-config.ts";
 
 const unavailable = () =>
   NextResponse.json({ error: "Layanan backend belum dikonfigurasi." }, { status: 503 });
