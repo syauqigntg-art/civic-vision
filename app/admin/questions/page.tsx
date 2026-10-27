@@ -242,7 +242,7 @@ export default function Questions() {
     const answerWarning = answerCount > 0
       ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan.`
       : "";
-    const prompt = `Hapus pertanyaan "${q.question_text}" dari bank pertanyaan aktif?${answerWarning}\n\nPertanyaan akan hilang dari dashboard dan tidak masuk ke versi LKPD baru. Jawaban siswa dan snapshot LKPD yang sudah terbit tetap disimpan untuk menjaga riwayat. Tindakan ini tidak dapat dibatalkan dari dashboard.`;
+    const prompt = `Hapus pertanyaan "${q.question_text}" dari bank pertanyaan aktif?${answerWarning}\n\nPertanyaan akan hilang dari dashboard dan tidak masuk ke draft/snapshot baru. Versi yang sudah terbit tetap berlaku sampai guru menerbitkan versi baru. Jawaban siswa dan snapshot lama tetap disimpan untuk menjaga riwayat. Tindakan ini tidak dapat dibatalkan dari dashboard.`;
     if (!confirm(prompt)) return;
 
     setErr("");
@@ -438,7 +438,7 @@ export default function Questions() {
                   <td>
                     <div className="admin-row-actions">
                       <button className="btn g" type="button" onClick={() => edit(q)} disabled={readOnly}>Edit</button>
-                      <button className="btn g danger" type="button" onClick={() => del(q)} disabled={readOnly}>Hapus</button>
+                      <button className="btn g danger" type="button" onClick={() => del(q)} disabled={readOnly || saving}>{saving ? "Menghapus..." : "Hapus"}</button>
                     </div>
                   </td>
                 </tr>
