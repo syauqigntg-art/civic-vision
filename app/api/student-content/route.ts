@@ -241,7 +241,10 @@ export async function POST(req: Request) {
     .maybeSingle();
 
   if (versionResult.error) {
-    console.error("Project version snapshot lookup failed:", versionResult.error.message);
+    console.error("[student-content] project version snapshot lookup failed", {
+      stage: "project_versions",
+      ...safeSupabaseDiagnostic(versionResult.error),
+    });
     return fail(503, "Versi materi belum dapat diverifikasi. Coba lagi nanti.");
   }
   const version = versionResult.data;
