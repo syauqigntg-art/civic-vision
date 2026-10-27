@@ -189,4 +189,4 @@ assert.match(questionRemovalMigration, /SET deleted_at = COALESCE\(deleted_at, c
 assert.match(questionRemovalMigration, /private\.build_project_version_content[\s\S]*?q\.deleted_at IS NULL/, "New snapshots omit logically deleted questions");
 assert.doesNotMatch(questionRemovalMigration, /DELETE\s+FROM\s+public\.answers/i, "Question removal preserves historic answer rows");
 assert.match(adminHook, /is\("deleted_at", null\)/, "Deleted questions are hidden from the admin working list");
-assert.match(editor, /tidak masuk ke versi LKPD baru[\s\S]*?Snapshot terbit dan jawaban lama tetap disimpan/, "Delete confirmation explains working-bank removal and historic preservation");
+assert.match(editor, /tidak masuk ke draft\/snapshot baru[\s\S]*?Jawaban siswa dan snapshot lama tetap disimpan/, "Delete confirmation explains working-bank removal and historic preservation");
