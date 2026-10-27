@@ -33,7 +33,7 @@ export default function Submissions() {
   const exportRows = () => [["Kelompok", "Versi LKPD", "Video", "Pertanyaan", "Jawaban"], ...rows.filter(r => r.s).flatMap(r => {
     const groupLabel = `Kelompok ${two(r.g.group_number)}${r.g.group_name ? " — " + r.g.group_name : ""}`;
     if (r.snapshotMissing) return [[groupLabel, "Snapshot tidak tersedia", "", "Hasil historis tidak dapat ditafsirkan tanpa snapshot", ""]];
-    return qsFor(r.s).map(q => [groupLabel, r.pv ? `v${r.pv.version_number}` : "Snapshot tidak tersedia", r.v?.title || "", q.question_text, show(q, rawOf(ans, r.s.id, q.id)).replace(/\n/g, " | ")]);
+    return qsFor(r.s).map(q => [groupLabel, r.pv ? `v${r.pv.version_number}` : "Snapshot tidak tersedia", r.v?.title || "", q.question_text, answerFor(r.s, q).replace(/\n/g, " | ")]);
   })];
   const cur = rows.find(r => r.g.id === sel);
   if (cur) { const { g, s, v, pv } = cur; const list = qsFor(s); const cats = [...new Set(list.map(q => q.category))]; const snapshotMissing = cur.snapshotMissing;
