@@ -180,3 +180,13 @@ assert.match(versioningErrors, /table_missing[\s\S]*table_schema_cache[\s\S]*rpc
 assert.match(submissionResults, /if \(!Array\.isArray\(snapshot\)\) return \[\];/, "Historical results fail closed when the pinned snapshot is unavailable");
 assert.doesNotMatch(submissionResults, /Array\.isArray\(snapshot\) \? snapshot : qs/, "Historical results never fall back to mutable current questions");
 assert.match(submissionResults, /s \? historicalVideo : vs\.find/, "Historical submissions never fall back to the current video row");
+
+
+const adminHook = read("../hooks/useAdmin.ts");
+const questionRemovalMigration = read("../supabase/migrations/20261027170000_admin_question_logical_delete_preserve_history.sql");
+assert.match(questionRemovalMigration, /ADD COLUMN IF NOT EXISTS deleted_at timestamptz/i, "Question removal has an explicit logical-deletion marker");
+assert.match(questionRemovalMigration, /SET deleted_at = COALESCE\(deleted_at, clock_timestamp\(\)\)/, "Delete removes questions from the working bank regardless of historic answers");
+assert.match(questionRemovalMigration, /private\.build_project_version_content[\s\S]*?q\.deleted_at IS NULL/, "New snapshots omit logically deleted questions");
+assert.doesNotMatch(questionRemovalMigration, /DELETE\s+FROM\s+public\.answers/i, "Question removal preserves historic answer rows");
+assert.match(adminHook, /is\("deleted_at", null\)/, "Deleted questions are hidden from the admin working list");
+assert.match(editor, /tidak masuk ke versi LKPD baru[\s\S]*?Snapshot terbit dan jawaban lama tetap disimpan/, "Delete confirmation explains working-bank removal and historic preservation");
