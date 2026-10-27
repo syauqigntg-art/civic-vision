@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { spawnSync } from "node:child_process";
 import test from "node:test";
+import { NextRequest } from "next/server";
+import { proxy } from "../proxy.ts";
 import { isPublicSupabaseConfigured, readPublicSupabaseConfig } from "../lib/supabase/public-config.ts";
 import { createUnavailableSupabaseClient } from "../lib/supabase/client.ts";
 
@@ -70,4 +72,24 @@ test("unavailable browser client never claims a user or successful query", async
 
   const signIn = await client.auth.signInWithPassword({ email: "", password: "" });
   assert.equal(signIn.error.message, "Backend configuration is unavailable.");
+});
+
+test("runtime API requests return 503 and protected admin requests redirect when config is absent", async () => {
+  const names = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY"];
+  const previous = Object.fromEntries(names.map((name) => [name, process.env[name]]));
+  for (const name of names) delete process.env[name];
+  try {
+    const apiResponse = await proxy(new NextRequest("http://localhost/api/student-content"));
+    assert.equal(apiResponse.status, 503);
+    assert.deepEqual(await apiResponse.json(), { error: "Layanan backend belum dikonfigurasi." });
+
+    const adminResponse = await proxy(new NextRequest("http://localhost/admin/versions"));
+    assert.equal(adminResponse.status, 307);
+    assert.match(adminResponse.headers.get("location") || "", /\/admin\/login\?config=unavailable/);
+  } finally {
+    for (const name of names) {
+      if (previous[name] === undefined) delete process.env[name];
+      else process.env[name] = previous[name];
+    }
+  }
 });
