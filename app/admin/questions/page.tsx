@@ -1,4 +1,4 @@
-"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin"; import { QuestionField } from "@/components/lkpd/QuestionField"; import { toXlsx, stamp } from "@/lib/utils/export";
+"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin"; import { QuestionField } from "@/components/lkpd/QuestionField"; import { toXlsx, stamp, guard } from "@/lib/utils/export";
 const T: Record<string, string> = { text: "Jawaban singkat", textarea: "Jawaban panjang", multiple_text: "Beberapa jawaban teks", single_select: "Pilih satu jawaban", multi_select: "Pilih beberapa jawaban", scale: "Skala 1–5" };
 const PBL_PHASES: Record<string, { title: string; subtitle: string; instruction: string; output: string }> = {
   see: { title: "SEE", subtitle: "Mengamati masalah", instruction: "Amati stimulus/video, identifikasi fakta dan pihak yang terdampak.", output: "Fakta pengamatan dan rumusan awal masalah" },
@@ -278,7 +278,7 @@ export default function Questions() {
             ];
           }),
         ];
-        await toXlsx(exportRows, "salinan-jawaban-soal-" + stamp() + ".xlsx");
+        await toXlsx(exportRows.map((row) => row.map((cell) => guard(String(cell ?? ""))), "salinan-jawaban-soal-" + stamp() + ".xlsx");
       }
 
       const { data, error } = await sb.rpc("admin_delete_question", {
@@ -308,11 +308,11 @@ export default function Questions() {
         setErr("");
         await load();
         setSuccessMessage(answerCount > 0
-          ? "Pertanyaan dihapus permanen. Salinan Excel berisi " + answerCount + " jawaban terkait telah diminta untuk diunduh."
+          ? "Pertanyaan dihapus permanen. Unduhan salinan Excel berisi " + answerCount + " jawaban terkait telah dimulai."
           : "Pertanyaan dan pilihan jawabannya dihapus permanen.");
       }
     } catch {
-      setErr("Ekspor Excel atau koneksi gagal. Penghapusan tidak dilanjutkan jika ekspor gagal; periksa status soal sebelum mencoba lagi.");
+      setErr("Ekspor Excel atau koneksi gagal. Jika ekspor gagal, soal tidak dihapus; muat ulang daftar untuk memastikan status server sebelum mencoba lagi.");
     } finally {
       setSaving(false);
     }
