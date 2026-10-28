@@ -374,7 +374,7 @@ export default function Questions() {
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
-      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Hapus menghilangkan pertanyaan, pilihan jawaban, dan jawaban siswa terkait secara permanen. Snapshot lama tidak diubah dan dapat tetap memuat teks pertanyaan tanpa jawaban terkait.</p>
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Hapus permanen menghilangkan pertanyaan, pilihan jawaban, dan jawaban siswa terkait. Jika ada jawaban, sistem mengunduh file backup Excel sebelum meminta konfirmasi.</p>
       {successMessage && <div className="notice" role="status">{successMessage}</div>}
       {err && <div className="warn" role="alert">{err}</div>}
       <div className="admin-section-head">
