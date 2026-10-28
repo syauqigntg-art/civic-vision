@@ -71,7 +71,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
         if (!data) throw new Error("Perubahan tidak tersimpan. Periksa izin admin di database.");
         await refreshProjects();
         await load();
-        setMessage("Identitas kerja berhasil disimpan. Untuk menerapkannya sebagai materi siswa, buka Versi Proyek & LKPD, simpan draft, pratinjau, validasi, lalu terbitkan versi baru.");
+        setMessage("Identitas proyek berhasil disimpan.");
       } else {
         const { data, error } = await sb
           .from("projects")
@@ -90,7 +90,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
         if (!refreshed) throw new Error("Proyek dibuat, tetapi daftar proyek gagal dimuat. Muat ulang halaman untuk memilihnya.");
         selectProject(data.id);
         setProjectScreen("edit");
-        setMessage("Proyek baru berhasil dibuat dan dipilih. Proyek belum tersedia bagi siswa sampai materi disimpan sebagai draft, divalidasi, dan diterbitkan melalui menu Versi Proyek & LKPD.");
+        setMessage("Proyek baru berhasil dibuat dan dipilih. Selanjutnya tambahkan video kasus, pertanyaan LKPD, dan penugasan kelompok.");
       }
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Gagal menyimpan proyek. Coba lagi.");
@@ -263,7 +263,7 @@ export default function Panel({ tab }: { tab: "project" | "settings" }) {
           <p>
             {projectScreen === "create"
               ? "Isi identitas proyek baru. Proyek dibuat aktif dan dapat dikelola secara terpisah."
-              : "Atur identitas ruang kerja. Perubahan di sini belum mengubah snapshot LKPD yang sedang digunakan siswa sampai versi baru diterbitkan."}
+              : "Atur identitas dan informasi proyek. Perubahan disimpan langsung pada proyek terpilih."}
           </p>
         </div>
         {projectScreen === "edit" && P?.id && (
