@@ -278,7 +278,7 @@ export default function Questions() {
             ];
           }),
         ];
-        await toXlsx(exportRows.map((row) => row.map((cell) => guard(String(cell ?? ""))), "salinan-jawaban-soal-" + stamp() + ".xlsx");
+        await toXlsx(exportRows.map((row) => row.map((cell) => guard(String(cell ?? "")))), "salinan-jawaban-soal-" + stamp() + ".xlsx");
       }
 
       const { data, error } = await sb.rpc("admin_delete_question", {
