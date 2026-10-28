@@ -146,7 +146,7 @@ jobs:
           grep -q "Login guru" /tmp/civic-vision-login.html
           grep -q "Layanan backend belum dikonfigurasi" /tmp/civic-vision-login.html
 
-          admin_status=$(curl --silent --show-error -D /tmp/civic-vision-admin.headers -o /tmp/civic-vision-admin.body -w '%{http_code}' http://127.0.0.1:3000/admin/versions)
+          admin_status=$(curl --silent --show-error -D /tmp/civic-vision-admin.headers -o /tmp/civic-vision-admin.body -w '%{http_code}' http://127.0.0.1:3000/admin/questions)
           test "$admin_status" = "307"
           grep -qi 'location: .*admin/login?config=unavailable' /tmp/civic-vision-admin.headers
 
