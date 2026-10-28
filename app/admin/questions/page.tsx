@@ -334,7 +334,7 @@ export default function Questions() {
       ];
       const safeQuestionName = q.question_text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "soal";
       try {
-        toXlsx(backupRows, `backup-jawaban-soal-${stamp()}-${safeQuestionName}.xlsx`);
+        await toXlsx(backupRows, `backup-jawaban-soal-${stamp()}-${safeQuestionName}.xlsx`);
       } catch {
         setErr("Backup Excel gagal dibuat. Soal tidak dihapus; coba ekspor hasil dari menu Jawaban Siswa terlebih dahulu.");
         return;
