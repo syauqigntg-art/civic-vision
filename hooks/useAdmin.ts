@@ -5,9 +5,9 @@ import { sb } from "@/lib/supabase/client";
 import { useProjectContext } from "@/components/admin/ProjectProvider";
 import type { Q } from "@/types";
 
-type Part = "P" | "gs" | "vs" | "qs" | "gv" | "gm" | "subs" | "ans" | "pvs";
+type Part = "P" | "gs" | "vs" | "qs" | "gv" | "gm" | "subs" | "ans";
 const ALL: Part[] = ["P", "gs", "vs", "qs", "gv", "gm", "subs", "ans"];
-const emptyData = () => ({ P: {}, gs: [], vs: [], qs: [], gv: [], gm: [], subs: [], ans: [], pvs: [] });
+const emptyData = () => ({ P: {}, gs: [], vs: [], qs: [], gv: [], gm: [], subs: [], ans: [] });
 
 export interface AdminData {
   P: any;
@@ -21,7 +21,6 @@ export interface AdminData {
   gm: any[];
   subs: any[];
   ans: any[];
-  pvs: any[];
   loading: boolean;
   error: boolean;
   load: () => Promise<void>;
@@ -97,8 +96,6 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
           return submissionIds.length
             ? sb.from("answers").select("submission_id,question_id,answer_text").in("submission_id", submissionIds)
             : Promise.resolve({ data: [], error: null });
-        case "pvs":
-          return sb.from("project_versions").select("id,project_id,version_number,status,content,published_at,created_at").eq("project_id", projectId).order("version_number", { ascending: false });
       }
     };
 
