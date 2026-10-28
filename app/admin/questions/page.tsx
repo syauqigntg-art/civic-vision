@@ -206,9 +206,9 @@ export default function Questions() {
       if (error) {
         const message = error.message.toLowerCase();
         if (message.includes("question_has_answers_create_new_version")) {
-          setErr("Perubahan ditolak karena database belum memastikan jawaban ini terlindungi oleh snapshot historis. Jawaban tidak dihapus. Periksa status migration versioning sebelum mencoba lagi.");
+          setErr("Pertanyaan ini sudah memiliki jawaban siswa dan perubahan isinya ditolak. Jika memang ingin menghapusnya, ekspor hasil ke Excel terlebih dahulu lalu gunakan Hapus permanen.");
         } else if (message.includes("question_has_unversioned_answers")) {
-          setErr("Perubahan ditolak karena setidaknya satu jawaban belum dapat dipastikan terikat ke snapshot historis yang valid. Tidak ada jawaban yang dihapus; minta maintainer memeriksa relasi submission/version.");
+          setErr("Perubahan ditolak oleh aturan database karena pertanyaan memiliki jawaban terkait. Jawaban tidak dihapus. Untuk menghapus pertanyaan, ekspor hasil ke Excel lalu gunakan Hapus permanen.");
         } else if (message.includes("duplicate_question_options")) {
           setErr("Pilihan jawaban tidak boleh duplikat.");
         } else if (message.includes("invalid_question_options")) {
@@ -241,9 +241,9 @@ export default function Questions() {
     }
     const answerCount = ans.filter((answer: any) => answer.question_id === q.id).length;
     const answerWarning = answerCount > 0
-      ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan.`
+      ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan. Sebelum melanjutkan, unduh Excel melalui menu Jawaban Siswa dan pastikan file tersimpan. Jawaban terkait akan hilang permanen dari aplikasi.`
       : "";
-    const prompt = `Hapus pertanyaan secara permanen?\n\nPertanyaan: "${q.question_text}"${answerWarning}\n\nPertanyaan, pilihan jawaban, dan seluruh jawaban siswa terkait akan dihapus. Snapshot LKPD lama tidak diubah dan mungkin masih memuat teks pertanyaan ini. Penghapusan tidak dapat dibatalkan melalui dashboard.`;
+    const prompt = `Hapus pertanyaan secara permanen?\n\nPertanyaan: "${q.question_text}"${answerWarning}\n\nPertanyaan, pilihan jawaban, dan seluruh jawaban siswa terkait akan dihapus permanen. Tindakan ini tidak dapat dibatalkan melalui dashboard.`;
     if (!confirm(prompt)) return;
 
     setErr("");
@@ -273,7 +273,7 @@ export default function Questions() {
       } else {
         setErr("");
         await load();
-        setSuccessMessage("Pertanyaan, pilihan jawaban, dan jawaban terkait telah dihapus permanen. Snapshot lama tidak diubah.");
+        setSuccessMessage("Pertanyaan, pilihan jawaban, dan seluruh jawaban terkait telah dihapus permanen.");
       }
     } catch {
       setErr("Koneksi gagal saat menghapus pertanyaan. Muat ulang daftar untuk memastikan status terakhir.");
@@ -306,7 +306,7 @@ export default function Questions() {
   };
   const bump = (i: number, d: number) => { const t = qs[i + d]; if (t) reorder(qs[i].id, t.id); };
   if (f) return (<section className="glass">
-      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Perubahan soal masuk ke snapshot berikutnya setelah guru menyimpan, memvalidasi, dan menerbitkan versi. Pekerjaan siswa yang sudah berjalan tetap memakai snapshot yang dipin; jawaban historis tidak dihapus.</p><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Pertanyaan dikelola langsung pada proyek terpilih. Menghapus soal akan menghapus pilihan dan seluruh jawaban siswa yang terkait; ekspor hasil ke Excel sebelum melakukan penghapusan permanen.</p><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
     <label>Pertanyaan</label><textarea value={f.question_text} onChange={e => set("question_text", e.target.value)} />
     <label>Kategori</label><select value={f.category} onChange={e => set("category", e.target.value)}><option value="">Pilih kategori</option>{cats.map(c => <option key={c}>{c}</option>)}<option value="__new">+ Kategori baru...</option></select>
     {f.category === "__new" && <input style={{ marginTop: 8 }} placeholder="Nama kategori baru" value={f.newCat} onChange={e => set("newCat", e.target.value)} />}
