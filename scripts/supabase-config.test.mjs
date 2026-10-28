@@ -102,13 +102,14 @@ test("project version diagnostics distinguish schema mismatch from query failure
   assert.doesNotMatch(JSON.stringify(safeSupabaseDiagnostic({ code: "42501", message: secretLikeMessage })), /DO_NOT_LOG|service_role_secret/);
 });
 
-test("student content version lookup explicitly checks current project and submission version columns", async () => {
+test("student content uses live project/video/question tables without version schema", async () => {
   const route = await readFile(new URL("../app/api/student-content/route.ts", import.meta.url), "utf8");
-  assert.match(route, /select\("is_active,active_version_id"\)/);
-  assert.match(route, /select\("status,project_version_id,video_id"\)/);
-  assert.match(route, /category: "project_not_found"/);
-  assert.match(route, /safeSupabaseDiagnostic\(projectResult\.error\)/);
-  assert.match(route, /safeSupabaseDiagnostic\(submissionResult\.error\)/);
+  assert.match(route, /select\("id,is_active"\)/);
+  assert.match(route, /select\("status,video_id"\)/);
+  assert.match(route, /from\("questions"\)/);
+  assert.match(route, /from\("videos"\)/);
+  assert.match(route, /from\("question_options"\)/);
+  assert.doesNotMatch(route, /project_versions|active_version_id|project_version_id/);
 });
 
 
@@ -119,8 +120,9 @@ test("the shared layout visibly reports when browser Supabase config is absent",
   assert.match(layout, /data tidak akan disimulasikan/);
 });
 
-test("project snapshot query diagnostics avoid raw database error messages", async () => {
+test("student content handles live-table lookup failures without echoing database details", async () => {
   const route = await readFile(new URL("../app/api/student-content/route.ts", import.meta.url), "utf8");
-  assert.match(route, /stage: "project_versions",[\s\S]*?safeSupabaseDiagnostic\(versionResult\.error\)/);
-  assert.doesNotMatch(route, /Project version snapshot lookup failed:", versionResult\.error\.message/);
+  assert.match(route, /Student content project\/submission lookup failed/);
+  assert.match(route, /Konten proyek belum dapat diverifikasi/);
+  assert.doesNotMatch(route, /safeSupabaseDiagnostic|project version snapshot lookup/i);
 });
