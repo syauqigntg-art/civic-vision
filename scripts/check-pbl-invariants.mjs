@@ -103,6 +103,8 @@ assert.doesNotMatch(adminPanel, /Versi Proyek & LKPD|snapshot LKPD|versi baru di
 assert.match(retiredVersionsPage, /redirect\("\/admin"\)/, "Old version route redirects to the admin summary");
 assert.doesNotMatch(studentResults, /project_version_number|Versi LKPD/, "Student result page does not expose project version labels");
 assert.match(editor, /backup Excel|ekspor hasil ke Excel/i, "Permanent delete exports affected answers before confirmation");
+assert.match(editor, /await toXlsx\(backupRows,/, "Permanent deletion waits for the Excel backup to finish before confirmation");
+assert.match(editor, /\.range\(offset, offset \+ pageSize - 1\)/, "Question backup paginates through the full answer set");
 assert.match(editor, /Hapus permanen/, "Question editor exposes permanent deletion");
 assert.match(hardDeleteMigration, /CREATE OR REPLACE FUNCTION public\.admin_delete_question\(p_id uuid, p_project_id uuid\)[\s\S]*?SECURITY DEFINER[\s\S]*?private\.is_admin\(\)/, "Hard-delete RPC validates admin identity");
 assert.match(hardDeleteMigration, /DELETE FROM public\.answers[\s\S]*?DELETE FROM public\.question_options[\s\S]*?DELETE FROM public\.questions/i, "Hard delete removes answer, option, and question rows in one transaction");
