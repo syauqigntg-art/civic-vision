@@ -246,12 +246,12 @@ export default function Questions() {
     }
     // Read every matching answer with range pagination. Do not rely on the
     // dashboard's in-memory answer list, which may be capped by the API page size.
-    const backupAnswers: Array<{ submission_id: string; question_id: string; answer_text: string | null }> = [];
+    const backupAnswers: Array<{ submission_id: string | null; answer_text: string | null }> = [];
     const pageSize = 500;
     for (let offset = 0; ; offset += pageSize) {
       const { data, error } = await sb
         .from("answers")
-        .select("submission_id,question_id,answer_text")
+        .select("submission_id,answer_text")
         .eq("project_id", P.id)
         .eq("question_id", q.id)
         .order("submission_id")
@@ -265,9 +265,15 @@ export default function Questions() {
       if (page.length < pageSize) break;
     }
 
-    const answerCount = backupAnswers.length;
+    if (backupAnswers.some((answer) => !answer.submission_id)) {
+      setErr("Ada jawaban tanpa relasi submission yang valid. Soal tidak dihapus sampai data diperiksa.");
+      return;
+    }
+
+    const validBackupAnswers = backupAnswers as Array<{ submission_id: string; answer_text: string | null }>;
+    const answerCount = validBackupAnswers.length;
     if (answerCount > 0) {
-      const submissionIds = [...new Set(backupAnswers.map((answer) => answer.submission_id))];
+      const submissionIds = [...new Set(validBackupAnswers.map((answer) => answer.submission_id))];
       const submissionById = new Map<string, any>();
       for (let offset = 0; offset < submissionIds.length; offset += 400) {
         const ids = submissionIds.slice(offset, offset + 400);
@@ -288,11 +294,13 @@ export default function Questions() {
         return;
       }
 
-      const groupIds = [...new Set(
-        [...submissionById.values()]
-          .map((submission: any) => submission.group_id)
-          .filter((id: unknown): id is string => typeof id === "string")
-      )];
+      const submissionRows = [...submissionById.values()];
+      if (submissionRows.some((submission: any) => !submission.group_id)) {
+        setErr("Ada submission tanpa kelompok yang valid. Soal tidak dihapus sampai data diperiksa.");
+        return;
+      }
+
+      const groupIds = [...new Set(submissionRows.map((submission: any) => submission.group_id as string))];
       const groupById = new Map<string, any>();
       for (let offset = 0; offset < groupIds.length; offset += 400) {
         const ids = groupIds.slice(offset, offset + 400);
@@ -313,18 +321,18 @@ export default function Questions() {
         return;
       }
 
-      const backupRows = [
+      const backupRows: string[][] = [
         ["Proyek", "ID Pertanyaan", "Kategori", "Pertanyaan", "Kelompok", "Nomor Kelompok", "Kelas", "Ketua", "Status Submission", "Jawaban"],
-        ...backupAnswers.map((answer) => {
-          const submission = submissionById.get(answer.submission_id);
-          const group = groupById.get(submission.group_id);
+        ...validBackupAnswers.map((answer) => {
+          const submission = submissionById.get(answer.submission_id)!;
+          const group = groupById.get(submission.group_id)!;
           return [
             P.title || "",
             q.id,
             q.category || "",
             q.question_text,
             group.group_name || "",
-            group.group_number ?? "",
+            group.group_number == null ? "" : String(group.group_number),
             group.class_name || "",
             group.leader_name || "",
             submission.status || "",
