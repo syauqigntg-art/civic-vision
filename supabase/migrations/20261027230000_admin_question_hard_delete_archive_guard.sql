@@ -1,10 +1,11 @@
 BEGIN;
 
--- Follow-up to 20261027210000_admin_question_permanent_delete.sql.
--- The deployment audited before this migration does not yet have project_versions
--- or questions.deleted_at. This migration deliberately does not depend on either.
--- It must run AFTER the existing versioning and permanent-delete migrations when
--- the complete pending migration history is reconciled.
+-- Compatibility hard-delete migration for the live-content product direction.
+-- This migration is designed to work on the existing pre-versioning Production
+-- schema and does not depend on project_versions or questions.deleted_at.
+-- Do not apply the retired project-versioning migrations as a prerequisite.
+-- Reconcile the exact database ledger/functions and obtain change approval before
+-- deploying; this source change alone does not run anything against a database.
 
 -- Preserve existing archive protections for ordinary operations. The narrowly
 -- scoped bypass is only usable by the owner-executed admin RPC, with a transaction-
