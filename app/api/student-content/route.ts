@@ -1,7 +1,6 @@
 import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
-import { safeSupabaseDiagnostic } from "@/lib/supabase/diagnostics";
 import { studentContentReq } from "@/lib/validation/schemas";
 
 export const runtime = "nodejs";
@@ -30,50 +29,6 @@ async function limit(bucket: "student" | "bad-code", keyHash: string, max: numbe
   });
 }
 
-type SnapshotVideo = {
-  id: string;
-  project_id: string;
-  number: number;
-  title: string;
-  category: string | null;
-  description: string | null;
-  video_url: string | null;
-  thumbnail_url: string | null;
-  duration: string | null;
-  is_active: boolean | null;
-};
-
-type SnapshotQuestion = {
-  id: string;
-  category: string;
-  phase: "see" | "think" | "connect" | "act" | null;
-  question_text: string;
-  description: string | null;
-  question_type: string;
-  placeholder: string | null;
-  is_required: boolean | null;
-  min_items: number | null;
-  display_order: number;
-  is_active: boolean | null;
-  question_options?: Array<{ option_text: string; display_order: number }>;
-};
-
-type ProjectContentSnapshot = {
-  schema_version: number;
-  project: {
-    id: string;
-    title: string;
-    tagline: string | null;
-    description: string | null;
-    subject: string | null;
-    grade: string | null;
-    phase: string | null;
-    duration: string | null;
-  };
-  videos: SnapshotVideo[];
-  questions: SnapshotQuestion[];
-};
-
 async function loadGroup(code: string) {
   return admin
     .from("groups")
@@ -82,16 +37,39 @@ async function loadGroup(code: string) {
     .maybeSingle();
 }
 
+async function loadQuestions(projectId: string, phase?: "see" | "think" | "connect" | "act") {
+  const { data, error } = await admin
+    .from("questions")
+    .select("*,question_options(*)")
+    .eq("project_id", projectId)
+    .order("display_order");
+
+  if (error) return { data: null, error };
+
+  const questions = (data || [])
+    .filter((question: any) => question.is_active !== false)
+    .filter((question: any) => !phase || question.phase === phase)
+    .map((question: any) => ({
+      ...question,
+      question_options: (question.question_options || [])
+        .map(({ option_text, display_order }: { option_text: string; display_order: number }) => ({
+          option_text,
+          display_order,
+        }))
+        .sort((a: { display_order: number }, b: { display_order: number }) => a.display_order - b.display_order),
+    }));
+
+  return { data: questions, error: null };
+}
+
 async function loadAssignedVideo(
   groupId: string,
   projectId: string,
   videoId: string,
-  content: ProjectContentSnapshot,
   pinnedVideoId?: string | null,
 ) {
-  // Existing work must remain reachable even if a teacher later changes the
-  // current group assignment. A group with a submission is restricted to its
-  // pinned video, never to a new assignment/version.
+  // Once a group starts, keep its selected video even if the teacher changes
+  // assignments. Content itself is read from the current project tables.
   if (pinnedVideoId && pinnedVideoId !== videoId) {
     return { data: null, error: null };
   }
@@ -111,29 +89,19 @@ async function loadAssignedVideo(
     }
   }
 
-  const video = (content.videos || []).find(
-    (item) =>
-      item.id === videoId &&
-      item.project_id === projectId &&
-      item.is_active !== false
-  );
+  const { data: video, error } = await admin
+    .from("videos")
+    .select("*")
+    .eq("id", videoId)
+    .eq("project_id", projectId)
+    .maybeSingle();
 
-  return { data: video || null, error: null };
-}
+  if (error) return { data: null, error };
+  if (!video || (!pinnedVideoId && video.is_active === false)) {
+    return { data: null, error: null };
+  }
 
-function loadQuestions(content: ProjectContentSnapshot, phase?: SnapshotQuestion["phase"]) {
-  const questions = (content.questions || [])
-    .filter((question) => question.is_active !== false)
-    .filter((question) => !phase || question.phase === phase)
-    .sort((a, b) => a.display_order - b.display_order)
-    .map((question) => ({
-      ...question,
-      question_options: (question.question_options || [])
-        .map(({ option_text, display_order }) => ({ option_text, display_order }))
-        .sort((a, b) => a.display_order - b.display_order),
-    }));
-
-  return { data: questions, error: null };
+  return { data: video, error: null };
 }
 
 export async function POST(req: Request) {
@@ -187,85 +155,39 @@ export async function POST(req: Request) {
     return fail(counted.data === true ? 404 : 429);
   }
 
-  // A group with a submission stays pinned to that exact immutable snapshot.
-  // Only groups without a submission resolve to the currently active publication.
+  // The working project is the source of truth. No published snapshot/version
+  // is required; question edits and permanent deletion take effect directly.
   const [projectResult, submissionResult] = await Promise.all([
-    admin.from("projects").select("is_active,active_version_id").eq("id", group.project_id).maybeSingle(),
-    admin.from("submissions").select("status,project_version_id,video_id").eq("group_id", group.id).maybeSingle(),
+    admin.from("projects").select("id,is_active").eq("id", group.project_id).maybeSingle(),
+    admin.from("submissions").select("status,video_id").eq("group_id", group.id).maybeSingle(),
   ]);
-  if (projectResult.error) {
-    console.error("[student-content] project version lookup failed", {
-      stage: "projects",
-      ...safeSupabaseDiagnostic(projectResult.error),
-    });
-    return fail(503, "Versi proyek belum dapat diverifikasi. Coba lagi nanti.");
-  }
-  if (submissionResult.error) {
-    console.error("[student-content] project version lookup failed", {
-      stage: "submissions",
-      ...safeSupabaseDiagnostic(submissionResult.error),
-    });
-    return fail(503, "Versi proyek belum dapat diverifikasi. Coba lagi nanti.");
+
+  if (projectResult.error || submissionResult.error) {
+    console.error("Student content project/submission lookup failed.");
+    return fail(503, "Konten proyek belum dapat diverifikasi. Coba lagi nanti.");
   }
   if (!projectResult.data) {
-    // A missing row is distinct from a failed query/schema lookup. Do not log
-    // project IDs, group codes, student identity, or database row contents.
-    console.error("[student-content] project version lookup returned no row", {
-      stage: "projects",
-      category: "project_not_found",
-    });
     return fail(409, "Proyek tidak tersedia. Hubungi guru.");
   }
 
   const project = projectResult.data;
   const submission = submissionResult.data;
-  const projectArchived = project.is_active === false;
   const alreadySubmitted = submission?.status === "submitted";
-  if (projectArchived && !alreadySubmitted) {
+
+  if (project.is_active === false && !alreadySubmitted) {
     return fail(
       403,
       "Proyek ini diarsipkan. Jawaban draft tetap tersimpan; minta guru mengaktifkan kembali proyek untuk melanjutkan."
     );
   }
 
-  const versionId = submission?.project_version_id || project.active_version_id;
-  if (!versionId) {
-    return fail(409, "Proyek ini belum memiliki versi LKPD yang diterbitkan. Hubungi guru.");
-  }
-
-  const versionResult = await admin
-    .from("project_versions")
-    .select("id,project_id,version_number,status,content")
-    .eq("id", versionId)
-    .eq("project_id", group.project_id)
-    .maybeSingle();
-
-  if (versionResult.error) {
-    console.error("[student-content] project version snapshot lookup failed", {
-      stage: "project_versions",
-      ...safeSupabaseDiagnostic(versionResult.error),
-    });
-    return fail(503, "Versi materi belum dapat diverifikasi. Coba lagi nanti.");
-  }
-  const version = versionResult.data;
-  if (!version || version.status !== "published" || !version.content) {
-    return fail(409, "Versi LKPD kelompok tidak tersedia. Hubungi guru.");
-  }
-
-  const content = version.content as ProjectContentSnapshot;
-  if (!Array.isArray(content.videos) || !Array.isArray(content.questions)) {
-    console.error("Published project version content shape is invalid.");
-    return fail(500);
-  }
-
   try {
     if (parsed.data.op === "list_videos") {
-      let assignedIds: Set<string>;
+      let assignedIds: string[];
 
       if (submission?.video_id) {
-        // Continue the exact work already started; never switch the pinned
-        // video or version merely because assignments changed after starting.
-        assignedIds = new Set([submission.video_id]);
+        // Existing work stays on its already-selected video.
+        assignedIds = [submission.video_id];
       } else {
         const { data: assignments, error: assignmentsError } = await admin
           .from("group_videos")
@@ -273,48 +195,61 @@ export async function POST(req: Request) {
           .eq("group_id", group.id)
           .eq("project_id", group.project_id);
 
-        if (assignmentsError) return fail(500);
-        assignedIds = new Set(
-          (assignments || []).map((assignment) => assignment.video_id).filter(Boolean)
-        );
+        if (assignmentsError) return fail(503, "Penugasan video belum dapat dimuat.");
+        assignedIds = (assignments || [])
+          .map((assignment: any) => assignment.video_id)
+          .filter((id: unknown): id is string => typeof id === "string");
       }
 
-      const data = content.videos
-        .filter((video) =>
-          assignedIds.has(video.id) &&
-          video.project_id === group.project_id &&
-          video.is_active !== false
-        )
-        .sort((a, b) => a.number - b.number)
-        .map(({ id, number, title, category }) => ({ id, number, title, category }));
+      if (assignedIds.length === 0) {
+        return NextResponse.json({ data: [] }, { headers: { "Cache-Control": "no-store" } });
+      }
+
+      const { data: videos, error: videosError } = await admin
+        .from("videos")
+        .select("id,project_id,number,title,category,is_active")
+        .eq("project_id", group.project_id)
+        .in("id", assignedIds)
+        .order("number");
+
+      if (videosError) return fail(503, "Video kasus belum dapat dimuat.");
+
+      const data = (videos || [])
+        .filter((video: any) => submission?.video_id === video.id || video.is_active !== false)
+        .map(({ id, number, title, category }: any) => ({ id, number, title, category }));
 
       return NextResponse.json({ data }, { headers: { "Cache-Control": "no-store" } });
     }
 
     const { vid } = parsed.data.args;
+    if (!vid) return fail(400, "Video belum dipilih.");
+
     const videoResult = await loadAssignedVideo(
       group.id,
       group.project_id,
       vid,
-      content,
       submission?.video_id,
     );
     if (videoResult.error) {
       console.error("Student assignment video lookup failed:", videoResult.error.message);
-      return fail(500);
+      return fail(503, "Penugasan video belum dapat diverifikasi.");
     }
     if (!videoResult.data) return fail(404);
 
     if (parsed.data.op === "video_detail") {
-      const questionsResult = loadQuestions(content, "see");
-      // Do not expose the group record or access code in this response.
+      const questionsResult = await loadQuestions(group.project_id, "see");
+      if (questionsResult.error) return fail(503, "Pertanyaan belum dapat dimuat.");
+
+      // Never expose the group record or access code in the response.
       return NextResponse.json(
         { data: { video: videoResult.data, questions: questionsResult.data } },
         { headers: { "Cache-Control": "no-store" } }
       );
     }
 
-    const questionsResult = loadQuestions(content);
+    const questionsResult = await loadQuestions(group.project_id);
+    if (questionsResult.error) return fail(503, "Pertanyaan belum dapat dimuat.");
+
     return NextResponse.json(
       { data: questionsResult.data },
       { headers: { "Cache-Control": "no-store" } }
