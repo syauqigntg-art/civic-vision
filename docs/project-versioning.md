@@ -1,3 +1,5 @@
+> **Status: dihentikan per 28 Oktober 2026.** Alur “Versi Proyek & LKPD” tidak lagi menjadi fitur aktif Civic Vision. Konten siswa dan hasil guru menggunakan tabel proyek, video, pertanyaan, dan jawaban yang aktif. Jangan melanjutkan pengembangan atau menerapkan migration versioning dari dokumen ini. File migration dan pengujian versi dipertahankan sebagai artefak historis saja; bukan instruksi deployment.
+
 # Versi Proyek dan LKPD — Desain dan Panduan Rilis
 
 **Status per 2026-10-26:** migration dan tes SQL telah dijalankan pada Supabase Staging saja. Browser E2E dan review SQL independen masih menjadi blocker; Production belum disentuh.
