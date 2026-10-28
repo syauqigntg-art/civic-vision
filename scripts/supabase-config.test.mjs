@@ -108,7 +108,7 @@ test("student content uses live project/video/question tables without version sc
   assert.match(route, /select\("status,video_id"\)/);
   assert.match(route, /from\("questions"\)/);
   assert.match(route, /from\("videos"\)/);
-  assert.match(route, /from\("question_options"\)/);
+  assert.match(route, /question_options\(\*\)/);
   assert.doesNotMatch(route, /project_versions|active_version_id|project_version_id/);
 });
 
