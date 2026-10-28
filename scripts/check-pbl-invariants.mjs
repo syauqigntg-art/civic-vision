@@ -26,7 +26,7 @@ assert.match(student, /checkLimit\(\s*"student"/, "Student API uses a request li
 assert.match(student, /parsed\.data\.op === "get_group"/, "Student API checks invalid group-code attempts");
 assert.match(studentContent, /studentContentReq\.safeParse\(body\)/, "Student content API validates requests");
 assert.match(studentContent, /\.eq\("group_id", group\.id\)/, "Assigned content is scoped to a group");
-assert.match(studentContent, /\.eq\("project_id", projectId\)/, "Assigned content is scoped to a project");
+assert.match(studentContent, /\.eq\("project_id", group\.project_id\)/, "Assigned content is scoped to a project");
 assert.match(autosave, /flushPromise\.current/, "Autosave shares an in-flight flush promise");
 assert.match(autosave, /persist\(\)/, "Autosave persists pending values");
 assert.match(autosave, /result\.data !== true/, "Autosave checks server acceptance");
@@ -35,7 +35,7 @@ assert.match(editor, /admin_delete_question/, "Editor uses guarded deletion");
 assert.match(editor, /admin_reorder_questions/, "Editor uses transactional reorder");
 assert.match(editor, /Pratinjau tampilan siswa/, "Editor shows student preview");
 assert.match(editor, /PBL_PHASES/, "Editor presents phase guidance");
-assert.match(editor, /await toXlsx\(exportRows, "salinan-jawaban-soal-"/, "Deleting a question exports its answers to Excel first");
+assert.match(editor, /await toXlsx\(exportRows\.map[\s\S]*?salinan-jawaban-soal-/, "Deleting a question exports its answers to Excel first");
 assert.doesNotMatch(editor, /question_has_answers_create_new_version|question_has_unversioned_answers|Versi Proyek & LKPD|snapshot/i, "Question editor no longer depends on project versioning");
 assert.doesNotMatch(editor, /from\("question_options"\)\.delete\(\)/, "Options are not deleted through a separate client call");
 assert.match(phaseBar, /see.*think.*connect.*act/s, "Phase navigation preserves all four phases");
