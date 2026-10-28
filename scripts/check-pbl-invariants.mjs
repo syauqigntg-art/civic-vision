@@ -94,7 +94,7 @@ const adminHook = read("../hooks/useAdmin.ts");
 // the snapshot/version workflow. These source checks do not replace runtime tests.
 assert.match(studentContent, /from\("questions"\)/, "Student content reads questions from the selected project");
 assert.match(studentContent, /from\("videos"\)/, "Student content reads assigned videos from the selected project");
-assert.match(studentContent, /from\("question_options"\)/, "Student content loads current answer options");
+assert.match(studentContent, /question_options\(\*\)/, "Student content loads current answer options");
 assert.doesNotMatch(studentContent, /project_versions|active_version_id|project_version_id/, "Student content does not require versioning schema");
 assert.doesNotMatch(submissionHistory, /project_versions|active_version_id|project_version_id|Versi LKPD|snapshot/i, "Teacher results do not require or present project versions");
 assert.match(submissionHistory, /toXlsx\(exportRows\(\)/, "Teacher results can export live question answers to Excel");
