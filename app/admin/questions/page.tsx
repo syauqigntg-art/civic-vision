@@ -1,4 +1,4 @@
-"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin"; import { QuestionField } from "@/components/lkpd/QuestionField";
+"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin"; import { QuestionField } from "@/components/lkpd/QuestionField"; import { toXlsx, stamp } from "@/lib/utils/export";
 const T: Record<string, string> = { text: "Jawaban singkat", textarea: "Jawaban panjang", multiple_text: "Beberapa jawaban teks", single_select: "Pilih satu jawaban", multi_select: "Pilih beberapa jawaban", scale: "Skala 1–5" };
 const PBL_PHASES: Record<string, { title: string; subtitle: string; instruction: string; output: string }> = {
   see: { title: "SEE", subtitle: "Mengamati masalah", instruction: "Amati stimulus/video, identifikasi fakta dan pihak yang terdampak.", output: "Fakta pengamatan dan rumusan awal masalah" },
@@ -92,7 +92,7 @@ function getPlaceholderOptions(category: string, phase: string) {
 }
 
 export default function Questions() {
-  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [successMessage, setSuccessMessage] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
+  const { P, qs, ans, gs, subs, load, loading } = useAdmin(["P", "qs", "ans", "gs", "subs"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [successMessage, setSuccessMessage] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
   const filteredQs = useMemo(() => {
     const query = search.trim().toLowerCase();
     return qs.filter((q: any) => {
@@ -205,11 +205,7 @@ export default function Questions() {
 
       if (error) {
         const message = error.message.toLowerCase();
-        if (message.includes("question_has_answers_create_new_version")) {
-          setErr("Perubahan ditolak karena database belum memastikan jawaban ini terlindungi oleh snapshot historis. Jawaban tidak dihapus. Periksa status migration versioning sebelum mencoba lagi.");
-        } else if (message.includes("question_has_unversioned_answers")) {
-          setErr("Perubahan ditolak karena setidaknya satu jawaban belum dapat dipastikan terikat ke snapshot historis yang valid. Tidak ada jawaban yang dihapus; minta maintainer memeriksa relasi submission/version.");
-        } else if (message.includes("duplicate_question_options")) {
+        if (message.includes("duplicate_question_options")) {
           setErr("Pilihan jawaban tidak boleh duplikat.");
         } else if (message.includes("invalid_question_options")) {
           setErr("Pilihan jawaban tidak valid. Isi minimal 2 pilihan yang masing-masing maksimal 300 karakter.");
@@ -218,7 +214,7 @@ export default function Questions() {
         } else if (message.includes("admin_required") || message.includes("permission denied")) {
           setErr("Akses ditolak. Masuk kembali menggunakan akun guru/admin.");
         } else {
-          setErr("Pertanyaan gagal disimpan. Perubahan belum dikonfirmasi; periksa isian, akses admin, dan status database sebelum mencoba lagi.");
+          setErr("Pertanyaan gagal disimpan. Perubahan belum dikonfirmasi; periksa isian dan akses admin.");
         }
         return;
       }
@@ -239,17 +235,52 @@ export default function Questions() {
       setErr("Proyek belum dipilih atau tidak ditemukan. Pilih proyek sebelum menghapus pertanyaan.");
       return;
     }
-    const answerCount = ans.filter((answer: any) => answer.question_id === q.id).length;
+
+    const relatedAnswers = ans.filter((answer: any) => answer.question_id === q.id);
+    const answerCount = relatedAnswers.length;
     const answerWarning = answerCount > 0
-      ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan.`
-      : "";
-    const prompt = `Hapus pertanyaan secara permanen?\n\nPertanyaan: "${q.question_text}"${answerWarning}\n\nPertanyaan, pilihan jawaban, dan seluruh jawaban siswa terkait akan dihapus. Snapshot LKPD lama tidak diubah dan mungkin masih memuat teks pertanyaan ini. Penghapusan tidak dapat dibatalkan melalui dashboard.`;
-    if (!confirm(prompt)) return;
+      ? "\n\nAda " + answerCount + " jawaban siswa tersimpan. Jika kamu melanjutkan, sistem akan otomatis mengunduh salinan Excel jawaban untuk soal ini sebelum menghapusnya."
+      : "\n\nTidak ada jawaban siswa yang tercatat untuk soal ini.";
+    const prompt = "Hapus soal secara permanen?\n\nProyek: \"" + String(P.title || "Tanpa judul") +
+      "\"\nPertanyaan: \"" + q.question_text + "\"" + answerWarning +
+      "\n\nSoal, pilihan jawaban, dan semua jawaban terkait akan dihapus permanen. Pastikan file Excel hasil unduhan tersimpan. Tindakan ini tidak dapat dibatalkan melalui dashboard.\n\nLanjutkan?";
+    if (!window.confirm(prompt)) return;
 
     setErr("");
     setSuccessMessage("");
     setSaving(true);
     try {
+      if (answerCount > 0) {
+        const exportRows: string[][] = [
+          ["Proyek", String(P.title || ""), "", "", "", ""],
+          ["Kategori", String(q.category || ""), "", "", "", ""],
+          ["Pertanyaan", String(q.question_text || ""), "", "", "", ""],
+          ["Jenis ekspor", "Salinan jawaban sebelum penghapusan permanen", "", "", "", ""],
+          ["Kelompok", "Kelas", "Ketua kelompok", "Status pengerjaan", "Jawaban tersimpan", "Waktu pembaruan"],
+          ...relatedAnswers.map((answer: any) => {
+            const submission = subs.find((item: any) => item.id === answer.submission_id);
+            const group = gs.find((item: any) => item.id === submission?.group_id);
+            const groupName = group
+              ? "Kelompok " + String(group.group_number ?? "—").padStart(2, "0") + (group.group_name ? " — " + group.group_name : "")
+              : "Kelompok tidak ditemukan";
+            const status = submission?.status === "submitted"
+              ? "Sudah dikirim"
+              : submission?.status === "draft"
+                ? "Draf"
+                : "Tidak diketahui";
+            return [
+              groupName,
+              String(group?.class_name || "—"),
+              String(group?.leader_name || "—"),
+              status,
+              String(answer.answer_text ?? ""),
+              String(submission?.updated_at || answer.updated_at || ""),
+            ];
+          }),
+        ];
+        await toXlsx(exportRows, "salinan-jawaban-soal-" + stamp() + ".xlsx");
+      }
+
       const { data, error } = await sb.rpc("admin_delete_question", {
         p_id: q.id,
         p_project_id: P.id,
@@ -261,10 +292,13 @@ export default function Questions() {
         } else if (message.includes("admin_required") || message.includes("permission denied") || message.includes("jwt") || message.includes("unauthorized")) {
           setErr("Akses ditolak. Masuk kembali menggunakan akun guru/admin.");
         } else {
-          setErr("Pertanyaan gagal dihapus. Belum ada perubahan yang dikonfirmasi; periksa apakah migration penghapusan sudah diterapkan pada database.");
+          setErr(answerCount > 0
+            ? "Excel sudah disiapkan, tetapi soal belum terhapus. Periksa akses database sebelum mencoba lagi."
+            : "Pertanyaan gagal dihapus. Periksa akses admin dan status database.");
         }
         return;
       }
+
       if (data === "not_found") {
         setErr("Pertanyaan tidak ditemukan pada proyek yang sedang dipilih. Muat ulang daftar.");
       } else if (data !== "deleted") {
@@ -273,10 +307,12 @@ export default function Questions() {
       } else {
         setErr("");
         await load();
-        setSuccessMessage("Pertanyaan, pilihan jawaban, dan jawaban terkait telah dihapus permanen. Snapshot lama tidak diubah.");
+        setSuccessMessage(answerCount > 0
+          ? "Pertanyaan dihapus permanen. Salinan Excel berisi " + answerCount + " jawaban terkait telah diminta untuk diunduh."
+          : "Pertanyaan dan pilihan jawabannya dihapus permanen.");
       }
     } catch {
-      setErr("Koneksi gagal saat menghapus pertanyaan. Muat ulang daftar untuk memastikan status terakhir.");
+      setErr("Ekspor Excel atau koneksi gagal. Penghapusan tidak dilanjutkan jika ekspor gagal; periksa status soal sebelum mencoba lagi.");
     } finally {
       setSaving(false);
     }
@@ -306,7 +342,7 @@ export default function Questions() {
   };
   const bump = (i: number, d: number) => { const t = qs[i + d]; if (t) reorder(qs[i].id, t.id); };
   if (f) return (<section className="glass">
-      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Perubahan soal masuk ke snapshot berikutnya setelah guru menyimpan, memvalidasi, dan menerbitkan versi. Pekerjaan siswa yang sudah berjalan tetap memakai snapshot yang dipin; jawaban historis tidak dihapus.</p><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Pertanyaan aktif langsung digunakan dalam LKPD siswa. Mengedit atau menghapus soal dapat memengaruhi pengerjaan berikutnya; sebelum menghapus soal yang sudah dijawab, sistem akan mengunduh salinan Excel jawaban terkait.</p><h2>{f.id ? "Edit Pertanyaan" : "Tambah Pertanyaan"}</h2>{err && <div className="warn" role="alert">{err}</div>}<fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
     <label>Pertanyaan</label><textarea value={f.question_text} onChange={e => set("question_text", e.target.value)} />
     <label>Kategori</label><select value={f.category} onChange={e => set("category", e.target.value)}><option value="">Pilih kategori</option>{cats.map(c => <option key={c}>{c}</option>)}<option value="__new">+ Kategori baru...</option></select>
     {f.category === "__new" && <input style={{ marginTop: 8 }} placeholder="Nama kategori baru" value={f.newCat} onChange={e => set("newCat", e.target.value)} />}
@@ -340,7 +376,7 @@ export default function Questions() {
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
-      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Hapus menghilangkan pertanyaan, pilihan jawaban, dan jawaban siswa terkait secara permanen. Snapshot lama tidak diubah dan dapat tetap memuat teks pertanyaan tanpa jawaban terkait.</p>
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Hapus permanen akan menghapus soal, pilihan jawaban, serta jawaban siswa terkait. Jika jawaban tersedia, salinan Excel diunduh terlebih dahulu agar guru dapat menyimpannya.</p>
       {successMessage && <div className="notice" role="status">{successMessage}</div>}
       {err && <div className="warn" role="alert">{err}</div>}
       <div className="admin-section-head">
