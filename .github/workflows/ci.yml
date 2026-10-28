@@ -22,6 +22,69 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  postgres-hard-delete-regression:
+    name: PostgreSQL hard-delete regression (pre-versioning schema)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - name: Install PostgreSQL on the runner (no Docker)
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y postgresql postgresql-client
+          sudo service postgresql start
+          pg_lsclusters
+          pg_isready
+
+      - name: Create disposable local database and record runtime version
+        run: |
+          set -euo pipefail
+          psql --version
+          sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d postgres -f supabase/tests/bootstrap-local-roles.sql
+          sudo -u postgres createdb --owner=postgres civic_vision_test
+          sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d civic_vision_test -f supabase/tests/bootstrap-local-supabase.sql
+          echo "::group::PostgreSQL server version"
+          sudo -u postgres psql -X -At -v ON_ERROR_STOP=1 -d civic_vision_test -c "SHOW server_version;"
+          echo "::endgroup::"
+
+      - name: Build baseline through migration 20261023010223
+        run: |
+          set -euo pipefail
+          for sql in \
+            supabase/schema.sql \
+            supabase/p1-project-isolation.sql \
+            supabase/migrations/20261022151155_harden_is_admin_and_fk_indexes.sql \
+            supabase/migrations/20261022151421_optimize_users_rls_policies.sql \
+            supabase/migrations/20261022152719_secure_admin_helper_and_transactional_question_editor.sql \
+            supabase/migrations/20261022153005_add_safe_question_deletion_rpc.sql \
+            supabase/migrations/20261022153051_add_transactional_question_order_and_delete.sql \
+            supabase/migrations/20261023010223_serialize_answer_saves_with_submission.sql
+          do
+            echo "::group::Apply $sql"
+            sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d civic_vision_test -f "$sql"
+            echo "::endgroup::"
+          done
+          echo "::group::Grant Supabase-like table access for local test roles"
+          sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d civic_vision_test -c "GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role; GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO anon, authenticated, service_role; GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated, service_role;"
+          echo "::endgroup::"
+
+      - name: Apply existing corrective migration to disposable database
+        run: |
+          set -euo pipefail
+          echo "::group::Apply supabase/migrations/20261027230000_admin_question_hard_delete_archive_guard.sql"
+          sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d civic_vision_test -f supabase/migrations/20261027230000_admin_question_hard_delete_archive_guard.sql
+          echo "::endgroup::"
+
+      - name: Run synthetic pre-versioning regression suite
+        run: |
+          set -euo pipefail
+          sudo -u postgres psql -X -v ON_ERROR_STOP=1 -d civic_vision_test -f supabase/tests/admin-question-hard-delete-no-versioning.sql
+
   typecheck:
     name: Install and typecheck
     runs-on: ubuntu-latest
