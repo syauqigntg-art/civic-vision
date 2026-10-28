@@ -229,16 +229,16 @@ Setiap status di bawah adalah hasil pemetaan source/dokumentasi, kecuali jika se
 
 ## 4. Urutan implementasi yang direkomendasikan
 
-1. **P0 — keamanan dan operasi:** verifikasi target staging, migrasi, backup/restore, dan akses antarkelompok; catat SHA/deployment. Jangan menulis ke Production.
-2. **P1 — versioning proyek/LKPD:** tinjau PR `feature/project-lkpd-versioning`, lakukan migration dan integrasi test pada staging; lanjutkan ke rubric versioning sesudah pinning submission terbukti.
+1. **P0 — keamanan dan operasi:** rekonsiliasi target database, backup/restore, dan akses antarkelompok sebelum deployment. Jangan menulis ke Production tanpa persetujuan.
+2. **P0/P1 — hapus soal secara permanen:** pastikan backup Excel soal terjawab diunduh sebelum konfirmasi; penghapusan jawaban, opsi, dan pertanyaan harus atomik, terbatas pada proyek yang dipilih, dan diuji terhadap akun non-admin serta kegagalan transaksi.
 3. **P0 — PBL inti:** implementasikan A.3 organisasi belajar dan A.4 pengelolaan bukti dengan authorization serta save/reload/isolation tests.
 4. **P1 — tahap lanjutan:** produk/presentasi A.5, refleksi A.6, feedback/revisi A.7.
-5. **P1 — konten yang dapat dipelihara:** editor konfigurasi tahapan, draft–validasi–publish, pustaka template.
-6. **P1 — penilaian:** editor rubrik berversi, skor per kriteria, persetujuan dan riwayat nilai.
-7. **P1/P2 — operasi lintas periode:** sekolah/kelas/tahun ajaran jika masuk scope, laporan historis, monitoring, dokumentasi, pemilik sistem.
-8. **Setiap tahap:** tes otomatis dan browser/staging pada SHA yang sama; update status hanya berdasarkan bukti yang relevan.
+5. **P1 — konten yang dapat dipelihara:** editor konten langsung, validasi input, pratinjau formulir, dan pustaka template yang tidak memerlukan alur draft/snapshot/publikasi.
+6. **P1 — penilaian:** editor rubrik, skor per kriteria, persetujuan dan riwayat nilai; putuskan aturan audit/perubahan nilai sebelum implementasi.
+7. **P1/P2 — operasi lintas periode:** sekolah/kelas/tahun ajaran jika masuk scope, laporan, monitoring, dokumentasi, dan pemilik sistem.
+8. **Setiap tahap:** tes otomatis serta browser pada project disposable yang aman dan SHA yang sama; update status hanya berdasarkan bukti aktual.
 
-Dependensi penting: **versi proyek/LKPD → submission terikat versi → rubrik berversi → skor/feedback/revisi historis**. Hindari mengembangkan penilaian final sebelum versi konten dan aturan revisi ditentukan.
+**Batas produk:** workflow **Versi Proyek & LKPD** telah dihentikan dan bukan dependensi untuk pekerjaan berikutnya. Migration versioning lama tetap disimpan sebagai artefak historis karena skema database yang ada perlu direkonsiliasi sebelum deployment. Jangan menjalankan `supabase db push` atau menerapkan rangkaian migration lama tanpa menyelesaikan rekonsiliasi tersebut.
 
 ## 5. Daftar bukti runtime yang masih harus dikumpulkan
 
