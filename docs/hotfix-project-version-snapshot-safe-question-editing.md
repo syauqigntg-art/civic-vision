@@ -1,3 +1,5 @@
+> **Arsip / tidak untuk dikerjakan lebih lanjut per 28 Oktober 2026.** Fitur Versi Proyek & LKPD dihentikan atas keputusan produk. Bagian rencana migration dan verifikasi di bawah ini adalah catatan historis, bukan langkah yang boleh diterapkan ke Staging atau Production. Alur aktif diarahkan ke tabel proyek/video/pertanyaan saat ini dan penghapusan soal permanen dengan ekspor Excel oleh guru terlebih dahulu.
+
 # Hotfix: Project Snapshot Diagnostics and Safe Question Editing
 
 Status: **implementation in progress; not release-approved**. No Production writes or migrations were run during investigation.
