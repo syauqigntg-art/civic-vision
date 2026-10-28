@@ -85,7 +85,7 @@ test("runtime backend readiness fails closed when public or server configuration
 });
 
 
-test("project version diagnostics distinguish schema mismatch from query failure without exposing messages", () => {
+test("database diagnostics distinguish schema mismatch from query failure without exposing messages", () => {
   const secretLikeMessage = "access_code=DO_NOT_LOG service_role_secret";
   assert.deepEqual(safeSupabaseDiagnostic({ code: "42703", message: secretLikeMessage }), {
     category: "schema_mismatch",
