@@ -1,4 +1,5 @@
-"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, Q } from "@/lib/supabase"; import { useAdmin } from "@/lib/admin"; import { QuestionField } from "@/components/lkpd/QuestionField";
+"use client"; import { questionForm } from "@/lib/validation/schemas"; import { useMemo, useState } from "react"; import { sb, opts, Q } from "@/lib/supabase";
+import { toXlsx, stamp } from "@/lib/utils/export"; import { useAdmin } from "@/lib/admin"; import { QuestionField } from "@/components/lkpd/QuestionField";
 const T: Record<string, string> = { text: "Jawaban singkat", textarea: "Jawaban panjang", multiple_text: "Beberapa jawaban teks", single_select: "Pilih satu jawaban", multi_select: "Pilih beberapa jawaban", scale: "Skala 1–5" };
 const PBL_PHASES: Record<string, { title: string; subtitle: string; instruction: string; output: string }> = {
   see: { title: "SEE", subtitle: "Mengamati masalah", instruction: "Amati stimulus/video, identifikasi fakta dan pihak yang terdampak.", output: "Fakta pengamatan dan rumusan awal masalah" },
@@ -92,7 +93,7 @@ function getPlaceholderOptions(category: string, phase: string) {
 }
 
 export default function Questions() {
-  const { P, qs, ans, load, loading } = useAdmin(["P", "qs", "ans"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [successMessage, setSuccessMessage] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
+  const { P, qs, ans, subs, gs, load, loading, error: dataError } = useAdmin(["P", "qs", "ans", "subs", "gs"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [successMessage, setSuccessMessage] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
   const filteredQs = useMemo(() => {
     const query = search.trim().toLowerCase();
     return qs.filter((q: any) => {
@@ -235,13 +236,46 @@ export default function Questions() {
   };
   const del = async (q: Q) => {
     if (saving) return;
+    if (loading || dataError) {
+      setErr("Data soal atau jawaban siswa belum berhasil diverifikasi. Muat ulang halaman sebelum menghapus agar backup Excel dan jumlah jawaban akurat.");
+      return;
+    }
     if (!P?.id) {
       setErr("Proyek belum dipilih atau tidak ditemukan. Pilih proyek sebelum menghapus pertanyaan.");
       return;
     }
-    const answerCount = ans.filter((answer: any) => answer.question_id === q.id).length;
+    const relatedAnswers = ans.filter((answer: any) => answer.question_id === q.id);
+    const answerCount = relatedAnswers.length;
+    if (answerCount > 0) {
+      const backupRows = [
+        ["Proyek", "ID Pertanyaan", "Kategori", "Pertanyaan", "Kelompok", "Nomor Kelompok", "Kelas", "Ketua", "Status Submission", "Jawaban"],
+        ...relatedAnswers.map((answer: any) => {
+          const submission = subs.find((item: any) => item.id === answer.submission_id);
+          const group = gs.find((item: any) => item.id === submission?.group_id);
+          return [
+            P?.title || "",
+            q.id,
+            q.category || "",
+            q.question_text,
+            group?.group_name || "",
+            group?.group_number ?? "",
+            group?.class_name || "",
+            group?.leader_name || "",
+            submission?.status || "",
+            answer.answer_text ?? "",
+          ];
+        }),
+      ];
+      const safeQuestionName = q.question_text.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "soal";
+      try {
+        toXlsx(backupRows, `backup-jawaban-soal-${stamp()}-${safeQuestionName}.xlsx`);
+      } catch {
+        setErr("Backup Excel gagal dibuat. Soal tidak dihapus; coba unduh hasil dari menu Jawaban Siswa terlebih dahulu.");
+        return;
+      }
+    }
     const answerWarning = answerCount > 0
-      ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan. Sebelum melanjutkan, unduh Excel melalui menu Jawaban Siswa dan pastikan file tersimpan. Jawaban terkait akan hilang permanen dari aplikasi.`
+      ? `\n\nDitemukan ${answerCount} jawaban siswa. Sistem sudah memulai unduhan backup Excel untuk soal ini. Pastikan file tersimpan sebelum melanjutkan. Jawaban terkait akan hilang permanen dari aplikasi.`
       : "";
     const prompt = `Hapus pertanyaan secara permanen?\n\nPertanyaan: "${q.question_text}"${answerWarning}\n\nPertanyaan, pilihan jawaban, dan seluruh jawaban siswa terkait akan dihapus permanen. Tindakan ini tidak dapat dibatalkan melalui dashboard.`;
     if (!confirm(prompt)) return;
