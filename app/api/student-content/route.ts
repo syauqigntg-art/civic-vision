@@ -180,7 +180,6 @@ export async function POST(req: Request) {
       .from("questions")
       .select("id,project_id,category,phase,question_text,description,question_type,placeholder,is_required,min_items,display_order,is_active,question_options(option_text,display_order)")
       .eq("project_id", group.project_id)
-      .eq("is_active", true)
       .order("display_order");
 
     if (parsed.data.op === "video_detail") {
@@ -193,7 +192,7 @@ export async function POST(req: Request) {
       return fail(503, "Pertanyaan LKPD belum dapat dimuat. Coba lagi nanti.");
     }
 
-    const cleanQuestions = (questions || []).map((question: any) => ({
+    const cleanQuestions = (questions || []).filter((question: any) => question.is_active !== false).map((question: any) => ({
       ...question,
       question_options: (question.question_options || [])
         .map((option: any) => ({
