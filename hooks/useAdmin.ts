@@ -7,7 +7,7 @@ import type { Q } from "@/types";
 
 type Part = "P" | "gs" | "vs" | "qs" | "gv" | "gm" | "subs" | "ans";
 const ALL: Part[] = ["P", "gs", "vs", "qs", "gv", "gm", "subs", "ans"];
-const emptyData = () => ({ P: {}, gs: [], vs: [], qs: [], gv: [], gm: [], subs: [] , ans: [] });
+const emptyData = () => ({ P: {}, gs: [], vs: [], qs: [], gv: [], gm: [], subs: [], ans: [] });
 
 export interface AdminData {
   P: any;
