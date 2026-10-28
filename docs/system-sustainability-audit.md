@@ -25,7 +25,7 @@ Prioritas: **P0** keamanan/integritas yang menghalangi penggunaan aman; **P1** k
 | B.2 Sekolah/kelas/periode | Tersedia, perlu penyempurnaan | P1 | Pertahankan kelompok/penugasan dan isolasi proyek; putuskan apakah sekolah, kelas formal, mata pelajaran, dan tahun ajaran menjadi entitas. |
 | B.3 Pemeliharaan sistem | Tersedia, perlu penyempurnaan | P0 | Pertahankan CI, SQL audit, dokumentasi staging; lengkapi health/monitoring dan bukti backup-restore. |
 | C.1 Identitas proyek | Tersedia, perlu penyempurnaan | P1 | Pertahankan CRUD dasar dan arsip; lengkapi editor metadata dan keluaran/tujuan pembelajaran. |
-| C.2 Draft, publikasi, versi | Implementasi pada branch, belum diverifikasi | P1 | Tinjau PR versioning; jalankan migration dan uji staging/browser sebelum menyatakan selesai. Versi rubrik/penilaian tetap pekerjaan terpisah. |
+| C.2 Draft, publikasi, versi | Dihentikan atas keputusan produk 2026-10-28 | — | Menu Versi Proyek & LKPD dan alur draft/snapshot/publikasi tidak dilanjutkan. Konten dikelola langsung pada tabel aktif; jangan menerapkan migration versioning yang diarsipkan. |
 | D.1 Konfigurasi tahapan PBL | Tersedia, perlu penyempurnaan | P0 | Jangan menyamakan empat label SEE/THINK/CONNECT/ACT dengan lima tahap PBL; rancang konfigurasi yang divalidasi. |
 | D.2 A.1 Validitas masalah | Tersedia, perlu penyempurnaan | P1 | Audit konten kasus/prompt aktif dengan rubrik pedagogis dan bukti respons. |
 | D.3 A.2 Orientasi masalah | Tersedia, perlu penyempurnaan | P1 | Tambahkan hasil belajar, ruang lingkup, pemisahan fakta/dugaan, dan uji pemahaman. |
@@ -44,7 +44,7 @@ Prioritas: **P0** keamanan/integritas yang menghalangi penggunaan aman; **P1** k
 | G.3 Backup/restore | Belum diverifikasi | P0 | Buktikan backup, retensi, restore, RPO/RTO pada lingkungan aman. |
 | G.4 Pemantauan | Belum ditemukan | P1 | Tambahkan monitoring terpusat/alert tanpa membocorkan data siswa atau kode akses. |
 | H Pengujian/gerbang rilis | Belum diverifikasi | P0 | CI tersedia, tetapi gerbang browser/staging, isolasi, versi, dan restore belum lengkap/terbukti pada SHA terkini. |
-| I Penggunaan lintas kelas/tahun | Tersedia, perlu penyempurnaan | P1 | Pertahankan arsip proyek; rancang periode, template, versi kurikulum/rubrik, dokumentasi, dan kepemilikan operasional. |
+| I Penggunaan lintas kelas/tahun | Tersedia, perlu penyempurnaan | P1 | Pertahankan arsip proyek; rancang periode, template, dokumentasi, dan kepemilikan operasional. Workflow Versi Proyek & LKPD tidak dilanjutkan. |
 
 ## 3. Pemetaan detail
 
@@ -84,15 +84,13 @@ Setiap status di bawah adalah hasil pemetaan source/dokumentasi, kecuali jika se
 **Yang belum lengkap:** editor yang diperiksa menyimpan identitas dasar (judul, tagline, deskripsi); tidak ada bukti bahwa tujuan belajar, konteks masalah, keluaran terukur, jadwal, dan publikasi draft terkelola. Metadata skema tambahan belum otomatis berarti bisa diedit di UI.
 **Tes/bukti:** source ada; browser test untuk create/edit/archive belum dicatat pada exact SHA saat audit.
 **Tindak lanjut:** lengkapi form dan validasi metadata; bedakan arsip dari penghapusan permanen.
-**Kriteria penerimaan:** proyek dapat dibuat, diedit, diarsipkan/dipulihkan dengan konfirmasi; siswa tidak melihat perubahan draft yang belum diterbitkan.
+**Kriteria penerimaan:** proyek dapat dibuat, diedit, diarsipkan/dipulihkan dengan konfirmasi; perubahan konten aktif langsung terlihat bagi siswa sesuai proyek yang dikelola.
 
 #### C.2 Draft, publikasi, dan versi konten
-**Status: Implementasi pada branch, belum diverifikasi — P1.**
-**Bukti baseline audit:** source pada baseline audit belum memiliki model versi immutable. Pada branch `feature/project-lkpd-versioning`, migration dan alur admin baru telah disiapkan: snapshot `project_versions`, pointer `projects.active_version_id`, pin `submissions.project_version_id`, baseline versi untuk proyek lama, editor draft–pratinjau–validasi–publish, dan pemuatan konten siswa dari snapshot yang dipin. PR dan migration tersebut belum diterapkan pada database dan belum terverifikasi melalui browser/staging.
-**Kesenjangan:** migration perlu ditinjau dan dijalankan pada staging, lalu diuji untuk proyek pra-migrasi, dua versi berturutan, submission lama dan baru, konten yang diarsipkan, serta pembacaan hasil/ekspor. Diff/rollback UI belum menjadi bagian implementasi ini. Model versi rubrik/penilaian belum dibuat.
-**Tindak lanjut:** tinjau [desain dan panduan versi proyek/LKPD](project-versioning.md); jangan menerapkan migration ke Production sebelum uji staging dan review independen.
-**Kriteria penerimaan:** publish membuat versi immutable; draft tidak mengubah versi aktif; setiap submission tetap terikat ke versi yang dipakai; jawaban lama tetap dapat dibaca menggunakan snapshot historis; rollback atau perubahan aktif tidak mengubah sejarah.
-
+**Status: Dihentikan berdasarkan keputusan produk — 2026-10-28.**
+**Keputusan:** menu **Versi Proyek & LKPD** dan alur draft, snapshot, validasi, serta publikasi tidak dilanjutkan. Guru mengelola konten pada proyek terpilih secara langsung; siswa dan halaman hasil membaca tabel proyek, video, pertanyaan, opsi, submission, dan jawaban aktif.
+**Batasan:** file migration serta tes versioning lama dipertahankan sebagai catatan historis, bukan instruksi deployment. Jangan menerapkan migration versioning dari rangkaian lama ke Production atau Staging. Penghapusan soal permanen ditangani secara terpisah dan harus menghapus soal, opsi, serta jawaban terkait secara transaksional dengan unduhan Excel sebelum konfirmasi.
+**Tindak lanjut:** tinjau perubahan pada branch `feature/live-content-hard-delete-20261028`; jalankan CI dan uji browser pada project disposable. Deployment dan migration database memerlukan review/approval terpisah. Production tidak diubah dalam pekerjaan ini.
 ### D. Pengaturan model pembelajaran PBL
 
 #### D.1 Struktur tahapan
