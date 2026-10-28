@@ -93,7 +93,7 @@ function getPlaceholderOptions(category: string, phase: string) {
 }
 
 export default function Questions() {
-  const { P, qs, ans, subs, gs, load, loading, error: dataError } = useAdmin(["P", "qs", "ans", "subs", "gs"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [successMessage, setSuccessMessage] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
+  const { P, qs, load, loading, error: dataError } = useAdmin(["P", "qs"]); const readOnly = P?.is_active === false; const [drag, setDrag] = useState(""); const [f, setF] = useState<any>(null); const [err, setErr] = useState(""); const [successMessage, setSuccessMessage] = useState(""); const [search, setSearch] = useState(""); const [phaseFilter, setPhaseFilter] = useState("all"); const [statusFilter, setStatusFilter] = useState("all"); const [previewAnswer, setPreviewAnswer] = useState<unknown>(""); const [saving, setSaving] = useState(false); const cats = [...new Set(qs.map((q: any) => String(q?.category ?? "").trim()).filter(Boolean))];
   const filteredQs = useMemo(() => {
     const query = search.trim().toLowerCase();
     return qs.filter((q: any) => {
@@ -244,24 +244,90 @@ export default function Questions() {
       setErr("Proyek belum dipilih atau tidak ditemukan. Pilih proyek sebelum menghapus pertanyaan.");
       return;
     }
-    const relatedAnswers = ans.filter((answer: any) => answer.question_id === q.id);
-    const answerCount = relatedAnswers.length;
+    // Read every matching answer with range pagination. Do not rely on the
+    // dashboard's in-memory answer list, which may be capped by the API page size.
+    const backupAnswers: Array<{ submission_id: string; question_id: string; answer_text: string | null }> = [];
+    const pageSize = 500;
+    for (let offset = 0; ; offset += pageSize) {
+      const { data, error } = await sb
+        .from("answers")
+        .select("submission_id,question_id,answer_text")
+        .eq("project_id", P.id)
+        .eq("question_id", q.id)
+        .order("submission_id")
+        .range(offset, offset + pageSize - 1);
+      if (error) {
+        setErr("Jawaban terkait belum berhasil dibaca lengkap. Soal tidak dihapus; muat ulang atau minta pengelola memeriksa akses database.");
+        return;
+      }
+      const page = data || [];
+      backupAnswers.push(...page);
+      if (page.length < pageSize) break;
+    }
+
+    const answerCount = backupAnswers.length;
     if (answerCount > 0) {
+      const submissionIds = [...new Set(backupAnswers.map((answer) => answer.submission_id))];
+      const submissionById = new Map<string, any>();
+      for (let offset = 0; offset < submissionIds.length; offset += 400) {
+        const ids = submissionIds.slice(offset, offset + 400);
+        const { data, error } = await sb
+          .from("submissions")
+          .select("id,group_id,status")
+          .eq("project_id", P.id)
+          .in("id", ids);
+        if (error) {
+          setErr("Data submission untuk backup belum berhasil dibaca. Soal tidak dihapus.");
+          return;
+        }
+        for (const row of data || []) submissionById.set(row.id, row);
+      }
+
+      if (submissionById.size !== submissionIds.length) {
+        setErr("Relasi jawaban dan submission tidak lengkap. Soal tidak dihapus sampai data diperiksa.");
+        return;
+      }
+
+      const groupIds = [...new Set(
+        [...submissionById.values()]
+          .map((submission: any) => submission.group_id)
+          .filter((id: unknown): id is string => typeof id === "string")
+      )];
+      const groupById = new Map<string, any>();
+      for (let offset = 0; offset < groupIds.length; offset += 400) {
+        const ids = groupIds.slice(offset, offset + 400);
+        const { data, error } = await sb
+          .from("groups")
+          .select("id,group_name,group_number,class_name,leader_name")
+          .eq("project_id", P.id)
+          .in("id", ids);
+        if (error) {
+          setErr("Identitas kelompok untuk backup belum berhasil dibaca. Soal tidak dihapus.");
+          return;
+        }
+        for (const row of data || []) groupById.set(row.id, row);
+      }
+
+      if (groupById.size !== groupIds.length) {
+        setErr("Relasi submission dan kelompok tidak lengkap. Soal tidak dihapus sampai data diperiksa.");
+        return;
+      }
+
       const backupRows = [
         ["Proyek", "ID Pertanyaan", "Kategori", "Pertanyaan", "Kelompok", "Nomor Kelompok", "Kelas", "Ketua", "Status Submission", "Jawaban"],
-        ...relatedAnswers.map((answer: any) => {
-          const submission = subs.find((item: any) => item.id === answer.submission_id);
-          const group = gs.find((item: any) => item.id === submission?.group_id);
+        ...backupAnswers.map((answer) => {
+          const submission = submissionById.get(answer.submission_id);
+          const group = groupById.get(submission.group_id);
           return [
-            P?.title || "",
+            P.title || "",
             q.id,
             q.category || "",
             q.question_text,
-            group?.group_name || "",
-            group?.group_number ?? "",
-            group?.class_name || "",
-            group?.leader_name || "",
-            submission?.status || "",
+            group.group_name || "",
+            group.group_number ?? "",
+            group.class_name || "",
+            group.leader_name || "",
+            submission.status || "",
             answer.answer_text ?? "",
           ];
         }),
@@ -270,7 +336,7 @@ export default function Questions() {
       try {
         toXlsx(backupRows, `backup-jawaban-soal-${stamp()}-${safeQuestionName}.xlsx`);
       } catch {
-        setErr("Backup Excel gagal dibuat. Soal tidak dihapus; coba unduh hasil dari menu Jawaban Siswa terlebih dahulu.");
+        setErr("Backup Excel gagal dibuat. Soal tidak dihapus; coba ekspor hasil dari menu Jawaban Siswa terlebih dahulu.");
         return;
       }
     }
