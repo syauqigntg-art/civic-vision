@@ -198,13 +198,14 @@ assert.match(hardDeleteGuardMigration, /DROP TRIGGER IF EXISTS questions_publish
 
 const productionCompatDeleteMigration = read("../supabase/migrations/20261101090000_admin_question_hard_delete_production_compat.sql");
 const productionCompatDeleteTest = read("../supabase/tests/admin-question-hard-delete-production-compat.sql");
-assert.match(productionCompatDeleteMigration, /CREATE OR REPLACE FUNCTION public\\.admin_delete_question\\(p_id uuid, p_project_id uuid\\)[\\s\\S]*?SECURITY DEFINER[\\s\\S]*?private\\.is_admin\\(\\)/, "Production-compatible RPC remains admin-only and SECURITY DEFINER");
-assert.match(productionCompatDeleteMigration, /DELETE FROM public\\.answers[\\s\\S]*?DELETE FROM public\\.question_options[\\s\\S]*?DELETE FROM public\\.questions/i, "Production-compatible RPC deletes answers/options/question in one transaction");
+assert.ok(productionCompatDeleteMigration.includes("CREATE OR REPLACE FUNCTION public.admin_delete_question(p_id uuid, p_project_id uuid)"), "Production-compatible RPC is defined");
+assert.ok(productionCompatDeleteMigration.includes("SECURITY DEFINER") && productionCompatDeleteMigration.includes("private.is_admin()"), "Production-compatible RPC remains admin-only and SECURITY DEFINER");
+assert.ok(productionCompatDeleteMigration.indexOf("DELETE FROM public.answers") < productionCompatDeleteMigration.indexOf("DELETE FROM public.question_options") && productionCompatDeleteMigration.indexOf("DELETE FROM public.question_options") < productionCompatDeleteMigration.indexOf("DELETE FROM public.questions"), "Production-compatible RPC deletes answers/options/question in one transaction");
 assert.doesNotMatch(productionCompatDeleteMigration, /project_versions|project_version_id|deleted_at|RETURN 'deactivated'/, "Production-compatible migration has no dependency on versioning or soft-delete schema");
-assert.match(productionCompatDeleteTest, /all related answers\\/options deleted/, "Production-compatible SQL test checks dependent answer deletion");
-assert.match(productionCompatDeleteTest, /submissions or unrelated question\\/answer changed/, "Production-compatible SQL test protects submissions and unrelated answers");
-assert.match(productionCompatDeleteTest, /non-admin deletion was accepted/, "Production-compatible SQL test checks non-admin denial");
-assert.match(productionCompatDeleteTest, /cv_test_forced_delete_failure/, "Production-compatible SQL test checks transaction rollback");
+assert.ok(productionCompatDeleteTest.includes("answered question, options, and answers were not all deleted"), "Production-compatible SQL test checks dependent answer deletion");
+assert.ok(productionCompatDeleteTest.includes("submissions or unrelated question/answer changed"), "Production-compatible SQL test protects submissions and unrelated answers");
+assert.ok(productionCompatDeleteTest.includes("non-admin deletion was accepted"), "Production-compatible SQL test checks non-admin denial");
+assert.ok(productionCompatDeleteTest.includes("cv_test_forced_delete_failure"), "Production-compatible SQL test checks transaction rollback");
 
 assert.doesNotMatch(hardDeleteGuardMigration, /UPDATE public\.project_versions|DELETE FROM public\.project_versions|admin_publish_project_version|admin_save_project_version_draft/i, "Compatibility hard-delete does not mutate or republish snapshots");
 assert.match(permanentDeleteMigration, /DELETE FROM public\.answers[\s\S]*?DELETE FROM public\.question_options[\s\S]*?DELETE FROM public\.questions/i, "Permanent deletion removes answers, options, then the question in one RPC transaction");
