@@ -181,7 +181,7 @@ assert.match(questionVersionHotfixTest, /ROLLBACK;/, "SQL regression rolls back 
 assert.match(versioningErrors, /table_missing[\s\S]*table_schema_cache[\s\S]*rpc_unavailable[\s\S]*schema_cache_mismatch[\s\S]*permission[\s\S]*network/, "Versioning UI distinguishes database failure classes");
 assert.match(submissionResults, /if \(!Array\.isArray\(snapshot\)\) return \[\];/, "Historical results fail closed when the pinned snapshot is unavailable");
 assert.doesNotMatch(submissionResults, /Array\.isArray\(snapshot\) \? snapshot : qs/, "Historical results never fall back to mutable current questions");
-assert.match(submissionResults, /s \? historicalVideo : vs\.find/, "Historical submissions never fall back to the current video row");
+assert.match(submissionResults, /historicalVideo \|\| \(legacySubmission \? vs\.find/, "Legacy pre-snapshot submissions can resolve their current video without changing snapshot-backed history");
 
 
 const adminHook = read("../hooks/useAdmin.ts");
@@ -195,6 +195,17 @@ assert.match(hardDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.rejec
 assert.match(hardDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.guard_active_parent_project\(\)/, "Parent-project guard is preserved for ordinary writes");
 assert.match(hardDeleteGuardMigration, /CREATE OR REPLACE FUNCTION public\.guard_active_project_row\(\)/, "Question-project guard is preserved for ordinary writes");
 assert.match(hardDeleteGuardMigration, /DROP TRIGGER IF EXISTS questions_published_version_delete_guard/i, "Only the question snapshot-delete guard is removed");
+
+const productionCompatDeleteMigration = read("../supabase/migrations/20261101090000_admin_question_hard_delete_production_compat.sql");
+const productionCompatDeleteTest = read("../supabase/tests/admin-question-hard-delete-production-compat.sql");
+assert.match(productionCompatDeleteMigration, /CREATE OR REPLACE FUNCTION public\\.admin_delete_question\\(p_id uuid, p_project_id uuid\\)[\\s\\S]*?SECURITY DEFINER[\\s\\S]*?private\\.is_admin\\(\\)/, "Production-compatible RPC remains admin-only and SECURITY DEFINER");
+assert.match(productionCompatDeleteMigration, /DELETE FROM public\\.answers[\\s\\S]*?DELETE FROM public\\.question_options[\\s\\S]*?DELETE FROM public\\.questions/i, "Production-compatible RPC deletes answers/options/question in one transaction");
+assert.doesNotMatch(productionCompatDeleteMigration, /project_versions|project_version_id|deleted_at|RETURN 'deactivated'/, "Production-compatible migration has no dependency on versioning or soft-delete schema");
+assert.match(productionCompatDeleteTest, /all related answers\\/options deleted/, "Production-compatible SQL test checks dependent answer deletion");
+assert.match(productionCompatDeleteTest, /submissions or unrelated question\\/answer changed/, "Production-compatible SQL test protects submissions and unrelated answers");
+assert.match(productionCompatDeleteTest, /non-admin deletion was accepted/, "Production-compatible SQL test checks non-admin denial");
+assert.match(productionCompatDeleteTest, /cv_test_forced_delete_failure/, "Production-compatible SQL test checks transaction rollback");
+
 assert.doesNotMatch(hardDeleteGuardMigration, /UPDATE public\.project_versions|DELETE FROM public\.project_versions|admin_publish_project_version|admin_save_project_version_draft/i, "Compatibility hard-delete does not mutate or republish snapshots");
 assert.match(permanentDeleteMigration, /DELETE FROM public\.answers[\s\S]*?DELETE FROM public\.question_options[\s\S]*?DELETE FROM public\.questions/i, "Permanent deletion removes answers, options, then the question in one RPC transaction");
 assert.match(permanentDeleteMigration, /private\.is_admin\(\)/, "Permanent deletion validates admin identity");
@@ -207,7 +218,7 @@ assert.match(permanentDeleteMigration, /TG_TABLE_NAME = 'videos'/i, "Published v
 assert.doesNotMatch(permanentDeleteMigration, /project_archived/i, "Admin can permanently delete a question from an archived project");
 assert.doesNotMatch(adminHook, /is\("deleted_at", null\)/, "Previously inactive/deactivated questions remain discoverable for cleanup");
 assert.match(editor, /Hapus pertanyaan secara permanen/,"Delete confirmation explicitly describes permanent deletion");
-assert.match(editor, /Snapshot LKPD lama tidak diubah/,"Delete confirmation says existing snapshots are not modified");
+assert.match(editor, /Snapshot LKPD historis tidak diubah/,"Delete confirmation says existing snapshots are not modified");
 assert.match(editor, /setSuccessMessage\([\s\S]*?dihapus permanen/i, "UI only announces deletion after server confirmation");
 assert.match(editor, /onClick=\{\(\) => del\(q\)\} disabled=\{saving\}/, "Delete remains available for archived projects and non-active questions");
 
