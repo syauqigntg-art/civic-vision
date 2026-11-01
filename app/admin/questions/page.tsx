@@ -241,9 +241,9 @@ export default function Questions() {
     }
     const answerCount = ans.filter((answer: any) => answer.question_id === q.id).length;
     const answerWarning = answerCount > 0
-      ? `\n\nAda ${answerCount} jawaban siswa yang sudah tersimpan.`
+      ? `\n\nPERINGATAN: ${answerCount} jawaban siswa akan ikut dihapus permanen.`
       : "";
-    const prompt = `Hapus pertanyaan secara permanen?\n\nPertanyaan: "${q.question_text}"${answerWarning}\n\nPertanyaan, pilihan jawaban, dan seluruh jawaban siswa terkait akan dihapus. Snapshot LKPD lama tidak diubah dan mungkin masih memuat teks pertanyaan ini. Penghapusan tidak dapat dibatalkan melalui dashboard.`;
+    const prompt = `HAPUS PERTANYAAN SECARA PERMANEN?\n\nPertanyaan: "${q.question_text}"${answerWarning}\n\nSEBELUM MELANJUTKAN: unduh/cadangkan data jawaban melalui menu Jawaban Siswa, lalu pilih Unduh Excel.\n\nJika dilanjutkan, pertanyaan, pilihan jawaban, dan seluruh jawaban siswa untuk pertanyaan ini akan langsung dihapus dari database. Data submission kelompok dan jawaban untuk pertanyaan lain tetap dipertahankan. Snapshot LKPD historis tidak diubah.\n\nPenghapusan tidak dapat dibatalkan melalui dashboard. Lanjutkan hanya jika data yang diperlukan sudah dicadangkan ke Excel.`;
     if (!confirm(prompt)) return;
 
     setErr("");
@@ -340,7 +340,7 @@ export default function Questions() {
     <div className="admin-form-actions"><p>Pastikan fase dan status aktif sudah sesuai.</p><div className="row" style={{ marginTop: 0 }}><button className="btn g" onClick={() => setF(null)}>Batal</button><button className="btn" onClick={save} disabled={readOnly || saving}>{saving ? "Menyimpan..." : "Simpan pertanyaan"}</button></div></div></section>);
   return (
     <section className="glass">
-      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Hapus menghilangkan pertanyaan, pilihan jawaban, dan jawaban siswa terkait secara permanen. Snapshot lama tidak diubah dan dapat tetap memuat teks pertanyaan tanpa jawaban terkait.</p>
+      <p role="status" style={{ marginTop: 0, color: "#cbd5e1" }}>Sebelum menghapus, unduh/cadangkan hasil melalui menu Jawaban Siswa, lalu pilih Unduh Excel. Hapus permanen juga menghapus seluruh jawaban siswa untuk pertanyaan tersebut. Submission kelompok dan jawaban untuk pertanyaan lain tetap dipertahankan.</p>
       {successMessage && <div className="notice" role="status">{successMessage}</div>}
       {err && <div className="warn" role="alert">{err}</div>}
       <div className="admin-section-head">

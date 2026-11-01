@@ -107,7 +107,10 @@ export function useAdmin(parts: Part[] = ALL): AdminData {
     const next: any = {};
     ks.forEach((part, index) => {
       const result: any = results[index];
-      if (result.error) bad = true;
+      const missingOptionalVersionTable = part === "pvs"
+        && ["42P01", "PGRST205"].includes(String(result.error?.code || ""))
+        && String(result.error?.message || "").includes("project_versions");
+      if (result.error && !missingOptionalVersionTable) bad = true;
       if (part === "P") next.P = result.data || {};
       else next[part] = result.data || [];
     });
