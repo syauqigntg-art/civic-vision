@@ -11,7 +11,7 @@ export default function Submissions() {
   const readOnly = P?.is_active === false; const [fl, setFl] = useState({ g: "", v: "", s: "", c: "", from: "", to: "" }); const [sel, setSel] = useState("");
   const set = (k: string, v: string) => setFl({ ...fl, [k]: v });
   const allRows = gs.map(g => { const s = subOf(g, subs); const vid = s?.video_id || gv.find(x => x.group_id === g.id)?.video_id; const pv = pvs.find((item: any) => item.id === s?.project_version_id); const historicalVideo = (pv?.content?.videos || []).find((item: any) => item.id === vid); const legacySubmission = Boolean(s && !s.project_version_id); return { g, s, v: s ? (historicalVideo || (legacySubmission ? vs.find(x => x.id === vid) : undefined)) : vs.find(x => x.id === vid), pv, legacySubmission, snapshotMissing: Boolean(s && s.project_version_id && (!pv || !Array.isArray(pv.content?.questions) || (vid && !historicalVideo))), status: s ? (s.status ?? "") : "belum mulai", date: (s?.submitted_at || s?.updated_at || "").slice(0, 10) }; })
-  ; const rows = allRows.filter(r => (!fl.g || r.g.id === fl.g) && (!fl.v || r.v?.id === fl.v) && (!fl.s || r.status === fl.s) && (!fl.c || r.g.class_name === fl.c) && (!fl.from || (r.date && r.date >= fl.from)) && (!fl.to || (r.date && r.date <= fl.to)));
+  const rows = allRows.filter(r => (!fl.g || r.g.id === fl.g) && (!fl.v || r.v?.id === fl.v) && (!fl.s || r.status === fl.s) && (!fl.c || r.g.class_name === fl.c) && (!fl.from || (r.date && r.date >= fl.from)) && (!fl.to || (r.date && r.date <= fl.to)));
   const answerFor = (submission: any, question: any) => {
     const raw = rawOf(ans, submission.id, question.id);
     if (raw != null) return show(question, raw);
