@@ -13,7 +13,6 @@ SET search_path = ''
 AS $function$
 DECLARE
   v_project_active boolean;
-  v_locked_project_id uuid;
   v_deleted_count integer;
 BEGIN
   IF NOT COALESCE((SELECT private.is_admin()), false) THEN
@@ -21,8 +20,8 @@ BEGIN
   END IF;
 
   -- Serialize project-level administrative changes and reject archived projects.
-  SELECT p.id, p.is_active
-    INTO v_locked_project_id, v_project_active
+  SELECT p.is_active
+    INTO v_project_active
   FROM public.projects AS p
   WHERE p.id = p_project_id
   FOR UPDATE;
