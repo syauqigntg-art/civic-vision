@@ -221,7 +221,7 @@ assert.match(permanentDeleteMigration, /DROP TRIGGER IF EXISTS questions_publish
 assert.match(permanentDeleteMigration, /TG_TABLE_NAME = 'videos'/i, "Published video deletion remains protected");
 assert.doesNotMatch(permanentDeleteMigration, /project_archived/i, "Admin can permanently delete a question from an archived project");
 assert.doesNotMatch(adminHook, /is\("deleted_at", null\)/, "Previously inactive/deactivated questions remain discoverable for cleanup");
-assert.match(editor, /Hapus pertanyaan secara permanen/,"Delete confirmation explicitly describes permanent deletion");
+assert.match(editor, /HAPUS PERTANYAAN SECARA PERMANEN/i,"Delete confirmation explicitly describes permanent deletion");
 assert.match(editor, /Snapshot LKPD historis tidak diubah/,"Delete confirmation says existing snapshots are not modified");
 assert.match(editor, /setSuccessMessage\([\s\S]*?dihapus permanen/i, "UI only announces deletion after server confirmation");
 assert.match(editor, /onClick=\{\(\) => del\(q\)\} disabled=\{saving\}/, "Delete remains available for archived projects and non-active questions");
