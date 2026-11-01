@@ -10,8 +10,8 @@ export default function Submissions() {
   const { P, gs, vs, gv, gm, subs, ans, pvs, qs: currentQuestions, loading, error } = useAdmin(["P", "gs", "vs", "gv", "gm", "subs", "ans", "pvs", "qs"]);
   const readOnly = P?.is_active === false; const [fl, setFl] = useState({ g: "", v: "", s: "", c: "", from: "", to: "" }); const [sel, setSel] = useState("");
   const set = (k: string, v: string) => setFl({ ...fl, [k]: v });
-  const rows = gs.map(g => { const s = subOf(g, subs); const vid = s?.video_id || gv.find(x => x.group_id === g.id)?.video_id; const pv = pvs.find((item: any) => item.id === s?.project_version_id); const historicalVideo = (pv?.content?.videos || []).find((item: any) => item.id === vid); const legacySubmission = Boolean(s && !s.project_version_id); return { g, s, v: s ? (historicalVideo || (legacySubmission ? vs.find(x => x.id === vid) : undefined)) : vs.find(x => x.id === vid), pv, legacySubmission, snapshotMissing: Boolean(s && s.project_version_id && (!pv || !Array.isArray(pv.content?.questions) || (vid && !historicalVideo))), status: s ? (s.status ?? "") : "belum mulai", date: (s?.submitted_at || s?.updated_at || "").slice(0, 10) }; })
-    .filter(r => (!fl.g || r.g.id === fl.g) && (!fl.v || r.v?.id === fl.v) && (!fl.s || r.status === fl.s) && (!fl.c || r.g.class_name === fl.c) && (!fl.from || (r.date && r.date >= fl.from)) && (!fl.to || (r.date && r.date <= fl.to)));
+  const allRows = gs.map(g => { const s = subOf(g, subs); const vid = s?.video_id || gv.find(x => x.group_id === g.id)?.video_id; const pv = pvs.find((item: any) => item.id === s?.project_version_id); const historicalVideo = (pv?.content?.videos || []).find((item: any) => item.id === vid); const legacySubmission = Boolean(s && !s.project_version_id); return { g, s, v: s ? (historicalVideo || (legacySubmission ? vs.find(x => x.id === vid) : undefined)) : vs.find(x => x.id === vid), pv, legacySubmission, snapshotMissing: Boolean(s && s.project_version_id && (!pv || !Array.isArray(pv.content?.questions) || (vid && !historicalVideo))), status: s ? (s.status ?? "") : "belum mulai", date: (s?.submitted_at || s?.updated_at || "").slice(0, 10) }; })
+  ; const rows = allRows.filter(r => (!fl.g || r.g.id === fl.g) && (!fl.v || r.v?.id === fl.v) && (!fl.s || r.status === fl.s) && (!fl.c || r.g.class_name === fl.c) && (!fl.from || (r.date && r.date >= fl.from)) && (!fl.to || (r.date && r.date <= fl.to)));
   const answerFor = (submission: any, question: any) => {
     const raw = rawOf(ans, submission.id, question.id);
     if (raw != null) return show(question, raw);
@@ -37,7 +37,7 @@ export default function Submissions() {
     if (!Array.isArray(snapshot)) return [];
     return snapshot.filter((q: any) => q.is_active !== false || hasAnswer(q.id));
   };
-  const exportRows = () => [["Kelompok", "Versi LKPD", "Video", "Pertanyaan", "Jawaban"], ...rows.filter(r => r.s).flatMap(r => {
+  const exportRows = () => [["Kelompok", "Versi LKPD", "Video", "Pertanyaan", "Jawaban"], ...allRows.filter(r => r.s).flatMap(r => {
     const groupLabel = `Kelompok ${two(r.g.group_number)}${r.g.group_name ? " — " + r.g.group_name : ""}`;
     if (r.snapshotMissing) return [[groupLabel, "Snapshot tidak tersedia", "", "Hasil historis tidak dapat ditafsirkan tanpa snapshot", ""]];
     const versionLabel = r.pv ? `v${r.pv.version_number}` : (r.legacySubmission ? "Versi aktif (data pra-snapshot)" : "Snapshot tidak tersedia");
@@ -87,5 +87,5 @@ export default function Submissions() {
     {rows.some(r => r.snapshotMissing) && <p role="alert" className="warn">Sebagian submission tidak memiliki snapshot yang dapat dibaca. Hasil historis yang tidak lengkap tidak akan ditafsirkan memakai materi terkini.</p>}
     {loading ? <p>Memuat data...</p> : error ? <p role="alert">Data tidak dapat dimuat. Silakan muat ulang halaman.</p> : !subs.length ? <p>Belum ada hasil analisis yang dikirim.</p> : !rows.length && <p>Tidak ada hasil untuk filter ini.</p>}
     <div className="row"><button className="btn" onClick={() => saveBlob(`hasil-civic-vision-${stamp()}.csv`, new Blob([toCsv(exportRows())], { type: "text/csv;charset=utf-8" }))}>Unduh CSV</button><button className="btn" onClick={() => toXlsx(exportRows(), `hasil-civic-vision-${stamp()}.xlsx`)}>Unduh Excel</button></div>
-    <p style={{ fontSize: 13 }}>Unduhan mengikuti filter yang aktif dan hanya membaca data, tidak mengubah jawaban asli.</p></section>);
+    <p style={{ fontSize: 13 }}>Unduh Excel/CSV mencakup seluruh kelompok yang sudah memiliki submission, termasuk draf, dan tidak terpengaruh filter tampilan.</p></section>);
 }
