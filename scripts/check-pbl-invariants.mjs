@@ -206,6 +206,9 @@ assert.ok(productionCompatDeleteTest.includes("answered question, options, and a
 assert.ok(productionCompatDeleteTest.includes("submissions or unrelated question/answer changed"), "Production-compatible SQL test protects submissions and unrelated answers");
 assert.ok(productionCompatDeleteTest.includes("non-admin deletion was accepted"), "Production-compatible SQL test checks non-admin denial");
 assert.ok(productionCompatDeleteTest.includes("cv_test_forced_delete_failure"), "Production-compatible SQL test checks transaction rollback");
+assert.match(adminHook, /missingOptionalVersionTable[\\s\\S]*?PGRST205[\\s\\S]*?project_versions/, "Legacy production tolerates the optional version table being absent");
+assert.match(submissionResults, /legacySubmission[\\s\\S]*?currentQuestions\.filter/, "Legacy production exports drafts and answers from the live project question bank");
+assert.match(submissionResults, /rows\.filter\(r => r\.s\)/, "Excel export includes every group with a submission, including drafts");
 
 assert.doesNotMatch(hardDeleteGuardMigration, /UPDATE public\.project_versions|DELETE FROM public\.project_versions|admin_publish_project_version|admin_save_project_version_draft/i, "Compatibility hard-delete does not mutate or republish snapshots");
 assert.match(permanentDeleteMigration, /DELETE FROM public\.answers[\s\S]*?DELETE FROM public\.question_options[\s\S]*?DELETE FROM public\.questions/i, "Permanent deletion removes answers, options, then the question in one RPC transaction");
