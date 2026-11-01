@@ -1,8 +1,8 @@
 BEGIN;
 
 -- Production-compatible hard delete for the pre-versioning schema.
--- This migration intentionally does not depend on project_versions,
--- submissions.project_version_id, questions.deleted_at, or snapshot triggers.
+-- This migration targets the current live schema and does not require later
+-- publication/snapshot objects or soft-delete columns.
 -- It preserves the existing active-project and admin-only protections.
 
 CREATE OR REPLACE FUNCTION public.admin_delete_question(p_id uuid, p_project_id uuid)
