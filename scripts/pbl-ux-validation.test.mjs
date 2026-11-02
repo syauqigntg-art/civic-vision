@@ -152,6 +152,9 @@ test("question form accepts only PBL phases and required shape", () => {
     min_items: 1,
   };
   assert.equal(questionForm.safeParse(valid).success, true);
+  for (const phase of ["see", "think", "act", "connect", "keep"]) {
+    assert.equal(questionForm.safeParse({ ...valid, phase }).success, true, `${phase} is an editable STACK phase`);
+  }
   assert.equal(questionForm.safeParse({ ...valid, phase: "observe" }).success, false);
   assert.equal(questionForm.safeParse({ ...valid, question_text: " " }).success, false);
   assert.equal(questionForm.safeParse({ ...valid, display_order: 0 }).success, false);

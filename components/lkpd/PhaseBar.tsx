@@ -1,12 +1,13 @@
 const P: Record<string, [string, string, string]> = {
   see: ["SEE", "Mengamati masalah", "Amati video/stimulus, catat fakta, dan rumuskan masalah awal."],
   think: ["THINK", "Menganalisis masalah", "Telusuri penyebab, bukti, dampak, dan sudut pandang pihak terkait."],
-  connect: ["CONNECT", "Menghubungkan konsep", "Hubungkan kasus dengan nilai Pancasila, hak-kewajiban, keadilan, atau konsep IPS."],
-  act: ["ACT", "Merancang tindakan", "Susun solusi, langkah nyata, pembagian peran, dan indikator keberhasilan."],
+  act: ["ACT", "Melaksanakan tindakan", "Laksanakan solusi dan dokumentasikan hasil tindakan kelompok."],
+  connect: ["CONNECT", "Evaluasi dan refleksi", "Evaluasi hasil solusi, proses kerja kelompok, serta hubungkan pembelajaran dengan nilai Pancasila."],
+  keep: ["KEEP", "Keberlanjutan aksi", "Susun komitmen dan rencana tindak lanjut agar perubahan positif terus dijaga."],
 };
 
-const ALL_PHASES = ["see", "think", "connect", "act"];
-const ANALYSIS_PHASES = ["think", "connect", "act"];
+const ALL_PHASES = ["see", "think", "act", "connect", "keep"];
+const ANALYSIS_PHASES = ["think", "act", "connect", "keep"];
 
 export function PhaseBar({
   current,
@@ -21,8 +22,8 @@ export function PhaseBar({
 
   return (
     <ol
-      className={"phases" + (includeSee ? "" : " three")}
-      aria-label={includeSee ? "Empat tahap belajar" : "Tiga tahap analisis"}
+      className={"phases" + (includeSee ? " five" : " four")}
+      aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}
     >
       {phases.map((phase) => {
         const isCurrent = phase === current;
@@ -46,7 +47,7 @@ export function PhaseBar({
 
 export function PhaseCards() {
   return (
-    <ol className="phases big">
+    <ol className="phases big five">
       {ALL_PHASES.map((phase, index) => (
         <li key={phase} className="ph">
           <b>{index + 1}. {P[phase][0]}</b>

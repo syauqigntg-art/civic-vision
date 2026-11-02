@@ -16,5 +16,5 @@ export const studentContentReq = z.discriminatedUnion("op", [
 ]);
 export const videoForm = z.object({ title: z.string().trim().min(1, "Judul video wajib diisi.").max(150, "Judul maksimal 150 karakter."), category: z.string().max(100).optional(), description: z.string().max(1000, "Deskripsi maksimal 1000 karakter.").optional(), number: z.coerce.number().int().min(1, "Nomor minimal 1.").max(99) });
 export const questionForm = z.object({ question_text: z.string().trim().min(1, "Pertanyaan wajib diisi.").max(500, "Pertanyaan maksimal 500 karakter."), category: z.string().trim().min(1, "Kategori wajib diisi.").max(60),
-  phase: z.enum(["see", "think", "connect", "act"]).nullable(), question_type: z.enum(["text", "textarea", "multiple_text", "single_select", "multi_select", "scale"]), is_required: z.boolean(), is_active: z.boolean(), placeholder: z.string().max(200).nullable(), description: z.string().max(300).nullable(),
+  phase: z.enum(["see", "think", "act", "connect", "keep"]).nullable(), question_type: z.enum(["text", "textarea", "multiple_text", "single_select", "multi_select", "scale"]), is_required: z.boolean(), is_active: z.boolean(), placeholder: z.string().max(200).nullable(), description: z.string().max(300).nullable(),
   display_order: z.number().int().min(1, "Urutan minimal 1.").max(999), min_items: z.number().int().min(1).max(10) });

@@ -37,7 +37,10 @@ assert.match(editor, /Pratinjau tampilan siswa/, "Editor shows student preview")
 assert.match(editor, /PBL_PHASES/, "Editor presents phase guidance");
 assert.match(editor, /question_has_answers_create_new_version/, "Answered questions are protected from semantic edits");
 assert.doesNotMatch(editor, /from\("question_options"\)\.delete\(\)/, "Options are not deleted through a separate client call");
-assert.match(phaseBar, /see.*think.*connect.*act/s, "Phase navigation preserves all four phases");
+assert.match(phaseBar, /see.*think.*act.*connect.*keep/s, "STACK navigation preserves the five ordered phases");
+assert.match(editor, /value="keep">KEEP — Keberlanjutan aksi/, "Teacher can assign editable questions to KEEP");
+assert.match(editor, /CONNECT.*Evaluasi dan refleksi/, "Teacher editor defines CONNECT as evaluation and reflection");
+assert.match(analysis, /const PHASES = \["think", "act", "connect", "keep"\]/, "Student analysis follows STACK after SEE");
 assert.match(analysis, /Hasil yang diharapkan/, "Student page explains phase outcomes");
 assert.match(analysis, /Belum ada pertanyaan aktif pada fase/, "Empty phases are explained");
 assert.match(analysis, /Coba lagi/, "Analysis load errors expose an explicit retry action");

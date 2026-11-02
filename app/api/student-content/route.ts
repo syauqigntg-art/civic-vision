@@ -46,7 +46,7 @@ type SnapshotVideo = {
 type SnapshotQuestion = {
   id: string;
   category: string;
-  phase: "see" | "think" | "connect" | "act" | null;
+  phase: "see" | "think" | "act" | "connect" | "keep" | null;
   question_text: string;
   description: string | null;
   question_type: string;

@@ -17,7 +17,7 @@ import { ProgressBar } from "@/components/glass/ProgressBar";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
 
-const PHASES = ["think", "connect", "act"] as const;
+const PHASES = ["think", "act", "connect", "keep"] as const;
 type WorkPhase = (typeof PHASES)[number];
 
 const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string; output: string }> = {
@@ -26,23 +26,28 @@ const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string; output
     instruction: "Identifikasi masalah utama, telusuri penyebab, gunakan bukti, dan perhatikan sudut pandang pihak yang terdampak.",
     output: "Analisis masalah yang didukung fakta dan bukti.",
   },
-  connect: {
-    title: "CONNECT — Menghubungkan konsep",
-    instruction: "Hubungkan hasil analisis dengan nilai Pancasila, hak dan kewajiban, keadilan, atau konsep IPS yang relevan.",
-    output: "Argumentasi yang menunjukkan hubungan kasus dengan konsep atau nilai yang tepat.",
-  },
   act: {
-    title: "ACT — Merancang tindakan",
-    instruction: "Rancang solusi yang realistis, urutan langkah, pembagian peran, serta cara menilai apakah solusi berhasil.",
-    output: "Rencana aksi dengan langkah pelaksanaan dan indikator keberhasilan.",
+    title: "ACT — Melaksanakan tindakan",
+    instruction: "Laksanakan solusi yang telah dirancang, bagi tanggung jawab, dokumentasikan proses, dan catat hasil tindakan kelompok.",
+    output: "Dokumentasi pelaksanaan solusi dan hasil tindakan kelompok.",
+  },
+  connect: {
+    title: "CONNECT — Evaluasi dan refleksi",
+    instruction: "Evaluasi apakah solusi menjawab masalah, telaah kelebihan dan keterbatasannya, refleksikan proses kerja kelompok, lalu hubungkan pembelajaran dengan nilai Pancasila.",
+    output: "Evaluasi hasil pemecahan masalah, refleksi proses, dan hubungan tindakan dengan nilai Pancasila.",
+  },
+  keep: {
+    title: "KEEP — Keberlanjutan aksi",
+    instruction: "Susun komitmen individu dan rencana tindak lanjut kelompok agar perubahan positif dapat dipertahankan dalam kehidupan sehari-hari.",
+    output: "Komitmen pribadi dan rencana keberlanjutan aksi kelompok.",
   },
 };
 
-// Pertanyaan SEE dijawab di halaman video. Di sini hanya tampilkan
-// pertanyaan THINK, CONNECT, dan ACT. Pertanyaan tanpa fase tetap masuk THINK.
+// Pertanyaan SEE dijawab di halaman video. Halaman ini menampilkan THINK, ACT, CONNECT, dan KEEP.
+// Pertanyaan tanpa fase tetap masuk THINK.
 function phaseForQuestion(q: Q): WorkPhase | null {
   if (q.phase === "see") return null;
-  if (q.phase === "connect" || q.phase === "act") return q.phase;
+  if (q.phase === "act" || q.phase === "connect" || q.phase === "keep") return q.phase;
   return "think";
 }
 
