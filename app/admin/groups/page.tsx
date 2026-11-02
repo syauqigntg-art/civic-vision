@@ -9,42 +9,52 @@ function Members({
   init,
   onSave,
 }: {
-  init: string[];
-  onSave: (a: string[]) => void;
+  init: { id: string; name: string }[];
+  onSave: (a: { id?: string; name: string }[]) => void;
 }) {
-  const [m, setM] = useState(
-    [...init, "", "", "", "", ""].slice(
-      0,
-      Math.max(5, init.length)
-    )
+  const [m, setM] = useState<{ id?: string; name: string }[]>(
+    [...init.map((member) => ({ ...member })), ...Array.from({ length: Math.max(0, 5 - init.length) }, () => ({ name: "" }))]
   );
+
+  const updateName = (index: number, name: string) => {
+    setM((current) => current.map((member, i) => i === index ? { ...member, name } : member));
+  };
 
   return (
     <>
-      <label>Anggota</label>
-      <p className="admin-field-hint">Isi nama anggota, lalu pilih <strong>Simpan anggota</strong> untuk menyimpan daftar. Perubahan identitas kelompok disimpan otomatis setelah keluar dari kolom.</p>
-      {m.map((x, i) => (
-        <input
-          key={i}
-          style={{ marginTop: 6 }}
-          value={x}
-          aria-label={`Nama anggota ${i + 1}`}
-          placeholder={`Nama anggota ${i + 1}`}
-          onChange={(e) => {
-            const a = [...m];
-            a[i] = e.target.value;
-            setM(a);
-          }}
-        />
+      <label>Anggota ({m.filter((member) => member.name.trim()).length})</label>
+      <p className="admin-field-hint">Tambahkan atau kurangi anggota sesuai kebutuhan, lalu pilih <strong>Simpan anggota</strong>. Menghapus anggota dari daftar tidak menghapus riwayat jawaban kelompok.</p>
+      {m.map((member, i) => (
+        <div key={member.id || `new-${i}`} className="row" style={{ alignItems: "center", gap: 8 }}>
+          <input
+            style={{ marginTop: 6, flex: 1 }}
+            value={member.name}
+            aria-label={`Nama anggota ${i + 1}`}
+            placeholder={`Nama anggota ${i + 1}`}
+            onChange={(e) => updateName(i, e.target.value)}
+          />
+          <button
+            type="button"
+            className="btn g"
+            style={{ marginTop: 6, color: "#b91c1c" }}
+            aria-label={`Hapus anggota ${i + 1} dari daftar`}
+            title="Kurangi anggota"
+            onClick={() => setM((current) => current.filter((_, index) => index !== i))}
+          >
+            Hapus
+          </button>
+        </div>
       ))}
       <div className="row">
         <button
+          type="button"
           className="btn g"
-          onClick={() => setM([...m, ""])}
+          onClick={() => setM((current) => [...current, { name: "" }])}
         >
           + Anggota
         </button>
         <button
+          type="button"
           className="btn g"
           onClick={() => onSave(m)}
         >
@@ -268,35 +278,47 @@ export default function Groups() {
 
   const members = async (
     gid: string,
-    a: string[]
+    entries: { id?: string; name: string }[]
   ) => {
     if (readOnly) { alert("Proyek diarsipkan. Aktifkan kembali sebelum mengubah anggota."); return; }
-    const { error: deleteError } = await sb
-      .from("group_members")
-      .delete()
-      .eq("group_id", gid);
 
-    if (deleteError) {
-      alert("Gagal memperbarui anggota.");
-      return;
+    const current = gm.filter((member: any) => member.group_id === gid);
+    const desired = entries
+      .map((entry, index) => ({ ...entry, name: entry.name.trim(), member_order: index + 1 }))
+      .filter((entry) => entry.name);
+    const retainedIds = new Set(desired.filter((entry) => entry.id).map((entry) => entry.id));
+    const removedIds = current.filter((member: any) => !retainedIds.has(member.id)).map((member: any) => member.id);
+
+    if (removedIds.length) {
+      const { error } = await sb.from("group_members").delete().eq("group_id", gid).in("id", removedIds);
+      if (error) {
+        alert("Anggota gagal dikurangi. Tidak ada perubahan lanjutan yang disimpan.");
+        return;
+      }
     }
 
-    const rows = a
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .map((name, i) => ({
-        group_id: gid,
-        name,
-        member_order: i + 1,
-      }));
-
-    if (rows.length) {
-      const { error } = await sb
-        .from("group_members")
-        .insert(rows);
-
-      if (error) {
-        alert("Sebagian perubahan anggota mungkin belum tersimpan.");
+    for (const entry of desired) {
+      if (entry.id) {
+        const { error } = await sb.from("group_members")
+          .update({ name: entry.name, member_order: entry.member_order })
+          .eq("group_id", gid)
+          .eq("id", entry.id);
+        if (error) {
+          alert("Perubahan anggota belum seluruhnya tersimpan. Silakan muat ulang dan periksa daftar anggota.");
+          await load();
+          return;
+        }
+      } else {
+        const { error } = await sb.from("group_members").insert({
+          group_id: gid,
+          name: entry.name,
+          member_order: entry.member_order,
+        });
+        if (error) {
+          alert("Penambahan anggota gagal disimpan. Silakan periksa daftar anggota.");
+          await load();
+          return;
+        }
       }
     }
 
@@ -694,7 +716,7 @@ export default function Groups() {
               <Members
                 init={gm
                   .filter((m: any) => m.group_id === g.id)
-                  .map((m: any) => m.name)}
+                  .map((m: any) => ({ id: m.id, name: m.name || "" }))}
                 onSave={(a) => members(g.id, a)}
               />
 
