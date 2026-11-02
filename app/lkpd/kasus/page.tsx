@@ -6,12 +6,14 @@ import { getCode } from "@/lib/supabase";
 import { rpcS } from "@/lib/api/student";
 import { studentContent } from "@/lib/api/student-content";
 import { loadStudentCaseList } from "@/lib/student/load-case-list";
+import { MediaPlayer as Media } from "@/components/video/MediaPlayer";
 
 type VideoItem = {
   id: string;
   number: number;
   title: string;
   category: string | null;
+  thumbnail_url?: string | null;
 };
 
 export default function Kasus() {
@@ -128,6 +130,7 @@ export default function Kasus() {
       <div className="grid">
         {videos.map((video) => (
           <div className="glass" key={video.id}>
+            {video.thumbnail_url && <div className="admin-video-preview" style={{ marginBottom: 12 }}><Media path={video.thumbnail_url} kind="image" alt={`Thumbnail kasus: ${video.title}`} /></div>}
             <span className="tag">{video.category || "Kasus Pancasila"}</span>
             <span className="tag" style={{ marginLeft: 6 }}>
               Ditugaskan untuk kelompok kalian

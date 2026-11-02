@@ -286,7 +286,7 @@ export async function POST(req: Request) {
           video.is_active !== false
         )
         .sort((a, b) => a.number - b.number)
-        .map(({ id, number, title, category }) => ({ id, number, title, category }));
+        .map(({ id, number, title, category, thumbnail_url }) => ({ id, number, title, category, thumbnail_url }));
 
       return NextResponse.json({ data }, { headers: { "Cache-Control": "no-store" } });
     }
