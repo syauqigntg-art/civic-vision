@@ -434,8 +434,10 @@ export default function Videos() {
                                 <button className="btn" type="button" onClick={saveEdit} disabled={editSaving || readOnly}>{editSaving ? "Menyimpan…" : "Simpan perubahan"}</button>
                               </div>
                               {v.video_url && <details className="admin-expand" style={{ marginTop: 12 }}>
-                                <summary>Pratinjau video saat ini</summary>
-                                <div className="admin-video-preview"><Media path={v.video_url} poster={v.thumbnail_url} kind="video" alt={"Video: " + v.title} /></div>
+                                <summary>Pratinjau sumber video saat ini</summary>
+                                <div className="admin-video-preview">
+                                  {/^https?:\/\//i.test(v.video_url) ? <a href={v.video_url} target="_blank" rel="noopener noreferrer">Buka tautan video saat ini ↗</a> : <Media path={v.video_url} poster={v.thumbnail_url} kind="video" alt={"Video: " + v.title} />}
+                                </div>
                               </details>}
                             </div>
                           </td>
