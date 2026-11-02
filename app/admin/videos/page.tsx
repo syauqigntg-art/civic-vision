@@ -40,6 +40,7 @@ export default function Videos() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [editForm, setEditForm] = useState<VideoForm | null>(null);
   const [editSaving, setEditSaving] = useState(false);
+  const [editSourceType, setEditSourceType] = useState<"upload" | "link">("upload");
   const [formKey, setFormKey] = useState(0);
   const [sourceType, setSourceType] = useState<"upload" | "link">("upload");
 
@@ -125,6 +126,7 @@ export default function Videos() {
   const startEdit = (v: any) => {
     setErr("");
     setMessage("");
+    setEditSourceType((v.video_url || "").startsWith("http") ? "link" : "upload");
     setEditForm({
       id: v.id,
       number: String(v.number ?? ""),
@@ -139,6 +141,11 @@ export default function Videos() {
   const saveEdit = async () => {
     if (readOnly) { setErr("Proyek diarsipkan. Aktifkan kembali sebelum mengubah video."); return; }
     if (!editForm) return;
+    if (!editForm.video_url.trim()) { setErr(editSourceType === "link" ? "Link video wajib diisi." : "File video wajib diunggah."); return; }
+    if (editSourceType === "link") {
+      try { const url = new URL(editForm.video_url.trim()); if (!["http:", "https:"].includes(url.protocol)) throw new Error(); }
+      catch { setErr("Masukkan link video yang valid dengan awalan https:// atau http://."); return; }
+    }
     const parsed = videoForm.safeParse({
       title: editForm.title,
       category: editForm.category,
@@ -410,11 +417,11 @@ export default function Videos() {
                                 </div>
                                 <div className="admin-span-2">
                                   <label>Sumber video</label>
-                                  <select value={editForm.video_url.startsWith("http://") || editForm.video_url.startsWith("https://") ? "link" : "upload"} onChange={(e) => setEditForm({ ...editForm, video_url: e.target.value === "link" ? "" : editForm.video_url })}>
+                                  <select value={editSourceType} onChange={(e) => { setEditSourceType(e.target.value as "upload" | "link"); setEditForm({ ...editForm, video_url: "" }); }}>
                                     <option value="upload">Upload video</option>
                                     <option value="link">Link eksternal</option>
                                   </select>
-                                  {editForm.video_url.startsWith("http://") || editForm.video_url.startsWith("https://") ? <input aria-label="Link video eksternal" type="url" value={editForm.video_url} onChange={(e) => setEditForm({ ...editForm, video_url: e.target.value })} placeholder="https://..." /> : <Uploader kind="video" onUrl={(url) => setEditForm({ ...editForm, video_url: url })} />}
+                                  {editSourceType === "link" ? <input aria-label="Link video eksternal" type="url" value={editForm.video_url} onChange={(e) => setEditForm({ ...editForm, video_url: e.target.value })} placeholder="https://..." /> : <Uploader kind="video" onUrl={(url) => setEditForm({ ...editForm, video_url: url })} />}
                                 </div>
                                 <div className="admin-span-2">
                                   <label>Ganti thumbnail</label>
