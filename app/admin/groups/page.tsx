@@ -12,7 +12,7 @@ function Members({
   init: { id: string; name: string }[];
   onSave: (a: { id?: string; name: string }[]) => void;
 }) {
-  const [m, setM] = useState(
+  const [m, setM] = useState<{ id?: string; name: string }[]>(
     [...init.map((member) => ({ ...member })), ...Array.from({ length: Math.max(0, 5 - init.length) }, () => ({ name: "" }))]
   );
 
