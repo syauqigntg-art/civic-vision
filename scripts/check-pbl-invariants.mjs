@@ -10,7 +10,6 @@ const submissionHistory = read("../app/admin/submissions/page.tsx");
 const permanentDeleteRegressionSql = read("../supabase/p1-question-versioning-hotfix-test.sql");
 const phaseBar = read("../components/lkpd/PhaseBar.tsx");
 const analysis = read("../app/lkpd/kasus/[id]/analisis/page.tsx");
-const analysis = read("../app/lkpd/kasus/[id]/analisis/page.tsx");
 const cases = read("../app/lkpd/kasus/page.tsx");
 const identity = read("../app/lkpd/identitas/page.tsx");
 const identityController = read("../lib/utils/identity-save-controller.ts");
