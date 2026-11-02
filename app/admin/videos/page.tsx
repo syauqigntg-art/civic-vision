@@ -13,6 +13,8 @@ type VideoForm = {
   title: string;
   category: string;
   description: string;
+  video_url: string;
+  thumbnail_url: string;
 };
 
 const blank = {
@@ -39,6 +41,7 @@ export default function Videos() {
   const [editForm, setEditForm] = useState<VideoForm | null>(null);
   const [editSaving, setEditSaving] = useState(false);
   const [formKey, setFormKey] = useState(0);
+  const [sourceType, setSourceType] = useState<"upload" | "link">("upload");
 
   const set = (key: string, value: string) => setF((prev: any) => ({ ...prev, [key]: value }));
 
@@ -78,9 +81,18 @@ export default function Videos() {
       setErr(parsed.error.issues[0].message);
       return;
     }
-    if (!f.video_url) {
-      setErr("Unggah video terlebih dahulu.");
+    if (sourceType === "upload" && !f.video_url) {
+      setErr("Unggah file video terlebih dahulu.");
       return;
+    }
+    if (sourceType === "link") {
+      try {
+        const parsedUrl = new URL(String(f.video_url || "").trim());
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) throw new Error();
+      } catch {
+        setErr("Masukkan link video yang valid dengan awalan https:// atau http://.");
+        return;
+      }
     }
 
     setSaving(true);
@@ -91,13 +103,14 @@ export default function Videos() {
         title: f.title.trim(),
         category: f.category.trim() || null,
         description: f.description.trim() || null,
-        video_url: f.video_url,
+        video_url: String(f.video_url).trim(),
         thumbnail_url: f.thumbnail_url || null,
       });
 
       if (insertError) throw insertError;
 
       setF(blank);
+      setSourceType("upload");
       setFormKey((value) => value + 1);
       setFormOpen(false);
       setMessage("Video berhasil ditambahkan ke project.");
@@ -118,6 +131,8 @@ export default function Videos() {
       title: v.title || "",
       category: v.category || "",
       description: v.description || "",
+      video_url: v.video_url || "",
+      thumbnail_url: v.thumbnail_url || "",
     });
   };
 
@@ -146,6 +161,8 @@ export default function Videos() {
           title: editForm.title.trim(),
           category: editForm.category.trim() || null,
           description: editForm.description.trim() || null,
+          video_url: editForm.video_url.trim(),
+          thumbnail_url: editForm.thumbnail_url.trim() || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", editForm.id)
@@ -163,35 +180,6 @@ export default function Videos() {
     } finally {
       setEditSaving(false);
     }
-  };
-
-  const replaceVideo = async (v: any, newUrl: string) => {
-    if (readOnly) throw new Error("Proyek diarsipkan. Aktifkan kembali sebelum mengganti video.");
-    const oldPath = pathOf(v.video_url);
-    const newPath = pathOf(newUrl);
-    const { data, error: updateError } = await sb
-      .from("videos")
-      .update({ video_url: newUrl, updated_at: new Date().toISOString() })
-      .eq("id", v.id)
-      .select("id")
-      .maybeSingle();
-
-    if (updateError || !data) {
-      throw new Error("Video baru sudah diunggah, tetapi tautan belum tersimpan. Jangan hapus file lama; coba perbarui kembali.");
-    }
-
-    if (oldPath && oldPath !== newPath) {
-      const { error: removeError } = await sb.storage.from("videos").remove([oldPath]);
-      if (removeError) {
-        setMessage("Video berhasil diganti. File lama masih ada di Storage dan dapat dibersihkan nanti.");
-      } else {
-        setMessage("Video berhasil diganti.");
-      }
-    } else {
-      setMessage("Video berhasil diganti.");
-    }
-
-    await load();
   };
 
   const toggleActive = async (v: any) => {
@@ -258,7 +246,7 @@ export default function Videos() {
             <div className="admin-section-head">
               <div>
                 <h2>Tambah video kasus</h2>
-                <p>Unggah materi dan lengkapi informasi sebelum disimpan.</p>
+                <p>Pilih upload file video atau gunakan tautan video eksternal. Thumbnail dapat diunggah sendiri.</p>
               </div>
               <span className="admin-status-pill active">Video baru</span>
             </div>
@@ -266,15 +254,28 @@ export default function Videos() {
 
             <fieldset disabled={readOnly} style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}>
             <div className="admin-form-grid">
-              <div>
-                <label>File video (MP4, WebM, MOV · maks. 50 MB)</label>
-                <Uploader kind="video" onUrl={(url) => set("video_url", url)} />
-                {f.video_url && <div className="admin-upload-confirm">✓ Video siap disimpan</div>}
+              <div className="admin-span-2">
+                <label>Sumber video</label>
+                <div className="row" style={{ marginTop: 6 }}>
+                  <button type="button" className={sourceType === "upload" ? "btn" : "btn g"} onClick={() => { setSourceType("upload"); set("video_url", ""); }}>Upload video</button>
+                  <button type="button" className={sourceType === "link" ? "btn" : "btn g"} onClick={() => { setSourceType("link"); set("video_url", ""); }}>Gunakan link</button>
+                </div>
               </div>
-              <div>
-                <label>Gambar pratinjau (JPG, PNG, WebP · maks. 2 MB, opsional)</label>
+              <div className="admin-span-2">
+                {sourceType === "upload" ? <>
+                  <label>File video (MP4, WebM, MOV · maks. 50 MB)</label>
+                  <Uploader kind="video" onUrl={(url) => set("video_url", url)} />
+                  {f.video_url && <div className="admin-upload-confirm">✓ Video siap disimpan</div>}
+                </> : <>
+                  <label htmlFor="new-video-url">Link video eksternal *</label>
+                  <input id="new-video-url" type="url" value={f.video_url} onChange={(e) => set("video_url", e.target.value)} placeholder="https://..." />
+                  <p className="admin-field-hint">Siswa akan diarahkan ke tautan ini saat membuka video kasus.</p>
+                </>}
+              </div>
+              <div className="admin-span-2">
+                <label>Thumbnail (JPG, PNG, WebP · maks. 2 MB, opsional)</label>
                 <Uploader kind="image" onUrl={(url) => set("thumbnail_url", url)} />
-                {f.thumbnail_url && <div className="admin-upload-confirm">✓ Gambar pratinjau siap disimpan</div>}
+                {f.thumbnail_url && <div className="admin-upload-confirm">✓ Thumbnail siap disimpan</div>}
               </div>
               <div>
                 <label htmlFor="new-video-title">Judul video <span aria-hidden="true">*</span></label>
@@ -382,7 +383,7 @@ export default function Videos() {
                               <div className="admin-section-head">
                                 <div>
                                   <h3>Edit video {two(v.number)}</h3>
-                                  <p>Perubahan disimpan ketika tombol Simpan perubahan ditekan.</p>
+                                  <p>Guru dapat mengganti sumber video dan thumbnail. Perubahan akan masuk ke draft materi berikutnya.</p>
                                 </div>
                                 <button className="btn g" type="button" onClick={() => setEditForm(null)}>Tutup editor</button>
                               </div>
@@ -408,8 +409,16 @@ export default function Videos() {
                                   <textarea rows={2} style={{ minHeight: 76 }} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
                                 </div>
                                 <div className="admin-span-2">
-                                  <label>Ganti file video</label>
-                                  <Uploader kind="video" onUrl={(url) => replaceVideo(v, url)} />
+                                  <label>Sumber video</label>
+                                  <select value={editForm.video_url.startsWith("http://") || editForm.video_url.startsWith("https://") ? "link" : "upload"} onChange={(e) => setEditForm({ ...editForm, video_url: e.target.value === "link" ? "" : editForm.video_url })}>
+                                    <option value="upload">Upload video</option>
+                                    <option value="link">Link eksternal</option>
+                                  </select>
+                                  {editForm.video_url.startsWith("http://") || editForm.video_url.startsWith("https://") ? <input aria-label="Link video eksternal" type="url" value={editForm.video_url} onChange={(e) => setEditForm({ ...editForm, video_url: e.target.value })} placeholder="https://..." /> : <Uploader kind="video" onUrl={(url) => setEditForm({ ...editForm, video_url: url })} />}
+                                </div>
+                                <div className="admin-span-2">
+                                  <label>Ganti thumbnail</label>
+                                  <Uploader kind="image" onUrl={(url) => setEditForm({ ...editForm, thumbnail_url: url })} />
                                 </div>
                               </div>
                               </fieldset>
