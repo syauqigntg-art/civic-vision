@@ -1,4 +1,5 @@
 -- Extend the transactional teacher question editor to accept every STACK phase.
+-- Preserve existing admin checks, answered-question safeguards, and option validation.
 -- Existing question rows and student answers are intentionally left unchanged.
 CREATE OR REPLACE FUNCTION public.admin_save_question(
   p_id uuid,
@@ -33,8 +34,10 @@ BEGIN
     RAISE EXCEPTION USING ERRCODE = '42501', MESSAGE = 'admin_required';
   END IF;
 
-  SELECT is_active INTO v_project_active
-  FROM public.projects WHERE id = p_project_id;
+  SELECT p.is_active INTO v_project_active
+  FROM public.projects AS p
+  WHERE p.id = p_project_id
+  FOR UPDATE;
   IF NOT FOUND THEN
     RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'project_not_found';
   END IF;
@@ -87,7 +90,7 @@ BEGIN
     ) VALUES (
       p_project_id, btrim(p_question_text), btrim(p_category), p_phase, p_question_type,
       p_is_required, p_is_active, NULLIF(p_placeholder,''), NULLIF(p_description,''),
-      p_display_order, p_min_items, now()
+      p_display_order, p_min_items, clock_timestamp()
     ) RETURNING id INTO v_id;
   ELSE
     SELECT * INTO v_existing
@@ -98,21 +101,47 @@ BEGIN
       RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'question_not_found';
     END IF;
 
-    SELECT COALESCE(jsonb_agg(to_jsonb(option_text) ORDER BY display_order), '[]'::jsonb)
+    SELECT COALESCE(jsonb_agg(to_jsonb(option_text) ORDER BY display_order, id), '[]'::jsonb)
     INTO v_old_options
-    FROM public.question_options WHERE question_id = p_id;
+    FROM public.question_options
+    WHERE question_id = p_id;
 
-    IF EXISTS (SELECT 1 FROM public.answers WHERE question_id = p_id) AND (
-      v_existing.question_text IS DISTINCT FROM btrim(p_question_text)
-      OR v_existing.category IS DISTINCT FROM btrim(p_category)
-      OR v_existing.phase IS DISTINCT FROM p_phase
-      OR v_existing.question_type IS DISTINCT FROM p_question_type
-      OR v_existing.placeholder IS DISTINCT FROM NULLIF(p_placeholder,'')
-      OR v_existing.description IS DISTINCT FROM NULLIF(p_description,'')
-      OR v_existing.min_items IS DISTINCT FROM p_min_items
-      OR v_old_options IS DISTINCT FROM v_new_options
-    ) THEN
-      RAISE EXCEPTION USING ERRCODE = '22023', MESSAGE = 'question_has_answers_create_new_version';
+    IF EXISTS (SELECT 1 FROM public.answers AS a WHERE a.question_id = p_id) THEN
+      -- Fail closed if even one answer cannot be tied to a published snapshot
+      -- containing this question. Never delete or rewrite answer rows here.
+      IF EXISTS (
+        SELECT 1
+        FROM public.answers AS a
+        LEFT JOIN public.submissions AS s
+          ON s.id = a.submission_id
+         AND s.project_id = a.project_id
+        LEFT JOIN public.project_versions AS pv
+          ON pv.id = s.project_version_id
+         AND pv.project_id = s.project_id
+         AND pv.status = 'published'
+        WHERE a.question_id = p_id
+          AND (
+            a.project_id IS DISTINCT FROM p_project_id
+            OR s.id IS NULL
+            OR pv.id IS NULL
+            OR NOT EXISTS (
+              SELECT 1
+              FROM pg_catalog.jsonb_array_elements(
+                CASE
+                  WHEN pg_catalog.jsonb_typeof(pv.content->'questions') = 'array'
+                    THEN pv.content->'questions'
+                  ELSE '[]'::jsonb
+                END
+              ) AS item(value)
+              WHERE item.value->>'id' = p_id::text
+            )
+          )
+      ) THEN
+        RAISE EXCEPTION USING
+          ERRCODE = '23514',
+          MESSAGE = 'question_has_unversioned_answers',
+          DETAIL = 'At least one answer is not covered by an immutable published submission snapshot; no working content was changed.';
+      END IF;
     END IF;
 
     IF v_existing.display_order <> p_display_order THEN
@@ -138,11 +167,14 @@ BEGIN
       description = NULLIF(p_description,''),
       display_order = p_display_order,
       min_items = p_min_items,
-      updated_at = now()
+      updated_at = clock_timestamp()
     WHERE id = p_id AND project_id = p_project_id
     RETURNING id INTO v_id;
   END IF;
 
+  -- Options are working content. Published JSON snapshots keep the historical
+  -- option labels/order, while this transactional replacement affects future
+  -- snapshots only.
   DELETE FROM public.question_options WHERE question_id = v_id;
   IF p_question_type IN ('single_select','multi_select') THEN
     INSERT INTO public.question_options (question_id, option_text, display_order)
@@ -157,4 +189,5 @@ $function$;
 REVOKE ALL ON FUNCTION public.admin_save_question(uuid,uuid,text,text,text,text,boolean,boolean,text,text,integer,integer,jsonb) FROM PUBLIC, anon;
 GRANT EXECUTE ON FUNCTION public.admin_save_question(uuid,uuid,text,text,text,text,boolean,boolean,text,text,integer,integer,jsonb) TO authenticated;
 
-COMMIT;
+-- A question that is answered or referenced by a published snapshot is archived
+-- instead of physically removed, so results and old pinned work remain intact.
