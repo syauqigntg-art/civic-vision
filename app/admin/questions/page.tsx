@@ -3,8 +3,9 @@ const T: Record<string, string> = { text: "Jawaban singkat", textarea: "Jawaban 
 const PBL_PHASES: Record<string, { title: string; subtitle: string; instruction: string; output: string }> = {
   see: { title: "SEE", subtitle: "Mengamati masalah", instruction: "Amati stimulus/video, identifikasi fakta dan pihak yang terdampak.", output: "Fakta pengamatan dan rumusan awal masalah" },
   think: { title: "THINK", subtitle: "Menganalisis masalah", instruction: "Uraikan penyebab, bukti, dampak, dan sudut pandang berbagai pihak.", output: "Analisis masalah yang didukung bukti" },
-  connect: { title: "CONNECT", subtitle: "Menghubungkan konsep", instruction: "Hubungkan kasus dengan nilai Pancasila, hak-kewajiban, keadilan, atau konsep IPS yang relevan.", output: "Argumentasi yang menghubungkan kasus dan konsep" },
-  act: { title: "ACT", subtitle: "Merancang tindakan", instruction: "Rancang solusi, langkah, pembagian peran, dan cara menilai keberhasilannya.", output: "Rencana aksi dan indikator keberhasilan" },
+  act: { title: "ACT", subtitle: "Melaksanakan tindakan", instruction: "Laksanakan solusi yang telah dirancang, bagi tanggung jawab, dan dokumentasikan proses serta hasil tindakan.", output: "Dokumentasi pelaksanaan solusi dan hasil tindakan kelompok" },
+  connect: { title: "CONNECT", subtitle: "Evaluasi dan refleksi", instruction: "Evaluasi keberhasilan solusi, keterbatasan tindakan, proses kerja kelompok, dan hubungkan pembelajaran dengan nilai Pancasila.", output: "Evaluasi hasil pemecahan masalah, refleksi proses, dan hubungan dengan nilai Pancasila" },
+  keep: { title: "KEEP", subtitle: "Keberlanjutan aksi", instruction: "Susun komitmen individu dan rencana tindak lanjut kelompok agar perubahan positif terus dijaga.", output: "Komitmen pribadi dan rencana keberlanjutan aksi kelompok" },
 };
 
 const blank = { id: "", question_text: "", category: "", newCat: "", question_type: "textarea", is_required: true, is_active: true, phase: "", placeholder: "", description: "", display_order: 1, min_items: 2, options: [""] };
@@ -22,18 +23,24 @@ const PLACEHOLDER_BY_PHASE: Record<string, string[]> = {
     "Siapa saja pihak yang terlibat dan terdampak?",
     "Apa dampak masalah tersebut bagi lingkungan sekitar?",
   ],
-  connect: [
-    "Nilai atau sila Pancasila apa yang berkaitan dengan kasus ini?",
-    "Jelaskan hubungan kasus tersebut dengan nilai Pancasila...",
-    "Mengapa nilai tersebut relevan dengan permasalahan ini?",
-    "Prinsip etika atau kewarganegaraan apa yang perlu diperhatikan?",
-  ],
   act: [
-    "Solusi apa yang kalian usulkan untuk mengatasi masalah ini?",
-    "Tuliskan tindakan nyata yang dapat dilakukan...",
-    "Apa langkah pertama yang akan kalian lakukan?",
-    "Siapa yang perlu dilibatkan untuk menjalankan solusi tersebut?",
-    "Bagaimana cara memastikan solusi kalian dapat diterapkan?",
+    "Tindakan nyata apa yang kelompok kalian laksanakan?",
+    "Bagaimana pembagian peran saat menjalankan solusi?",
+    "Bukti atau dokumentasi apa yang menunjukkan tindakan telah dilakukan?",
+    "Apa hasil langsung dari tindakan kelompok kalian?",
+  ],
+  connect: [
+    "Sejauh mana solusi yang dilakukan berhasil menjawab masalah awal?",
+    "Apa kelebihan dan keterbatasan solusi yang telah dilaksanakan?",
+    "Bagaimana proses kerja sama kelompok selama pemecahan masalah?",
+    "Apa yang perlu diperbaiki jika tindakan ini dilakukan kembali?",
+    "Bagaimana tindakan tersebut mencerminkan nilai-nilai Pancasila?",
+  ],
+  keep: [
+    "Kebiasaan positif apa yang perlu dipertahankan setelah kegiatan ini?",
+    "Apa komitmen pribadi kalian untuk menjaga perubahan tersebut?",
+    "Apa rencana tindak lanjut kelompok dan siapa penanggung jawabnya?",
+    "Bagaimana cara memantau agar aksi ini terus berjalan?",
   ],
 };
 
@@ -310,7 +317,7 @@ export default function Questions() {
     <label>Pertanyaan</label><textarea value={f.question_text} onChange={e => set("question_text", e.target.value)} />
     <label>Kategori</label><select value={f.category} onChange={e => set("category", e.target.value)}><option value="">Pilih kategori</option>{cats.map(c => <option key={c}>{c}</option>)}<option value="__new">+ Kategori baru...</option></select>
     {f.category === "__new" && <input style={{ marginTop: 8 }} placeholder="Nama kategori baru" value={f.newCat} onChange={e => set("newCat", e.target.value)} />}
-    <label>Fase belajar</label><select value={f.phase} onChange={e => set("phase", e.target.value)}><option value="">— tanpa fase —</option><option value="see">SEE — Mengamati masalah</option><option value="think">THINK — Menganalisis masalah</option><option value="connect">CONNECT — Menghubungkan konsep</option><option value="act">ACT — Merancang tindakan</option></select>
+    <label>Fase belajar</label><select value={f.phase} onChange={e => set("phase", e.target.value)}><option value="">— tanpa fase —</option><option value="see">SEE — Mengamati masalah</option><option value="think">THINK — Menganalisis masalah</option><option value="act">ACT — Melaksanakan tindakan</option><option value="connect">CONNECT — Evaluasi dan refleksi</option><option value="keep">KEEP — Keberlanjutan aksi</option></select>
     <label>Tipe Pertanyaan</label><select value={f.question_type} onChange={e => set("question_type", e.target.value)}>{Object.entries(T).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>
     {f.question_type === "multiple_text" && <><label>Minimal jawaban</label><input type="number" min={1} value={f.min_items} onChange={e => set("min_items", e.target.value)} /></>}
     <label><input type="checkbox" style={{ width: "auto", marginRight: 8 }} checked={f.is_required} onChange={e => set("is_required", e.target.checked)} />Required (wajib dijawab)</label>
