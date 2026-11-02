@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { sb } from "@/lib/supabase";
 import { useAdmin, upd } from "@/lib/admin";
+import { publishCurrentProjectSnapshot } from "@/lib/admin/publish-current-project-snapshot";
 
 function Members({
   init,
@@ -211,11 +212,16 @@ export default function Groups() {
         );
       }
 
+      try {
+        await publishCurrentProjectSnapshot(P.id);
+      } catch (snapshotError) {
+        throw new Error(`Penugasan tersimpan, tetapi materi belum terbit untuk siswa: ${snapshotError instanceof Error ? snapshotError.message : "validasi snapshot gagal"}`);
+      }
+
       await load();
 
       setAssignMessage(
-        `Berhasil! Video ${selectedVideo.number} ditugaskan ` +
-          `kepada ${ids.length} kelompok.`
+        `Berhasil! Video ${selectedVideo.number} ditugaskan dan snapshot materi diterbitkan kepada ${ids.length} kelompok.`
       );
     } catch (e) {
       setAssignMessage(
@@ -271,6 +277,14 @@ export default function Groups() {
         await load();
         return;
       }
+    }
+
+    try {
+      await publishCurrentProjectSnapshot(P.id);
+    } catch (snapshotError) {
+      alert(`Penugasan tersimpan, tetapi materi belum terbit untuk siswa: ${snapshotError instanceof Error ? snapshotError.message : "validasi snapshot gagal"}`);
+      await load();
+      return;
     }
 
     await load();
