@@ -43,8 +43,8 @@ const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string; output
   },
 };
 
-// Pertanyaan SEE dijawab di halaman video. Di sini hanya tampilkan
-// pertanyaan THINK, CONNECT, dan ACT. Pertanyaan tanpa fase tetap masuk THINK.
+// Pertanyaan SEE dijawab di halaman video. Halaman ini menampilkan THINK, ACT, CONNECT, dan KEEP.
+// Pertanyaan tanpa fase tetap masuk THINK.
 function phaseForQuestion(q: Q): WorkPhase | null {
   if (q.phase === "see") return null;
   if (q.phase === "act" || q.phase === "connect" || q.phase === "keep") return q.phase;
