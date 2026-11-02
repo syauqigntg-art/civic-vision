@@ -236,7 +236,7 @@ export default function Video() {
           <h2>SEE — Mengamati permasalahan</h2>
           <p>
             Jawab pertanyaan pengamatan terlebih dahulu. Setelah tahap SEE
-            selesai, kalian akan melanjutkan ke THINK, CONNECT, dan ACT.
+            selesai, kalian akan melanjutkan ke THINK, ACT, CONNECT, dan KEEP.
           </p>
           <div
             style={{
