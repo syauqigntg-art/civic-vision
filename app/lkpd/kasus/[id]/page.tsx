@@ -210,13 +210,16 @@ export default function Video() {
       <h2 style={{ marginTop: 8 }}>
         Kasus {String(v.number).padStart(2, "0")}: {v.title}
       </h2>
-      <Media
-        path={v.video_url}
-        poster={v.thumbnail_url}
-        kind="video"
-        alt={`Video kasus: ${v.title}`}
-      />
-      {!v.video_url && <p>Video belum diunggah oleh guru.</p>}
+      {v.thumbnail_url && <Media path={v.thumbnail_url} kind="image" alt={`Thumbnail kasus: ${v.title}`} />}
+      {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) ? (
+        <div className="hint">
+          <b>Video kasus tersedia melalui tautan eksternal.</b>
+          <p>Tekan tombol di bawah untuk membuka video pada tab baru. Setelah selesai menonton, kembali ke halaman ini untuk melanjutkan analisis.</p>
+          <a className="btn" href={v.video_url} target="_blank" rel="noopener noreferrer">Buka video kasus ↗</a>
+        </div>
+      ) : v.video_url ? (
+        <Media path={v.video_url} poster={v.thumbnail_url} kind="video" alt={`Video kasus: ${v.title}`} />
+      ) : <p>Video belum tersedia dari guru.</p>}
       {v.description && <p>{v.description}</p>}
       <div className="hint">
         <b>Tujuan SEE — Mengamati masalah.</b> Perhatikan video dengan saksama.
