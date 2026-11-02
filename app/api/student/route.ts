@@ -176,8 +176,39 @@ export async function POST(req: Request) {
     }
   }
 
+  // The get_group RPC returns group metadata but intentionally does not
+  // include the related project. Resolve only the public learning-project
+  // fields here so the student identity page can display its project.
+  let responseData = data;
+  if (parsed.data.op === "get_group" && data && typeof data === "object") {
+    const code = parsed.data.args.code;
+    const { data: group, error: groupError } = await admin
+      .from("groups")
+      .select("project_id")
+      .eq("access_code", code.trim().toUpperCase())
+      .maybeSingle();
+
+    if (groupError || !group) {
+      console.error("Student group project lookup failed:", groupError?.message || "group missing");
+      return fail("Project tidak dapat diverifikasi. Coba lagi nanti.", 503);
+    }
+
+    const { data: project, error: projectError } = await admin
+      .from("projects")
+      .select("title,tagline,description")
+      .eq("id", group.project_id)
+      .maybeSingle();
+
+    if (projectError) {
+      console.error("Student project metadata lookup failed:", projectError.message);
+      return fail("Project tidak dapat dimuat. Coba lagi nanti.", 503);
+    }
+
+    responseData = { ...data, project: project ?? null };
+  }
+
   return NextResponse.json(
-    { data },
+    { data: responseData },
     { headers: { "Cache-Control": "no-store" } }
   );
 }
