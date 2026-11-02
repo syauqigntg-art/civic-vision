@@ -45,8 +45,10 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
 .glass{background:linear-gradient(rgba(8,16,60,.3),rgba(8,16,60,.3)),rgba(255,255,255,.08)}
 .steps{list-style:none;padding:0;margin:0 0 12px;display:flex;gap:6px;flex-wrap:wrap}.st{font:inherit;color:#fff;background:transparent;min-height:40px}.st:hover{background:rgba(255,255,255,.12)}
 .navlink{display:block;text-decoration:none;color:rgba(255,255,255,.88);padding:10px 14px;border-radius:14px}.navlink.on,.navlink:hover{background:rgba(255,255,255,.16);color:#fff}
-/* SEE · THINK · CONNECT · ACT */
+/* STACK: SEE · THINK · ACT · CONNECT · KEEP */
 .phases{list-style:none;padding:0;margin:0 0 14px;display:grid;gap:8px;grid-template-columns:repeat(4,1fr)}
+.phases.five{grid-template-columns:repeat(5,minmax(0,1fr))}
+.phases.four{grid-template-columns:repeat(4,minmax(0,1fr))}
 .ph{border:1px solid rgba(255,255,255,.2);border-radius:16px;padding:8px 10px;display:flex;flex-direction:column;opacity:.75}.ph small{font-size:11px}.ph p{margin:6px 0 0;font-size:13px}
 .ph.on{opacity:1;background:linear-gradient(135deg,#38bdf8,#7c5cff);border-color:transparent}.ph.ok{opacity:.95;border-color:#4ade80}
 .phases.big .ph{opacity:1;padding:14px}@media(max-width:760px){.phases{grid-template-columns:repeat(2,1fr)}}
