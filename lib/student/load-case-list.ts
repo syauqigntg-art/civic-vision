@@ -25,7 +25,7 @@ const FALLBACK_ERROR =
 export async function loadStudentCaseList(
   code: string | null | undefined,
   listVideos: (code: string) => Promise<ApiResult<CaseVideo[]>>,
-  getGroup: (code: string) => Promise<ApiResult<{ id?: string; video_ids?: unknown }>>,
+  getGroup: (code: string) => Promise<ApiResult<{ id?: string }>>,
 ): Promise<CaseListOutcome> {
   if (!code?.trim()) return { kind: "missing-code" };
 
@@ -43,12 +43,10 @@ export async function loadStudentCaseList(
       return { kind: "invalid-group" };
     }
 
-    const assignedIds = Array.isArray(groupResult.data.video_ids)
-      ? groupResult.data.video_ids.filter((value): value is string => typeof value === "string")
-      : [];
-    const videos = (videoResult.data || []).filter((video) => assignedIds.includes(video.id));
-
-    return { kind: "loaded", videos };
+    // The server endpoint is the source of truth for assignments and pinned
+    // submissions. Filtering again against current group.video_ids here can
+    // hide a video that an existing submission is required to keep using.
+    return { kind: "loaded", videos: videoResult.data || [] };
   } catch {
     return { kind: "failed", message: FALLBACK_ERROR };
   }
