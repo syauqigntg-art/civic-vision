@@ -13,7 +13,7 @@ type VideoItem = {
   number: number;
   title: string;
   category: string | null;
-  thumbnail_url: string | null;
+  thumbnail_url?: string | null;
 };
 
 export default function Kasus() {
