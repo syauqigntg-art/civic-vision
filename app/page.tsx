@@ -14,7 +14,7 @@ export default function Home() {
         <h2>Menganalisis Pancasila dalam Kehidupan Sehari-hari</h2>
         <p style={{ maxWidth: 520, margin: "12px auto" }}>
           Ruang belajar digital untuk mengamati kasus, menganalisis masalah,
-          menghubungkannya dengan nilai Pancasila, dan merancang tindakan nyata.
+          melaksanakan solusi, mengevaluasi proses pemecahan masalah, dan menjaga keberlanjutan aksi.
         </p>
         <p style={{ fontWeight: 600 }}>
           Amati. Analisis. Refleksikan. Terapkan.
@@ -40,7 +40,7 @@ export default function Home() {
       </div>
 
       <section className="glass">
-        <h2>Alur belajar: SEE → THINK → CONNECT → ACT</h2>
+        <h2>Alur belajar STACK: SEE → THINK → ACT → CONNECT → KEEP</h2>
         <PhaseCards />
       </section>
     </>
