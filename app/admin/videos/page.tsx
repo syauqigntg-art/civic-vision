@@ -6,6 +6,7 @@ import { videoForm } from "@/lib/validation/schemas";
 import { Fragment, useMemo, useState } from "react";
 import { sb } from "@/lib/supabase";
 import { useAdmin, upd, pathOf } from "@/lib/admin";
+import { publishCurrentProjectSnapshot } from "@/lib/admin/publish-current-project-snapshot";
 
 type VideoForm = {
   id: string;
@@ -109,12 +110,17 @@ export default function Videos() {
       });
 
       if (insertError) throw insertError;
+      try {
+        await publishCurrentProjectSnapshot(P.id);
+      } catch (snapshotError) {
+        throw new Error(`Video tersimpan, tetapi belum dapat diterbitkan untuk siswa: ${snapshotError instanceof Error ? snapshotError.message : "validasi snapshot gagal"}`);
+      }
 
       setF(blank);
       setSourceType("upload");
       setFormKey((value) => value + 1);
       setFormOpen(false);
-      setMessage("Video berhasil ditambahkan ke project.");
+      setMessage("Video berhasil ditambahkan dan diterbitkan. Kelompok yang belum memulai LKPD akan melihat materi terbaru.");
       await load();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Video gagal disimpan. Silakan coba kembali.");
@@ -178,9 +184,14 @@ export default function Videos() {
 
       if (saveError) throw saveError;
       if (!data) throw new Error("Tidak ada perubahan yang tersimpan. Periksa hak akses admin.");
+      try {
+        await publishCurrentProjectSnapshot(P.id);
+      } catch (snapshotError) {
+        throw new Error(`Perubahan video tersimpan, tetapi belum dapat diterbitkan untuk siswa: ${snapshotError instanceof Error ? snapshotError.message : "validasi snapshot gagal"}`);
+      }
 
       setEditForm(null);
-      setMessage("Perubahan video berhasil disimpan.");
+      setMessage("Perubahan video berhasil disimpan dan diterbitkan untuk kelompok yang belum memulai LKPD.");
       await load();
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Perubahan video gagal disimpan.");
