@@ -210,7 +210,7 @@ export default function Video() {
       <h2 style={{ marginTop: 8 }}>
         Kasus {String(v.number).padStart(2, "0")}: {v.title}
       </h2>
-      {v.thumbnail_url && <Media path={v.thumbnail_url} kind="image" alt={`Thumbnail kasus: ${v.title}`} />}
+      {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) && v.thumbnail_url && <Media path={v.thumbnail_url} kind="image" alt={`Thumbnail kasus: ${v.title}`} />}
       {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) ? (
         <div className="hint">
           <b>Video kasus tersedia melalui tautan eksternal.</b>
