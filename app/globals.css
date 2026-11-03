@@ -3850,7 +3850,8 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 /* ===== STUDENT PHASE CARDS · TRACKING TEXT ANIMATION =====
    700ms tracking-out + 500ms hidden pause + 700ms tracking-in.
    The loop is independent of completion and active-phase status. */
-.student-phase-cards .phase-text-tracking {
+.student-phase-cards .phase-text-tracking,
+.cv-learning-navigation .phase-text-tracking {
   display: block;
   letter-spacing: 0;
   opacity: 1;
@@ -3879,7 +3880,8 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 
 /* Keep text readable for users who request reduced motion. */
 @media (prefers-reduced-motion: reduce) {
-  .student-phase-cards .phase-text-tracking {
+  .student-phase-cards .phase-text-tracking,
+  .cv-learning-navigation .phase-text-tracking {
     animation: none;
     letter-spacing: normal;
     opacity: 1;
