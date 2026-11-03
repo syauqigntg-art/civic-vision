@@ -2652,7 +2652,7 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-save-status.is-pending {
   color: #e5f4ff;
   border-color: rgba(163,210,255,.38);
-  background: rgba(42,113,190,.2);
+  background: rgba(25,91,157,.58);
 }
 .cv-save-status.is-pending .cv-save-status-icon {
   color: #d8efff;
@@ -2661,7 +2661,7 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-save-status.is-success {
   color: #c9ffe8;
   border-color: rgba(125,239,190,.38);
-  background: rgba(36,166,112,.16);
+  background: rgba(17,117,89,.48);
 }
 .cv-save-status.is-success .cv-save-status-icon {
   color: #073d2c;
@@ -2670,7 +2670,7 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-save-status.is-warning {
   color: #ffedbd;
   border-color: rgba(255,213,125,.48);
-  background: rgba(161,107,24,.2);
+  background: rgba(129,83,13,.5);
 }
 .cv-save-status.is-warning .cv-save-status-icon {
   color: #573700;
@@ -2679,7 +2679,7 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-save-status.is-error {
   color: #ffd6d6;
   border-color: rgba(255,151,151,.48);
-  background: rgba(166,48,58,.2);
+  background: rgba(132,35,48,.52);
 }
 .cv-save-status.is-error .cv-save-status-icon {
   color: #641b24;
@@ -2838,7 +2838,13 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-question-card textarea::placeholder { color:rgba(225,241,255,.55); }
 .cv-student-workspace .case-detail-actions { padding-top:17px; border-top:1px solid rgba(222,244,255,.16); }
 .cv-student-workspace .case-autosave-note { font-size:11px; }
-.cv-analysis-workspace { width:min(100%,1360px); margin:0 auto 64px; }
+.cv-analysis-workspace {
+  width:min(100%,1360px); margin:0 auto 64px;
+  background-color:rgba(7,48,105,.9);
+  background-image:linear-gradient(145deg,rgba(30,105,171,.48),rgba(9,54,113,.94) 58%,rgba(10,65,126,.9));
+  border:1px solid rgba(190,229,255,.58);
+  box-shadow:0 22px 52px rgba(0,22,78,.24),inset 0 1px rgba(255,255,255,.34);
+}
 .cv-analysis-overview { padding-bottom:20px; }
 .cv-analysis-workspace .cv-learning-phases { margin-top:0; }
 .cv-analysis-workspace .case-analysis-instruction { margin-top:20px; }
@@ -2850,6 +2856,49 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   box-shadow:inset 0 1px rgba(255,255,255,.2),0 9px 22px rgba(0,18,58,.14);
 }
 .cv-analysis-question-card h2 { max-width:1000px; font-size:clamp(15px,1.45vw,18px); line-height:1.55; }
+
+/* Keep answer controls visually identical while empty, typing, filled, saved, or locked. */
+.cv-student-workspace .cv-question-card :is(input,textarea,select),
+.cv-analysis-workspace .cv-analysis-question-card :is(input,textarea,select) {
+  min-width:0;
+  color:#f8fcff;
+  background:linear-gradient(145deg,rgba(3,34,82,.94),rgba(5,48,105,.92));
+  border:1px solid rgba(194,229,255,.5);
+  border-radius:13px;
+  opacity:1;
+  box-shadow:inset 0 1px rgba(255,255,255,.07);
+  transition:border-color .18s ease,box-shadow .18s ease;
+}
+.cv-student-workspace .cv-question-card :is(input,textarea,select):focus,
+.cv-analysis-workspace .cv-analysis-question-card :is(input,textarea,select):focus {
+  color:#ffffff;
+  background:linear-gradient(145deg,rgba(3,34,82,.94),rgba(5,48,105,.92));
+  border-color:#a9e7ff;
+  outline:2px solid rgba(157,223,255,.24);
+  outline-offset:1px;
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 0 0 3px rgba(82,190,255,.12);
+}
+.cv-student-workspace .cv-question-card :is(input,textarea,select):disabled,
+.cv-analysis-workspace .cv-analysis-question-card :is(input,textarea,select):disabled {
+  color:#f3f9ff;
+  background:linear-gradient(145deg,rgba(3,34,82,.94),rgba(5,48,105,.92));
+  opacity:1;
+  cursor:not-allowed;
+}
+.cv-student-workspace .cv-question-card :is(input,textarea)::placeholder,
+.cv-analysis-workspace .cv-analysis-question-card :is(input,textarea)::placeholder {
+  color:rgba(225,241,255,.78);
+  opacity:1;
+}
+.cv-student-workspace .cv-question-card textarea,
+.cv-analysis-workspace .cv-analysis-question-card textarea {
+  min-height:190px;
+  padding:15px 16px;
+  font-size:14px;
+  line-height:1.7;
+  resize:vertical;
+}
+
 .cv-analysis-question-card textarea { min-height:190px; padding:15px 16px; font-size:14px; line-height:1.7; }
 .cv-analysis-question-card textarea::placeholder { color:rgba(225,241,255,.55); }
 .cv-analysis-workspace .case-analysis-actions { position:sticky; bottom:12px; z-index:4; padding:13px; border:1px solid rgba(221,242,255,.24); border-radius:17px; background:rgba(4,28,78,.78); backdrop-filter:blur(18px); }
