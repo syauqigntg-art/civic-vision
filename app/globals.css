@@ -2570,3 +2570,142 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 @media(max-width:640px) {
   .case-video-player-frame > div:not(.case-external-video-note) > img { object-fit:contain; }
 }
+
+
+/* ===== STUDENT CASE WORKSPACE · COMPACT PROGRESS & SAVE STATUS ===== */
+.case-detail-workspace .cv-progress-track {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 8px;
+  margin: 7px 0 20px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(4,24,68,.36);
+  box-shadow: inset 0 1px 2px rgba(0,12,42,.18);
+  appearance: none;
+  -webkit-appearance: none;
+}
+.case-detail-workspace .cv-progress-fill {
+  display: block;
+  height: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg,#7fe2ff,#d5f3ff);
+  box-shadow: 0 0 14px rgba(135,224,255,.32);
+  transition: width .35s ease;
+}
+.case-workspace-status {
+  min-width: 0;
+}
+.case-workspace-status > div {
+  min-width: 0;
+}
+.case-workspace-status .cv-save-status {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  max-width: min(100%, 360px);
+  min-height: 28px;
+  margin: 0;
+  padding: 5px 10px;
+  overflow: hidden;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  box-shadow: inset 0 1px rgba(255,255,255,.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+.cv-save-status-icon {
+  display: inline-grid;
+  flex: 0 0 15px;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 900;
+  line-height: 1;
+}
+.cv-save-status-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cv-save-status.is-pending {
+  color: #e5f4ff;
+  border-color: rgba(163,210,255,.38);
+  background: rgba(42,113,190,.2);
+}
+.cv-save-status.is-pending .cv-save-status-icon {
+  color: #d8efff;
+  background: rgba(158,213,255,.2);
+}
+.cv-save-status.is-success {
+  color: #c9ffe8;
+  border-color: rgba(125,239,190,.38);
+  background: rgba(36,166,112,.16);
+}
+.cv-save-status.is-success .cv-save-status-icon {
+  color: #073d2c;
+  background: #9af0c5;
+}
+.cv-save-status.is-warning {
+  color: #ffedbd;
+  border-color: rgba(255,213,125,.48);
+  background: rgba(161,107,24,.2);
+}
+.cv-save-status.is-warning .cv-save-status-icon {
+  color: #573700;
+  background: #ffdc91;
+}
+.cv-save-status.is-error {
+  color: #ffd6d6;
+  border-color: rgba(255,151,151,.48);
+  background: rgba(166,48,58,.2);
+}
+.cv-save-status.is-error .cv-save-status-icon {
+  color: #641b24;
+  background: #ffb8b8;
+}
+.cv-save-status.is-locked {
+  color: #ffe9bd;
+  border-color: rgba(255,218,145,.38);
+  background: rgba(153,103,35,.17);
+}
+.cv-save-status.is-locked .cv-save-status-icon {
+  color: #60400c;
+  background: #ffdfa0;
+}
+@media (max-width: 640px) {
+  .case-workspace-status {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 9px 12px;
+  }
+  .case-workspace-status > div {
+    flex: 1 1 180px;
+  }
+  .case-workspace-status .cv-save-status {
+    max-width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .case-detail-workspace .cv-progress-fill {
+    transition: none;
+  }
+}
