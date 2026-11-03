@@ -50,10 +50,10 @@ export function PhaseBar({
               <span className="cv-phase-icon" aria-hidden="true">{isComplete ? "✓" : ICONS[phase]}</span>
             </div>
             <span className="cv-phase-copy">
-              <b>{P[phase][0]}</b>
-              <small>{P[phase][1]}</small>
+              <b className="phase-text-tracking">{P[phase][0]}</b>
+              <small className="phase-text-tracking">{P[phase][1]}</small>
             </span>
-            <span className="cv-phase-description">{P[phase][2]}</span>
+            <span className="cv-phase-description phase-text-tracking">{P[phase][2]}</span>
             <span className="cv-phase-state">
               {isCurrent ? "● Sedang dikerjakan" : isComplete ? "✓ Selesai" : "○ Belum dimulai"}
             </span>
