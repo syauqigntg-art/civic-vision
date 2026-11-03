@@ -321,7 +321,9 @@ export default function Analisis() {
   }
 
   return (
-    <GlassCard>
+    <GlassCard className="case-analysis-workspace">
+      <div className="case-analysis-progress">
+      <div className="case-analysis-progress-heading"><div><span className="case-detail-kicker">ALUR PEMBELAJARAN</span><h1>Workspace LKPD</h1><p>Lanjutkan setiap tahap berdasarkan pertanyaan dan panduan dari guru.</p></div><span className="case-analysis-total">{pct}%<small>PROGRES TOTAL</small></span></div>
       <PhaseBar
         current={activePhase}
         completed={completedPhases}
@@ -341,8 +343,11 @@ export default function Analisis() {
         <SaveStatus st={save.st} />
       </div>
       <ProgressBar pct={pct} />
+      </div>
 
-      <p>
+      <section className="case-analysis-instruction">
+      <div className="case-analysis-step-label">TAHAP {step + 2} DARI 5</div>
+      <p className="case-analysis-phase-title">
         <b style={{ color: "#fff" }}>
           Tahap {step + 1} dari {PHASES.length}: {PHASE_INFO[activePhase].title}
         </b>
@@ -350,9 +355,11 @@ export default function Analisis() {
         {left ? `sisa ${left} tahap` : "tahap terakhir"}
       </p>
       <p>{PHASE_INFO[activePhase].instruction}</p>
-      <div className="hint" style={{ marginTop: 8 }}>
+      <div className="case-analysis-guidance">
         <b>Hasil yang diharapkan:</b> {PHASE_INFO[activePhase].output}
       </div>
+
+      </section>
 
       {locked && (
         <Alert>
@@ -382,6 +389,8 @@ export default function Analisis() {
         </div>
       )}
 
+      <section className="case-analysis-questions">
+      <div className="case-analysis-question-heading"><div><span className="case-detail-kicker">RUANG JAWABAN</span><h2>Pertanyaan dan Refleksi</h2><p>Jawab sesuai instruksi. Jawaban tersimpan otomatis saat kamu mengerjakan.</p></div><span className="case-current-stage">{activePhase.toUpperCase()}</span></div>
       <fieldset
         disabled={locked}
         style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
@@ -404,7 +413,8 @@ export default function Analisis() {
         ))}
       </fieldset>
 
-      <div className="row">
+      </section>
+      <div className="row case-analysis-actions">
         {step > 0 && (
           <Button
             variant="ghost"
