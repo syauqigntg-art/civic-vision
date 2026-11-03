@@ -8,6 +8,7 @@ const P: Record<string, [string, string, string]> = {
 
 const ALL_PHASES = ["see", "think", "act", "connect", "keep"];
 const ANALYSIS_PHASES = ["think", "act", "connect", "keep"];
+const ICONS: Record<string, string> = { see: "◎", think: "⌕", act: "ϟ", connect: "♧", keep: "✿" };
 
 export function PhaseBar({
   current,
@@ -19,22 +20,15 @@ export function PhaseBar({
   completed?: string[];
 }) {
   const phases = includeSee ? ALL_PHASES : ANALYSIS_PHASES;
-
   return (
-    <ol
-      className={"phases" + (includeSee ? " five" : " four")}
-      aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}
-    >
-      {phases.map((phase) => {
+    <ol className={"phases" + (includeSee ? " five" : " four")} aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}>
+      {phases.map((phase, index) => {
         const isCurrent = phase === current;
         const isComplete = !isCurrent && completed.includes(phase);
-
         return (
-          <li
-            key={phase}
-            className={"ph" + (isCurrent ? " on" : isComplete ? " ok" : "")}
-            aria-current={isCurrent ? "step" : undefined}
-          >
+          <li key={phase} className={"ph" + (isCurrent ? " on" : isComplete ? " ok" : "")} aria-current={isCurrent ? "step" : undefined}>
+            <span className="phase-symbol" aria-hidden="true">{ICONS[phase]}</span>
+            <span className="phase-sequence">{String(index + 1).padStart(2, "0")}</span>
             <b>{P[phase][0]}</b>
             <small>{P[phase][1]}</small>
             {isComplete && <small aria-label="Tahap selesai">✓ Selesai</small>}
@@ -47,12 +41,13 @@ export function PhaseBar({
 
 export function PhaseCards() {
   return (
-    <ol className="phases big five">
+    <ol className="phases big five student-phase-cards">
       {ALL_PHASES.map((phase, index) => (
-        <li key={phase} className="ph">
-          <b>{index + 1}. {P[phase][0]}</b>
+        <li key={phase} className={`ph phase-${phase}`}>
+          <div className="phase-card-head"><span className="phase-symbol" aria-hidden="true">{ICONS[phase]}</span><span className="phase-sequence">{String(index + 1).padStart(2, "0")}</span><b>{P[phase][0]}</b></div>
           <small>{P[phase][1]}</small>
           <p>{P[phase][2]}</p>
+          <span className="phase-card-line" />
         </li>
       ))}
     </ol>
