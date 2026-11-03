@@ -2903,3 +2903,64 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 @media (prefers-reduced-motion: reduce) {
   .cv-learning-phases .ph, .cv-analysis-workspace .case-analysis-actions { scroll-behavior:auto; transition:none; }
 }
+
+
+/* ===== VIDEO PLAYER FULL-WIDTH COMPOSITION REFINEMENT ===== */
+.case-detail-page {
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    "stages"
+    "header"
+    "video"
+    "instruction"
+    "workspace";
+  width: min(100%, 1320px);
+  gap: 16px;
+}
+.cv-stage-panel,
+.cv-case-header,
+.cv-video-panel,
+.cv-instruction-panel,
+.cv-student-workspace {
+  width: 100%;
+  min-width: 0;
+}
+.cv-stage-panel { grid-area: stages; }
+.cv-case-header { grid-area: header; }
+.cv-video-panel {
+  grid-area: video;
+  align-self: stretch;
+  padding: clamp(16px, 2vw, 24px);
+}
+.cv-video-panel-heading { margin-bottom: 14px; }
+.cv-video-panel .case-video-player-frame {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  max-height: none;
+  border-radius: clamp(14px, 1.8vw, 22px);
+}
+.cv-video-panel .case-video-player-frame video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.cv-instruction-panel { grid-area: instruction; }
+.cv-student-workspace { grid-area: workspace; }
+@media (max-width: 900px) {
+  .case-detail-page {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "stages"
+      "header"
+      "video"
+      "instruction"
+      "workspace";
+    gap: 14px;
+  }
+}
+@media (max-width: 640px) {
+  .case-detail-page { gap: 12px; }
+  .cv-video-panel { padding: 13px; }
+  .cv-video-panel .case-video-player-frame { border-radius: 14px; }
+}
