@@ -29,10 +29,10 @@ export function PhaseBar({
 
   return (
     <ol
-      className={"phases" + (includeSee ? " five" : " four") + " cv-learning-phases"}
+      className={"phases " + (includeSee ? "five" : "four") + " cv-learning-phases cv-learning-navigation"}
       aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}
     >
-      {phases.map((phase) => {
+      {phases.map((phase, index) => {
         const isCurrent = phase === current;
         const isComplete = !isCurrent && completed.includes(phase);
         const order = ALL_PHASES.indexOf(phase) + 1;
@@ -45,15 +45,19 @@ export function PhaseBar({
             aria-current={isCurrent ? "step" : undefined}
             aria-label={`${P[phase][0]} — ${P[phase][1]}: ${status}`}
           >
-            <span className="cv-phase-number">{String(order).padStart(2, "0")}</span>
-            <span className="cv-phase-icon" aria-hidden="true">{isComplete ? "✓" : ICONS[phase]}</span>
+            <div className="cv-learning-step-top">
+              <span className="cv-phase-number">{String(order).padStart(2, "0")}</span>
+              <span className="cv-phase-icon" aria-hidden="true">{isComplete ? "✓" : ICONS[phase]}</span>
+            </div>
             <span className="cv-phase-copy">
               <b>{P[phase][0]}</b>
               <small>{P[phase][1]}</small>
             </span>
-            <span className="cv-phase-state" aria-hidden="true">
-              {isCurrent ? "AKTIF" : isComplete ? "✓" : "—"}
+            <span className="cv-phase-description">{P[phase][2]}</span>
+            <span className="cv-phase-state">
+              {isCurrent ? "● Sedang dikerjakan" : isComplete ? "✓ Selesai" : "○ Belum dimulai"}
             </span>
+            {index < phases.length - 1 && <span className="cv-phase-connector" aria-hidden="true" />}
           </li>
         );
       })}
