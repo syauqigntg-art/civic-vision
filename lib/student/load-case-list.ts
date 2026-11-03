@@ -3,7 +3,9 @@ export type CaseVideo = {
   number: number;
   title: string;
   category: string | null;
+  description?: string | null;
   thumbnail_url?: string | null;
+  duration?: string | null;
 };
 
 type ApiResult<T> = { data: T | null; error: { message: string } | null };
