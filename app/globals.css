@@ -1507,11 +1507,36 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .student-brand-mark svg path:first-child{stroke:#fff!important;stroke-width:8!important}
 .student-brand-mark svg path:not(:first-child){stroke:none!important}
 .student-hero-art{position:relative;isolation:isolate;overflow:hidden}
-.student-hero-art>.hero-landscape{
-  position:absolute;inset:0;width:100%;height:100%;display:block;z-index:1;
-  object-fit:cover;filter:saturate(1.05) drop-shadow(0 12px 20px rgba(10,45,100,.16));
+.student-hero-art{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  min-width:0;
+}
+.student-hero-art>.hero-image{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  display:block;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center 40%;
+  filter:saturate(1.04) contrast(1.02);
 }
 .student-hero-art>.hero-art-caption{z-index:5}
-.student-hero-art>.hero-landscape+ .hero-art-caption{pointer-events:none}
 .student-hero-art:after{z-index:2;pointer-events:none}
-@media(max-width:760px){.student-hero-art>.hero-landscape{min-height:100%;object-fit:cover}}
+@media(min-width:761px) and (max-width:1100px){
+  .student-hero-art>.hero-image{object-position:center 42%}
+}
+@media(max-width:760px){
+  .student-hero-art{min-height:clamp(220px,58vw,340px)}
+  .student-hero-art>.hero-image{
+    object-fit:cover;
+    object-position:center 38%;
+  }
+}
+@media(max-width:420px){
+  .student-hero-art{min-height:220px}
+  .student-hero-art>.hero-image{object-position:center 38%}
+}
