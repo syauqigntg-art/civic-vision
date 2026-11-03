@@ -194,22 +194,29 @@ export default function Video() {
 
   return (
     <div className="case-detail-page">
-      <div className="case-detail-heading">
-        <div className="case-detail-breadcrumb">
-          <Link href="/lkpd">LKPD</Link><span aria-hidden="true">/</span><Link href="/lkpd/kasus">Video Kasus</Link><span aria-hidden="true">/</span><span aria-current="page">Detail Kasus</span>
-        </div>
+      <header className="case-detail-heading cv-case-header">
+        <nav className="case-detail-breadcrumb" aria-label="Breadcrumb">
+          <Link href="/lkpd">LKPD</Link><span aria-hidden="true">/</span><Link href="/lkpd/kasus">Video Kasus</Link><span aria-hidden="true">/</span><span aria-current="page">Ruang Pengamatan</span>
+        </nav>
         <div className="case-detail-heading-row">
-          <div><span className="case-detail-kicker">RUANG PENGAMATAN · TAHAP 01</span><h1>Detail Video Kasus</h1><p>Amati situasi dalam video, kenali fakta, dan catat masalah yang perlu diselidiki.</p></div>
+          <div className="cv-case-heading-copy">
+            <span className="case-detail-kicker">RUANG PENGAMATAN · TAHAP 01</span>
+            <h1>{v.title || "Detail Video Kasus"}</h1>
+            <div className="cv-case-meta-line">
+              <span>Kasus {String(v.number).padStart(2, "0")}</span>
+              {v.category && <span>{v.category}</span>}
+            </div>
+            <p>Amati situasi dalam video, kenali fakta, dan catat masalah yang perlu diselidiki.</p>
+          </div>
           <Link className="case-glass-button secondary" href="/lkpd/kasus">← Daftar Video</Link>
         </div>
-      </div>
+      </header>
 
-      <section className="case-detail-panel" aria-label="Informasi kasus dan pemutar video">
-        <div className="case-detail-meta">
-          <span className="case-detail-kicker">KASUS {String(v.number).padStart(2, "0")}</span>
-          {v.category && <span className="case-detail-category">{v.category}</span>}
+      <section className="case-detail-panel cv-video-panel" aria-label="Pemutar video kasus">
+        <div className="cv-video-panel-heading">
+          <div><span className="case-detail-kicker">MATERI PENGAMATAN</span><h2>{v.title}</h2></div>
+          <span className="cv-video-ratio">16:9 · VIDEO KASUS</span>
         </div>
-        <h2>Kasus {String(v.number).padStart(2, "0")}: {v.title}</h2>
         {v.description && <p className="case-detail-description">{v.description}</p>}
         <div className="case-video-player-frame">
           {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) && v.thumbnail_url && <Media path={v.thumbnail_url} kind="image" alt={`Thumbnail kasus: ${v.title}`} />}
@@ -226,28 +233,28 @@ export default function Video() {
         </div>
       </section>
 
-      <section className="case-detail-progress" aria-label="Tahapan pembelajaran">
-        <div className="case-section-heading"><div><span className="case-detail-kicker">ALUR PEMBELAJARAN</span><h2>Lima Tahap Pembelajaran</h2></div><span className="case-current-stage">TAHAP AKTIF · SEE</span></div>
+      <section className="case-detail-progress cv-stage-panel" aria-label="Tahapan pembelajaran">
+        <div className="case-section-heading"><div><span className="case-detail-kicker">ALUR PEMBELAJARAN · STACK</span><h2>Lima Tahap Pembelajaran</h2><p className="cv-section-subtitle">Ikuti urutan kegiatan untuk membangun pemahaman hingga aksi berkelanjutan.</p></div><span className="case-current-stage">TAHAP 01 / 05 · SEE</span></div>
         <PhaseBar current="see" />
       </section>
 
-      <section className="case-detail-instruction">
+      <section className="case-detail-instruction cv-instruction-panel">
         <div className="case-instruction-mark" aria-hidden="true">◎</div>
         <div><span className="case-detail-kicker">PANDUAN AKTIVITAS · SEE</span><h2>Mengamati permasalahan</h2><p>Perhatikan video dengan saksama. Catat fakta yang benar-benar terlihat, siapa yang terdampak, dan masalah awal yang perlu diselidiki. Bedakan fakta dari dugaan.</p><div className="case-learning-outcome"><b>Hasil yang diharapkan</b><span>Catatan fakta pengamatan dan rumusan awal masalah.</span></div></div>
       </section>
 
-      <section className="case-detail-workspace" aria-labelledby="case-workspace-title">
-        <div className="case-workspace-header">
-          <div><span className="case-detail-kicker">LEMBAR KERJA PESERTA DIDIK</span><h2 id="case-workspace-title">Workspace Pengamatan</h2><p>Isi jawaban berdasarkan hasil pengamatan video kasus.</p></div>
+      <section className="case-detail-workspace cv-student-workspace" aria-labelledby="case-workspace-title">
+        <div className="case-workspace-header cv-workspace-heading">
+          <div><span className="case-detail-kicker">LEMBAR KERJA PESERTA DIDIK</span><h2 id="case-workspace-title">Ruang Kerja Pengamatan</h2><p>Isi jawaban berdasarkan hasil pengamatan video kasus.</p></div>
           <div className="case-workspace-progress"><strong>{seePct}%</strong><span>Progres SEE</span></div>
         </div>
-        <div className="case-workspace-status"><div><b>Progress jawaban wajib</b><span>{requiredSee.filter((q) => filled(q, answers[q.id])).length} dari {requiredSee.length} pertanyaan selesai</span></div><SaveStatus st={save.st} /></div>
+        <div className="case-workspace-status cv-progress-summary"><div><b>Progress jawaban wajib</b><span>{requiredSee.filter((q) => filled(q, answers[q.id])).length} dari {requiredSee.length} pertanyaan selesai</span></div><SaveStatus st={save.st} /></div>
         <ProgressBar pct={seePct} />
         {locked && <Alert>Hasil telah dikirim dan dikunci. Jawaban pada tahap SEE hanya dapat diubah setelah guru membuka kembali pengerjaan.</Alert>}
         {seeQs.length > 0 ? (
           <fieldset className="case-question-list" disabled={locked}>
             {seeQs.map((q, index) => (
-              <article className="case-question-card" key={q.id}>
+              <article className="case-question-card cv-question-card" key={q.id}>
                 <div className="case-question-number">PERTANYAAN {String(index + 1).padStart(2, "0")}</div>
                 <span className="tag">{q.category}</span>
                 <h3 id={`q-${q.id}`}>{q.question_text}{q.is_required ? "" : " (opsional)"}</h3>
