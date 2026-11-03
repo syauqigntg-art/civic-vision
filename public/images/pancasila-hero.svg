@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" fill="none">
+  <defs>
+    <linearGradient id="sky" x1="110" y1="35" x2="760" y2="590" gradientUnits="userSpaceOnUse"><stop stop-color="#F7FBFF" stop-opacity=".94"/><stop offset=".48" stop-color="#B9D7F5" stop-opacity=".54"/><stop offset="1" stop-color="#426EAA" stop-opacity=".12"/></linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FF9A9F"/><stop offset="1" stop-color="#D7475B"/></linearGradient>
+    <linearGradient id="white" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFF"/><stop offset="1" stop-color="#DDEBFA"/></linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFE9B1"/><stop offset="1" stop-color="#C99B55"/></linearGradient>
+    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#DDF0E7"/><stop offset="1" stop-color="#7EAF9E"/></linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="24"/></filter>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#092B60" flood-opacity=".25"/></filter>
+  </defs>
+  <circle cx="575" cy="245" r="220" fill="#FFF" fill-opacity=".45" filter="url(#blur)"/>
+  <circle cx="592" cy="220" r="126" fill="url(#gold)" fill-opacity=".72"/>
+  <circle cx="592" cy="220" r="92" fill="#FFF8E8" fill-opacity=".7"/>
+  <path d="M0 460C132 405 221 442 332 406C450 367 548 407 660 370C760 337 835 354 900 322V620H0V460Z" fill="url(#sky)" fill-opacity=".72"/>
+  <path d="M95 390c30-20 52-16 68-2l-10 18-32 7-34-10 8-13Zm93-26 28-18 20 9-10 21-28 8-10-20Zm74 12 35-18 24 13-11 22-34 5-14-22Zm82-20 26-12 21 9-10 18-29 5-8-20Zm75 12 28-16 28 13-7 18-32 8-17-23Zm91-24 29-11 20 12-9 16-28 5-12-22Zm80 25 30-14 20 14-12 17-29 2-9-19Z" fill="url(#land)" stroke="#F6FFFB" stroke-opacity=".72" stroke-width="4"/>
+  <g filter="url(#shadow)">
+    <path d="M165 310c45-51 111-73 174-58-39 13-69 36-92 70 42-18 82-19 121-3-37 9-67 29-91 59-32 4-67-7-112-34Z" fill="url(#gold)" fill-opacity=".88"/>
+    <path d="M735 310c-45-51-111-73-174-58 39 13 69 36 92 70-42-18-82-19-121-3 37 9 67 29 91 59 32 4 67-7 112-34Z" fill="url(#gold)" fill-opacity=".88"/>
+    <path d="M450 242c-22 0-39 18-39 40 0 15 8 28 20 35l-11 36 30 26 30-26-11-36c12-7 20-20 20-35 0-22-17-40-39-40Z" fill="url(#gold)"/>
+    <path d="M450 265v75m-26-41h52" stroke="#A8793E" stroke-opacity=".72" stroke-width="5" stroke-linecap="round"/>
+  </g>
+  <g filter="url(#shadow)">
+    <path d="M278 420c0-18 15-33 33-33h278c18 0 33 15 33 33v113H278V420Z" fill="#F6FAFF" fill-opacity=".28" stroke="#FFF" stroke-opacity=".72" stroke-width="2"/>
+    <path d="M294 432h312v12H294z" fill="url(#red)"/>
+    <path d="M294 444h312v72H294z" fill="url(#white)"/>
+    <path d="M294 516h312v17H294z" fill="#F5F8FC"/>
+  </g>
+  <g fill="#FFF" fill-opacity=".52" stroke="#FFF" stroke-opacity=".82" stroke-width="2">
+    <path d="M355 385c-17-20-13-49 8-62 22-13 48-3 54 22 5 21-8 39-29 46l-33-6Z"/>
+    <path d="M488 355c4-26 31-40 54-27 22 13 24 41 7 61l-32 6c-20-8-33-22-29-40Z"/>
+  </g>
+  <path d="M128 548c120-48 235-44 322-14 100 35 206 32 322-15" stroke="#FFF" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
+  <path d="M172 576c108-29 202-24 278 0 91 29 184 26 278-7" stroke="#D9EBFF" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
+</svg>
