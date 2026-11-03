@@ -15,7 +15,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {inAdmin ? (
         <div className="admin-outer">{children}</div>
       ) : onStudentHome ? (
-        <div className="student-shell">
+        <div className="student-shell student-home">
           <header className="student-header">
             <Link href="/" className="student-brand" aria-label="CIVIC VISION Beranda">
               <span className="student-brand-mark" aria-hidden="true">C</span>
