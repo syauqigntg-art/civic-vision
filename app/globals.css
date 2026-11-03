@@ -2560,3 +2560,13 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   .case-external-video-note { padding:14px; }
   .case-external-video-note p { font-size:10px; }
 }
+
+/* Player frame fills its 16:9 slot without changing the media source. */
+.case-video-player-frame > div:not(.case-external-video-note) { position:absolute; inset:0; width:100%; height:100%; display:grid; place-items:center; }
+.case-video-player-frame > div:not(.case-external-video-note) > img { display:block; width:100%!important; max-width:none!important; height:100%!important; max-height:none!important; object-fit:contain; border-radius:inherit; }
+.case-video-player-frame .case-external-video-note { position:relative; z-index:1; background:rgba(3,28,74,.62); backdrop-filter:blur(8px); }
+.case-video-player-frame > div:has(> video) { position:absolute; inset:0; width:100%; height:100%; }
+.case-video-player-frame > div:has(> video) video { width:100%; height:100%; object-fit:contain; }
+@media(max-width:640px) {
+  .case-video-player-frame > div:not(.case-external-video-note) > img { object-fit:contain; }
+}
