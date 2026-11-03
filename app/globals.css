@@ -3848,25 +3848,39 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 
  
 /* ===== STUDENT PHASE CARDS · LEFT-TO-RIGHT TEXT WIPE =====
-   700ms wipe-out + 500ms pause + 700ms wipe-in = 1900ms cycle.
-   The animation is CSS-driven, so completion/current phase changes do not restart it. */
+   700ms wipe-out + 500ms invisible pause + 700ms wipe-in = 1900ms cycle.
+   CSS-driven animation continues independently of phase completion/current status. */
 .student-phase-cards .phase-text-wipe {
   display: block;
   clip-path: inset(0 0 0 0);
   animation: cv-phase-text-wipe 1900ms ease-in-out infinite;
-  will-change: clip-path;
+  will-change: clip-path, opacity;
 }
 
 @keyframes cv-phase-text-wipe {
-  0%,
+  0% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
   36.842% {
     clip-path: inset(0 0 0 100%);
+    opacity: 1;
+  }
+  36.843% {
+    clip-path: inset(0 0 0 100%);
+    opacity: 0;
+  }
+  63.157% {
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
   }
   63.158% {
-    clip-path: inset(0 0 0 100%);
+    clip-path: inset(0 100% 0 0);
+    opacity: 0;
   }
   100% {
     clip-path: inset(0 0 0 0);
+    opacity: 1;
   }
 }
 
@@ -3875,6 +3889,7 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   .student-phase-cards .phase-text-wipe {
     animation: none;
     clip-path: none;
+    opacity: 1;
     will-change: auto;
   }
 }
