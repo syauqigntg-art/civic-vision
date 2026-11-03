@@ -53,7 +53,7 @@ export function PhaseBar({
               <b className="phase-text-tracking">{P[phase][0]}</b>
               <small className="phase-text-tracking">{P[phase][1]}</small>
             </span>
-            <span className="cv-phase-description phase-text-tracking">{P[phase][2]}</span>
+            <span className="cv-phase-description">{P[phase][2]}</span>
             <span className="cv-phase-state">
               {isCurrent ? "● Sedang dikerjakan" : isComplete ? "✓ Selesai" : "○ Belum dimulai"}
             </span>
@@ -75,7 +75,7 @@ export function PhaseCards() {
             <b className="phase-text-tracking">{String(index + 1).padStart(2, "0")}. {P[phase][0]}</b>
           </div>
           <strong className="phase-card-title phase-text-tracking">{P[phase][1]}</strong>
-          <p className="phase-text-tracking">{P[phase][2]}</p>
+          <p>{P[phase][2]}</p>
           <span className="phase-card-art" aria-hidden="true">{["▣", "▤", "◉", "◆", "✿"][index]}</span>
         </li>
       ))}
