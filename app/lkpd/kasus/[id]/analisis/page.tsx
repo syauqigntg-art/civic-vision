@@ -154,8 +154,15 @@ export default function Analisis() {
   const seeDone = qs
     .filter((q) => q.phase === "see" && q.is_required)
     .every((q) => filled(q, a[q.id]));
-  const donePhases = PHASES.slice(0, step).filter((phase) => phaseDone(phase));
-  const completedPhases = [...(seeDone ? ["see"] : []), ...donePhases];
+  // Jawaban baru hanya boleh menampilkan status selesai setelah antrean autosave
+  // bersih. Jawaban yang dimuat dari snapshot server tetap dianggap tersimpan.
+  const answersConfirmedSaved =
+    (save.st === "idle" || save.st === "saved" || save.st === "locked") &&
+    !save.hasPending();
+  const donePhases = answersConfirmedSaved
+    ? PHASES.slice(0, step).filter((phase) => phaseDone(phase))
+    : [];
+  const completedPhases = answersConfirmedSaved && seeDone ? ["see", ...donePhases] : donePhases;
   const left = PHASES.length - step - 1;
 
   const change = (q: Q, v: unknown) => {
