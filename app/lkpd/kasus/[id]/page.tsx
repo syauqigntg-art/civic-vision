@@ -12,10 +12,10 @@ import { QuestionField } from "@/components/lkpd/QuestionField";
 import { PhaseBar } from "@/components/lkpd/PhaseBar";
 import { SaveStatus } from "@/components/lkpd/SaveStatus";
 import { ProgressBar } from "@/components/glass/ProgressBar";
-import { MediaPlayer as Media } from "@/components/video/MediaPlayer";
 import { GlassCard } from "@/components/glass/GlassCard";
 import { Alert } from "@/components/ui/Alert";
 import { Button } from "@/components/ui/Button";
+import { MediaPlayer as Media } from "@/components/video/MediaPlayer";
 
 export default function Video() {
   const { id } = useParams<{ id: string }>();
@@ -76,8 +76,6 @@ export default function Video() {
         const phaseQuestions = (contentResult.data.questions || []) as unknown as Q[];
         const isSubmitted = groupResult.data.submission?.status === "submitted";
 
-        // Jika ada pertanyaan SEE, siapkan draft agar jawaban di halaman video
-        // dapat disimpan melalui RPC yang sama seperti jawaban tahap berikutnya.
         if (phaseQuestions.length && !isSubmitted) {
           const { error } = await rpcS("begin_submission", { code, vid: id });
           if (error) {
@@ -132,9 +130,7 @@ export default function Video() {
       (q) => q.is_required && !filled(q, answers[q.id])
     );
     if (missing.length) {
-      setMsg(
-        `Tahap SEE belum lengkap. Lengkapi ${missing.length} pertanyaan wajib sebelum melanjutkan.`
-      );
+      setMsg(`Tahap SEE belum lengkap. Lengkapi ${missing.length} pertanyaan wajib sebelum melanjutkan.`);
       return;
     }
 
@@ -169,28 +165,21 @@ export default function Video() {
   };
 
   if (st === "load") {
-    return (
-      <GlassCard aria-busy="true">
-        <p>Memuat video dan pertanyaan tahap SEE...</p>
-      </GlassCard>
-    );
+    return <div className="case-detail-page"><GlassCard className="case-detail-state" aria-busy="true"><span className="case-detail-kicker">CIVIC VISION · RUANG BELAJAR</span><h1>Menyiapkan ruang pengamatan</h1><p>Memuat video dan pertanyaan tahap SEE...</p></GlassCard></div>;
   }
 
-  if (st === "err") {
+  if (st === "err" || st === "none") {
     return (
-      <GlassCard>
-        <Alert>{msg || "Video tidak dapat dimuat. Silakan coba kembali."}</Alert>
-        <Link className="btn g" href="/lkpd/kasus">← Sebelumnya</Link>
-      </GlassCard>
-    );
-  }
-
-  if (st === "none") {
-    return (
-      <GlassCard>
-        <Alert>{msg || "Video kasus tidak ditemukan."}</Alert>
-        <Link className="btn g" href="/lkpd/kasus">← Sebelumnya</Link>
-      </GlassCard>
+      <div className="case-detail-page">
+        <GlassCard className="case-detail-state">
+          <span className="case-detail-kicker">{st === "none" ? "PENUGASAN VIDEO" : "KONEKSI PEMBELAJARAN"}</span>
+          <h1>{st === "none" ? "Video tidak tersedia untuk kelompokmu" : "Video kasus belum dapat dimuat"}</h1>
+          <Alert>{msg || "Video tidak dapat dimuat. Silakan coba kembali."}</Alert>
+          <div className="case-detail-actions">
+            <Link className="case-glass-button secondary" href="/lkpd/kasus">← Kembali ke Video Kasus</Link>
+          </div>
+        </GlassCard>
+      </div>
     );
   }
 
@@ -204,104 +193,79 @@ export default function Video() {
     : 100;
 
   return (
-    <GlassCard>
-      <PhaseBar current="see" />
-      <span className="tag">{v.category || "Kasus Pancasila"}</span>
-      <h2 style={{ marginTop: 8 }}>
-        Kasus {String(v.number).padStart(2, "0")}: {v.title}
-      </h2>
-      {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) && v.thumbnail_url && <Media path={v.thumbnail_url} kind="image" alt={`Thumbnail kasus: ${v.title}`} />}
-      {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) ? (
-        <div className="hint">
-          <b>Video kasus tersedia melalui tautan eksternal.</b>
-          <p>Tekan tombol di bawah untuk membuka video pada tab baru. Setelah selesai menonton, kembali ke halaman ini untuk melanjutkan analisis.</p>
-          <a className="btn" href={v.video_url} target="_blank" rel="noopener noreferrer">Buka video kasus ↗</a>
+    <div className="case-detail-page">
+      <div className="case-detail-heading">
+        <div className="case-detail-breadcrumb">
+          <Link href="/lkpd">LKPD</Link><span aria-hidden="true">/</span><Link href="/lkpd/kasus">Video Kasus</Link><span aria-hidden="true">/</span><span aria-current="page">Detail Kasus</span>
         </div>
-      ) : v.video_url ? (
-        <Media path={v.video_url} poster={v.thumbnail_url} kind="video" alt={`Video kasus: ${v.title}`} />
-      ) : <p>Video belum tersedia dari guru.</p>}
-      {v.description && <p>{v.description}</p>}
-      <div className="hint">
-        <b>Tujuan SEE — Mengamati masalah.</b> Perhatikan video dengan saksama.
-        Catat fakta yang benar-benar terlihat, siapa yang terdampak, dan masalah
-        awal yang perlu diselidiki. Bedakan fakta dari dugaan.
-        <p style={{ marginBottom: 0 }}><b>Hasil yang diharapkan:</b> catatan fakta pengamatan dan rumusan awal masalah.</p>
+        <div className="case-detail-heading-row">
+          <div><span className="case-detail-kicker">RUANG PENGAMATAN · TAHAP 01</span><h1>Detail Video Kasus</h1><p>Amati situasi dalam video, kenali fakta, dan catat masalah yang perlu diselidiki.</p></div>
+          <Link className="case-glass-button secondary" href="/lkpd/kasus">← Daftar Video</Link>
+        </div>
       </div>
 
-      {seeQs.length > 0 && (
-        <section
-          style={{
-            marginTop: 20,
-            paddingTop: 18,
-            borderTop: "1px solid rgba(255,255,255,.18)",
-          }}
-        >
-          <h2>SEE — Mengamati permasalahan</h2>
-          <p>
-            Jawab pertanyaan pengamatan terlebih dahulu. Setelah tahap SEE
-            selesai, kalian akan melanjutkan ke THINK, ACT, CONNECT, dan KEEP.
-          </p>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              gap: 12,
-              flexWrap: "wrap",
-              fontSize: 13,
-            }}
-          >
-            <b>Progress pengamatan: {seePct}%</b>
-            <SaveStatus st={save.st} />
-          </div>
-          <ProgressBar pct={seePct} />
+      <section className="case-detail-panel" aria-label="Informasi kasus dan pemutar video">
+        <div className="case-detail-meta">
+          <span className="case-detail-kicker">KASUS {String(v.number).padStart(2, "0")}</span>
+          {v.category && <span className="case-detail-category">{v.category}</span>}
+        </div>
+        <h2>Kasus {String(v.number).padStart(2, "0")}: {v.title}</h2>
+        {v.description && <p className="case-detail-description">{v.description}</p>}
+        <div className="case-video-player-frame">
+          {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) && v.thumbnail_url && <Media path={v.thumbnail_url} kind="image" alt={`Thumbnail kasus: ${v.title}`} />}
+          {typeof v.video_url === "string" && /^https?:\/\//i.test(v.video_url) ? (
+            <div className="case-external-video-note">
+              <span className="case-player-icon" aria-hidden="true">↗</span>
+              <b>Video kasus tersedia melalui tautan eksternal</b>
+              <p>Buka video pada tab baru. Setelah selesai menonton, kembali ke halaman ini untuk melanjutkan pengamatan.</p>
+              <a className="case-glass-button primary" href={v.video_url} target="_blank" rel="noopener noreferrer">Buka Video Kasus ↗</a>
+            </div>
+          ) : v.video_url ? (
+            <Media path={v.video_url} poster={v.thumbnail_url} kind="video" alt={`Video kasus: ${v.title}`} />
+          ) : <div className="case-video-unavailable">Video belum tersedia dari guru.</div>}
+        </div>
+      </section>
 
-          {locked && (
-            <Alert>
-              Hasil telah dikirim dan dikunci. Jawaban pada tahap SEE hanya dapat
-              diubah setelah guru membuka kembali pengerjaan.
-            </Alert>
-          )}
+      <section className="case-detail-progress" aria-label="Tahapan pembelajaran">
+        <div className="case-section-heading"><div><span className="case-detail-kicker">ALUR PEMBELAJARAN</span><h2>Lima Tahap Pembelajaran</h2></div><span className="case-current-stage">TAHAP AKTIF · SEE</span></div>
+        <PhaseBar current="see" />
+      </section>
 
-          <fieldset
-            disabled={locked}
-            style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
-          >
-            {seeQs.map((q) => (
-              <div key={q.id} style={{ marginTop: 16 }}>
+      <section className="case-detail-instruction">
+        <div className="case-instruction-mark" aria-hidden="true">◎</div>
+        <div><span className="case-detail-kicker">PANDUAN AKTIVITAS · SEE</span><h2>Mengamati permasalahan</h2><p>Perhatikan video dengan saksama. Catat fakta yang benar-benar terlihat, siapa yang terdampak, dan masalah awal yang perlu diselidiki. Bedakan fakta dari dugaan.</p><div className="case-learning-outcome"><b>Hasil yang diharapkan</b><span>Catatan fakta pengamatan dan rumusan awal masalah.</span></div></div>
+      </section>
+
+      <section className="case-detail-workspace" aria-labelledby="case-workspace-title">
+        <div className="case-workspace-header">
+          <div><span className="case-detail-kicker">LEMBAR KERJA PESERTA DIDIK</span><h2 id="case-workspace-title">Workspace Pengamatan</h2><p>Isi jawaban berdasarkan hasil pengamatan video kasus.</p></div>
+          <div className="case-workspace-progress"><strong>{seePct}%</strong><span>Progres SEE</span></div>
+        </div>
+        <div className="case-workspace-status"><div><b>Progress jawaban wajib</b><span>{requiredSee.filter((q) => filled(q, answers[q.id])).length} dari {requiredSee.length} pertanyaan selesai</span></div><SaveStatus st={save.st} /></div>
+        <ProgressBar pct={seePct} />
+        {locked && <Alert>Hasil telah dikirim dan dikunci. Jawaban pada tahap SEE hanya dapat diubah setelah guru membuka kembali pengerjaan.</Alert>}
+        {seeQs.length > 0 ? (
+          <fieldset className="case-question-list" disabled={locked}>
+            {seeQs.map((q, index) => (
+              <article className="case-question-card" key={q.id}>
+                <div className="case-question-number">PERTANYAAN {String(index + 1).padStart(2, "0")}</div>
                 <span className="tag">{q.category}</span>
-                <h3 id={`q-${q.id}`} style={{ marginTop: 10 }}>
-                  {q.question_text}
-                  {q.is_required ? "" : " (opsional)"}
-                </h3>
-                <QuestionField
-                  q={q}
-                  raw={answers[q.id]}
-                  onChange={(value) => change(q, value)}
-                  labelledBy={`q-${q.id}`}
-                />
-                {q.description && <div className="hint">{q.description}</div>}
-              </div>
+                <h3 id={`q-${q.id}`}>{q.question_text}{q.is_required ? "" : " (opsional)"}</h3>
+                <QuestionField q={q} raw={answers[q.id]} onChange={(value) => change(q, value)} labelledBy={`q-${q.id}`} />
+                {q.description && <p className="case-question-help">{q.description}</p>}
+              </article>
             ))}
           </fieldset>
-        </section>
-      )}
-
-      {msg && <Alert>{msg}</Alert>}
-      <div className="row">
-        <Link className="btn g" href="/lkpd/kasus">← Sebelumnya</Link>
-        <Button disabled={busy} onClick={next}>
-          {busy
-            ? "Menyimpan..."
-            : locked
-              ? "LIHAT HASIL →"
-              : "Selanjutnya →"}
-        </Button>
-      </div>
-      <p style={{ fontSize: 13 }}>
-        Jawaban tahap SEE tersimpan otomatis. Lanjutkan ke THINK setelah
-        pertanyaan pengamatan yang wajib terisi.
-      </p>
-    </GlassCard>
+        ) : (
+          <div className="case-no-questions"><b>Belum ada pertanyaan pengamatan.</b><p>Guru belum menambahkan pertanyaan SEE untuk video ini. Kamu tetap dapat melanjutkan ke tahap berikutnya.</p></div>
+        )}
+        {msg && <Alert>{msg}</Alert>}
+        <div className="case-detail-actions">
+          <Link className="case-glass-button secondary" href="/lkpd/kasus">← Sebelumnya</Link>
+          <Button disabled={busy} onClick={next}>{busy ? "Menyimpan jawaban..." : locked ? "LIHAT HASIL →" : "Selanjutnya · THINK →"}</Button>
+        </div>
+        <p className="case-autosave-note">Jawaban tahap SEE tersimpan otomatis. Pastikan status penyimpanan berhasil sebelum melanjutkan ke THINK.</p>
+      </section>
+    </div>
   );
 }
