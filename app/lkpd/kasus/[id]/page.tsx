@@ -194,11 +194,6 @@ export default function Video() {
 
   return (
     <div className="case-detail-page">
-      <section className="case-detail-progress cv-stage-panel" aria-label="Tahapan pembelajaran">
-        <div className="case-section-heading"><div><span className="case-detail-kicker">ALUR PEMBELAJARAN · STACK</span><h2>Lima Tahap Pembelajaran</h2><p className="cv-section-subtitle">Ikuti urutan kegiatan untuk membangun pemahaman hingga aksi berkelanjutan.</p></div><span className="case-current-stage">TAHAP 01 / 05 · SEE</span></div>
-        <PhaseBar current="see" />
-      </section>
-
       <header className="case-detail-heading cv-case-header">
         <nav className="case-detail-breadcrumb" aria-label="Breadcrumb">
           <Link href="/lkpd">LKPD</Link><span aria-hidden="true">/</span><Link href="/lkpd/kasus">Video Kasus</Link><span aria-hidden="true">/</span><span aria-current="page">Ruang Pengamatan</span>
@@ -243,6 +238,11 @@ export default function Video() {
       <section className="case-detail-instruction cv-instruction-panel">
         <div className="case-instruction-mark" aria-hidden="true">◎</div>
         <div><span className="case-detail-kicker">PANDUAN AKTIVITAS · SEE</span><h2>Mengamati permasalahan</h2><p>Perhatikan video dengan saksama. Catat fakta yang benar-benar terlihat, siapa yang terdampak, dan masalah awal yang perlu diselidiki. Bedakan fakta dari dugaan.</p><div className="case-learning-outcome"><b>Hasil yang diharapkan</b><span>Catatan fakta pengamatan dan rumusan awal masalah.</span></div></div>
+      </section>
+
+      <section className="case-detail-progress cv-stage-panel" aria-label="Tahapan pembelajaran">
+        <div className="case-section-heading"><div><span className="case-detail-kicker">ALUR PEMBELAJARAN · STACK</span><h2>Lima Tahap Pembelajaran</h2><p className="cv-section-subtitle">Ikuti urutan kegiatan untuk membangun pemahaman hingga aksi berkelanjutan.</p></div><span className="case-current-stage">TAHAP 01 / 05 · SEE</span></div>
+        <PhaseBar current="see" />
       </section>
 
       <section className="case-detail-workspace cv-student-workspace" aria-labelledby="case-workspace-title">
