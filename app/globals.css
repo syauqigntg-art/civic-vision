@@ -3525,3 +3525,121 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   color: rgba(232,245,255,.88);
   border-top-color: rgba(219,240,255,.22);
 }
+
+
+/* ===== STACK · LIQUID GLASS HIGH-CONTRAST PHASE CARDS ===== */
+.cv-learning-navigation .ph {
+  border: 1px solid rgba(226, 244, 255, .48);
+  border-radius: 19px;
+  background: linear-gradient(150deg, rgba(34, 117, 190, .76), rgba(8, 55, 117, .78));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.28),
+    inset 0 0 0 1px rgba(167,220,255,.08),
+    0 10px 24px rgba(0,18,61,.24);
+  -webkit-backdrop-filter: blur(18px) saturate(155%);
+  backdrop-filter: blur(18px) saturate(155%);
+}
+.cv-learning-navigation .cv-phase-copy b,
+.cv-learning-navigation .cv-phase-copy small,
+.cv-learning-navigation .cv-phase-description,
+.cv-learning-navigation .cv-phase-state,
+.cv-learning-navigation .cv-phase-number { color: #fff; }
+.cv-learning-navigation .cv-phase-copy b { font-weight: 800; }
+.cv-learning-navigation .cv-phase-copy small {
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 650;
+}
+.cv-learning-navigation .cv-phase-description {
+  font-size: 11px;
+  line-height: 1.5;
+  color: rgba(248,252,255,.96);
+}
+.cv-learning-navigation .cv-phase-number {
+  border-color: rgba(240,250,255,.48);
+  background: rgba(225,244,255,.16);
+}
+.cv-learning-navigation .cv-phase-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  color: #fff;
+  border-color: rgba(238,249,255,.72);
+  background: linear-gradient(145deg,rgba(210,240,255,.32),rgba(100,176,235,.24));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.36), 0 4px 12px rgba(0,30,80,.16);
+}
+.cv-learning-navigation .cv-phase-state {
+  align-self: flex-start;
+  padding: 6px 10px;
+  border: 1px solid rgba(235,248,255,.48);
+  border-radius: 999px;
+  background: rgba(221,242,255,.12);
+  font-size: 10px;
+  line-height: 1.2;
+}
+.cv-learning-navigation .ph.pending {
+  border-color: rgba(226,244,255,.5);
+  background: linear-gradient(150deg,rgba(39,126,200,.68),rgba(8,58,119,.76));
+}
+.cv-learning-navigation .ph.on {
+  border-color: rgba(205,246,255,.98);
+  background: linear-gradient(150deg,rgba(45,173,246,.9),rgba(12,105,190,.86));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.48),
+    inset 0 0 0 1px rgba(220,248,255,.2),
+    0 0 0 1px rgba(111,216,255,.34),
+    0 0 24px rgba(69,190,255,.34),
+    0 12px 26px rgba(0,24,77,.24);
+}
+.cv-learning-navigation .ph.on .cv-phase-icon {
+  border-color: #fff;
+  background: rgba(214,245,255,.34);
+  box-shadow: inset 0 1px 0 #fff, 0 0 13px rgba(190,239,255,.4);
+}
+.cv-learning-navigation .ph.on .cv-phase-state {
+  border-color: rgba(239,251,255,.72);
+  background: rgba(227,248,255,.2);
+  color: #fff;
+}
+.cv-learning-navigation .ph.ok {
+  border-color: rgba(151,255,216,.92);
+  background: linear-gradient(150deg,rgba(16,157,119,.82),rgba(5,105,93,.84));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    inset 0 0 0 1px rgba(178,255,225,.12),
+    0 0 0 1px rgba(98,238,183,.2),
+    0 0 18px rgba(55,220,159,.2),
+    0 10px 22px rgba(0,25,67,.22);
+}
+.cv-learning-navigation .ph.ok .cv-phase-icon {
+  border-color: rgba(195,255,226,.96);
+  background: rgba(83,224,166,.28);
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.42), 0 0 13px rgba(98,255,190,.25);
+}
+.cv-learning-navigation .ph.ok .cv-phase-state {
+  border-color: rgba(173,255,218,.78);
+  background: rgba(111,242,183,.18);
+  color: #fff;
+}
+.cv-learning-navigation .cv-phase-connector {
+  right: calc(var(--step-gap) * -1);
+  width: var(--step-gap);
+  height: 2px;
+  background: linear-gradient(90deg,rgba(219,244,255,.82),rgba(151,217,255,.56));
+}
+.cv-learning-navigation .ph.ok .cv-phase-connector {
+  background: linear-gradient(90deg,rgba(115,248,190,.9),rgba(203,255,229,.68));
+  box-shadow: 0 0 7px rgba(95,245,177,.3);
+}
+@media (max-width: 1100px) {
+  .cv-learning-navigation { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .cv-learning-navigation .ph { min-height: 170px; }
+}
+@media (max-width: 640px) {
+  .cv-learning-navigation { display:flex; }
+  .cv-learning-navigation .ph { flex-basis:min(260px,82vw); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cv-learning-navigation .ph { transition:none; }
+}
