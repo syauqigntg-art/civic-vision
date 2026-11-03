@@ -3353,3 +3353,14 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 @media (prefers-reduced-motion: reduce) {
   .cv-learning-navigation .ph { transition: none; }
 }
+
+/* Keep the four-stage analysis variant balanced as well. */
+.cv-learning-navigation.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 1100px) {
+  .cv-learning-navigation.four { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .cv-learning-navigation.four { display: flex; }
+}
