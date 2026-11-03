@@ -18,7 +18,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="student-shell">
           <header className="student-header">
             <Link href="/" className="student-brand" aria-label="CIVIC VISION Beranda">
-              <span className="student-brand-mark" aria-hidden="true">C</span>
+              <span className="student-brand-mark" aria-hidden="true">
+                <svg viewBox="0 0 48 48" focusable="false" aria-hidden="true">
+                  <path d="M36.5 10.5A19 19 0 1 0 36.5 37.5" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="butt"/>
+                  <path d="M34 15.5 42 10v11Z" fill="#83d8ff"/>
+                  <path d="M34 32.5 42 38v-11Z" fill="#83d8ff"/>
+                  <path d="M11 24h15" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".9"/>
+                </svg>
+              </span>
               <span><strong>CIVIC VISION</strong><small>LKPD Digital</small></span>
             </Link>
             <NavBar />
