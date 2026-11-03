@@ -24,7 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <NavBar />
             <div className="student-profile" aria-label="Area siswa">
               <span className="student-profile-avatar" aria-hidden="true">S</span>
-              <span><strong>Ruang Siswa</strong><small>Belajar Pancasila</small></span>
+              <span><strong>Syauqi Alif</strong><small>Siswa · XI</small></span>
               <span aria-hidden="true">⌄</span>
             </div>
           </header>
