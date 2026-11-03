@@ -20,10 +20,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <Link href="/" className="student-brand" aria-label="CIVIC VISION Beranda">
               <span className="student-brand-mark" aria-hidden="true">
                 <svg viewBox="0 0 48 48" focusable="false" aria-hidden="true">
-                  <path d="M24 4 29.5 15.5 42 18 33.5 27 35.5 40 24 34 12.5 40 14.5 27 6 18 18.5 15.5Z" />
-                  <path d="M12 28.5 24 34.5 36 28.5M12 28.5 12 36 24 42 36 36 36 28.5" />
-                  <path d="M24 10.5v18M17.5 17 24 10.5 30.5 17" />
-                  <circle className="logo-core" cx="24" cy="23" r="2.4" />
+                  <path d="M36.5 10.5A19 19 0 1 0 36.5 37.5" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="butt"/>
+                  <path d="M34 15.5 42 10v11Z" fill="#83d8ff"/>
+                  <path d="M34 32.5 42 38v-11Z" fill="#83d8ff"/>
+                  <path d="M11 24h15" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".9"/>
                 </svg>
               </span>
               <span><strong>CIVIC VISION</strong><small>LKPD Digital</small></span>
