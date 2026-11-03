@@ -1962,3 +1962,16 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   .case-loading-indicator,.case-skeleton-card span{animation:none}
   .case-video-card,.case-watch-button{transition:none}
 }
+
+
+/* Mobile video cards retain the reference's 16:9 thumbnail above the copy. */
+@media(max-width:700px){
+  .case-video-card{display:flex;flex-direction:column}
+  .case-video-visual{width:100%;height:auto;min-height:0;aspect-ratio:16/9}
+  .case-video-content{min-height:0;padding:13px 14px 14px}
+  .case-video-content h3{font-size:15px;margin-bottom:12px}
+  .case-watch-button{min-height:39px;font-size:11px}
+}
+@media(max-width:430px){
+  .case-video-content h3{font-size:14px}
+}
