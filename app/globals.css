@@ -1283,3 +1283,139 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
 @media(prefers-reduced-motion:reduce){
  .student-stack-panel .student-phase-cards .ph{transition:none}
 }
+
+
+/* === B/C TIER 08–11: TYPOGRAPHY, MICROINTERACTIONS, RESPONSIVE + ACCESSIBILITY === */
+:root{
+ --cv-font:'Plus Jakarta Sans',system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ --cv-motion:220ms;
+ --cv-ease:cubic-bezier(.2,.75,.25,1);
+ --cv-focus:rgba(255,255,255,.98);
+}
+html{font-family:var(--cv-font);scroll-behavior:smooth}
+body{font-family:var(--cv-font);font-optical-sizing:auto}
+.student-dashboard,.student-dashboard *{font-family:var(--cv-font)}
+.student-dashboard h1,.student-dashboard h2,.student-dashboard h3,
+.student-dashboard strong,.student-dashboard b{font-weight:800}
+.student-dashboard p,.student-dashboard small,.student-dashboard .student-feature-copy{
+ font-weight:500;
+}
+.student-eyebrow,.student-art-caption,.phase-sequence,
+.student-profile small,.student-meta{
+ font-size:12px;
+ font-weight:600;
+ letter-spacing:.035em;
+}
+.student-hero h1{font-weight:800;letter-spacing:-.045em}
+.student-hero p,.student-feature-copy small,
+.student-stack-panel .student-phase-cards .ph p{font-weight:500}
+.student-feature-card,.student-cta,.cv-navbar .cv-nav-link,
+.student-profile,.student-stack-panel .student-phase-cards .ph,
+button,a,[role="button"]{
+ transition:
+  transform var(--cv-motion) var(--cv-ease),
+  box-shadow var(--cv-motion) var(--cv-ease),
+  background-color var(--cv-motion) var(--cv-ease),
+  border-color var(--cv-motion) var(--cv-ease),
+  color var(--cv-motion) var(--cv-ease),
+  filter var(--cv-motion) var(--cv-ease);
+}
+.student-feature-card:hover{
+ transform:translateY(-4px);
+ box-shadow:0 24px 48px rgba(0,16,65,.32),inset 0 1px 1px rgba(255,255,255,.9),0 0 24px rgba(166,222,255,.22);
+}
+.student-cta{
+ display:inline-flex;
+ align-items:center;
+ justify-content:center;
+ gap:12px;
+ min-height:48px;
+ box-shadow:0 10px 26px rgba(48,139,255,.42),inset 0 1px 1px rgba(255,255,255,.92);
+}
+.student-cta:hover{
+ transform:translateY(-2px) scale(1.015);
+ box-shadow:0 15px 34px rgba(48,139,255,.58),0 0 22px rgba(190,232,255,.48),inset 0 1px 1px white;
+}
+.student-cta:active,.btn:active,button:active,[role="button"]:active{transform:translateY(1px) scale(.985)}
+.cv-navbar .cv-nav-link:active{transform:scale(.97)}
+.student-feature-card:focus-visible,.student-cta:focus-visible,
+.cv-navbar .cv-nav-link:focus-visible,.student-profile:focus-visible,
+button:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,
+[role="button"]:focus-visible{
+ outline:3px solid var(--cv-focus);
+ outline-offset:4px;
+ box-shadow:0 0 0 6px rgba(98,180,255,.38),0 0 22px rgba(199,236,255,.45);
+}
+button,a,[role="button"],input,select{touch-action:manipulation}
+button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
+.student-dashboard a{text-underline-offset:3px}
+.student-dashboard a:focus:not(:focus-visible){outline:none}
+/* Progressive enhancement: native cross-document transitions where supported. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation:cv-page-out 160ms ease both}
+::view-transition-new(root){animation:cv-page-in 220ms ease both}
+@keyframes cv-page-out{to{opacity:.86;filter:blur(2px)}}
+@keyframes cv-page-in{from{opacity:.86;filter:blur(2px)}to{opacity:1;filter:blur(0)}}
+@media(min-width:761px) and (max-width:1100px){
+ .student-dashboard{padding-inline:clamp(18px,3vw,32px)}
+ .student-hero{grid-template-columns:minmax(0,1fr) minmax(0,.9fr);min-height:370px}
+ .student-hero-copy{padding:30px}
+ .student-feature-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .student-stack-panel .student-phase-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .student-stack-panel .student-phase-cards:before{display:none}
+ .student-stack-panel .student-phase-cards .ph,
+ .student-stack-panel .student-phase-cards .ph:nth-child(even){transform:none;min-height:230px}
+}
+@media(max-width:760px){
+ html,body{max-width:100%;overflow-x:hidden}
+ .student-dashboard{width:100%;min-width:0;padding-inline:12px}
+ .student-header{gap:10px;flex-wrap:wrap}
+ .student-header .cv-navbar{
+  order:3;width:100%;max-width:100%;min-width:0;
+  overflow-x:auto;justify-content:flex-start;
+  scrollbar-width:none;white-space:nowrap;
+  padding:7px;gap:5px;
+ }
+ .student-header .cv-navbar::-webkit-scrollbar{display:none}
+ .cv-navbar .cv-nav-link{flex:0 0 auto;min-height:44px;padding:9px 13px;font-size:12px}
+ .student-profile{max-width:48%;min-width:0}
+ .student-hero{min-width:0;grid-template-columns:1fr;overflow:hidden}
+ .student-hero-copy{padding:26px 22px}
+ .student-hero-art{min-height:250px}
+ .student-feature-grid{grid-template-columns:1fr;gap:12px}
+ .student-stack-panel{min-width:0;padding:18px 14px}
+ .student-stack-panel .student-phase-cards{
+  display:flex;overflow-x:auto;overscroll-behavior-x:contain;
+  scroll-snap-type:x mandatory;scroll-padding-inline:8px;
+  padding:8px 8px 18px;margin-inline:-4px;
+  scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.55) transparent;
+ }
+ .student-stack-panel .student-phase-cards .ph,
+ .student-stack-panel .student-phase-cards .ph:nth-child(even){
+  flex:0 0 min(78vw,285px);min-height:235px;scroll-snap-align:start;transform:none;
+ }
+ .student-stack-panel .student-phase-cards .ph:nth-child(even):hover,
+ .student-stack-panel .student-phase-cards .ph:nth-child(odd):hover{transform:translateY(-3px)}
+}
+@media(max-width:420px){
+ .student-header{align-items:flex-start}
+ .student-profile{max-width:52%;padding-inline:7px;font-size:11px}
+ .student-header .cv-navbar .cv-nav-link{padding-inline:11px}
+ .student-hero h1{font-size:clamp(29px,9vw,36px)}
+ .student-hero-copy{padding:23px 18px}
+ .student-stack-panel .student-phase-cards .ph,
+ .student-stack-panel .student-phase-cards .ph:nth-child(even){flex-basis:84vw}
+}
+/* Ensure text remains legible on the translucent surfaces. */
+.student-feature-copy small,.student-hero p{color:rgba(255,255,255,.94)}
+.student-stack-panel .student-phase-cards .ph p{color:#173b6b}
+@media(prefers-reduced-motion:reduce){
+ html{scroll-behavior:auto}
+ *,*::before,*::after{
+  animation-duration:.01ms!important;
+  animation-iteration-count:1!important;
+  scroll-behavior:auto!important;
+  transition-duration:.01ms!important;
+  view-transition-name:none!important;
+ }
+}
