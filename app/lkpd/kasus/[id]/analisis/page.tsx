@@ -321,8 +321,8 @@ export default function Analisis() {
   }
 
   return (
-    <GlassCard className="case-analysis-workspace">
-      <div className="case-analysis-progress">
+    <GlassCard className="case-analysis-workspace cv-analysis-workspace">
+      <div className="case-analysis-progress cv-analysis-overview">
       <div className="case-analysis-progress-heading"><div><span className="case-detail-kicker">ALUR PEMBELAJARAN</span><h1>Workspace LKPD</h1><p>Lanjutkan setiap tahap berdasarkan pertanyaan dan panduan dari guru.</p></div><span className="case-analysis-total">{pct}%<small>PROGRES TOTAL</small></span></div>
       <PhaseBar
         current={activePhase}
@@ -345,7 +345,7 @@ export default function Analisis() {
       <ProgressBar pct={pct} />
       </div>
 
-      <section className="case-analysis-instruction">
+      <section className="case-analysis-instruction cv-instruction-panel">
       <div className="case-analysis-step-label">TAHAP {step + 2} DARI 5</div>
       <p className="case-analysis-phase-title">
         <b style={{ color: "#fff" }}>
@@ -389,14 +389,14 @@ export default function Analisis() {
         </div>
       )}
 
-      <section className="case-analysis-questions">
+      <section className="case-analysis-questions cv-analysis-questions">
       <div className="case-analysis-question-heading"><div><span className="case-detail-kicker">RUANG JAWABAN</span><h2>Pertanyaan dan Refleksi</h2><p>Jawab sesuai instruksi. Jawaban tersimpan otomatis saat kamu mengerjakan.</p></div><span className="case-current-stage">{activePhase.toUpperCase()}</span></div>
       <fieldset
         disabled={locked}
         style={{ border: 0, padding: 0, margin: 0, minWidth: 0 }}
       >
         {cur.map((q) => (
-          <div key={q.id}>
+          <article className="cv-analysis-question-card" key={q.id}>
             <span className="tag">{q.category}</span>
             <h2 id={`q-${q.id}`} style={{ marginTop: 12 }}>
               {q.question_text}
@@ -409,7 +409,7 @@ export default function Analisis() {
               labelledBy={`q-${q.id}`}
             />
             {q.description && <div className="hint">{q.description}</div>}
-          </div>
+          </article>
         ))}
       </fieldset>
 
