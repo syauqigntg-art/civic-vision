@@ -3903,3 +3903,83 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   .cv-stage-panel .cv-learning-navigation .cv-phase-copy b,
   .cv-stage-panel .cv-learning-navigation .cv-phase-copy small { transition: none; }
 }
+
+
+/* ===== FINAL CASCADE FIX · PREMIUM STACK TYPOGRAPHY ===== */
+/* These selectors intentionally match the rendered PhaseBar DOM and outrank legacy .ph state rules. */
+.case-detail-progress.cv-stage-panel .case-section-heading h2 {
+  color: transparent !important;
+  background-image: linear-gradient(100deg,#ffffff 0%,#f4fcff 48%,#a8edff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: clamp(20px,2.2vw,24px) !important;
+  font-weight: 800 !important;
+  letter-spacing: -.025em !important;
+  line-height: 1.2;
+  text-shadow: 0 1px 1px rgba(0,27,66,.18),0 0 13px rgba(156,226,255,.24);
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph .cv-phase-copy b {
+  display: block;
+  color: transparent !important;
+  background-image: linear-gradient(105deg,#ffffff 0%,#f4fcff 52%,#b7efff 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  letter-spacing: .4px !important;
+  line-height: 1.18 !important;
+  text-shadow: 0 0 8px rgba(181,235,255,.24);
+  transition: background-image .22s ease, text-shadow .22s ease;
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph .cv-phase-copy small {
+  display: block;
+  color: #eaf8ff !important;
+  font-size: 13.5px !important;
+  font-weight: 700 !important;
+  letter-spacing: .01em;
+  line-height: 1.38 !important;
+  text-shadow: 0 1px 2px rgba(0,23,59,.24);
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph .cv-phase-description {
+  color: rgba(247,251,255,.92) !important;
+  font-size: 12.5px !important;
+  font-weight: 500 !important;
+  line-height: 1.5 !important;
+  text-shadow: 0 1px 1px rgba(0,20,54,.16);
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph.on .cv-phase-copy b {
+  background-image: linear-gradient(105deg,#ffffff 0%,#f3fdff 42%,#8ceaff 100%);
+  text-shadow: 0 0 5px rgba(133,226,255,.52),0 0 12px rgba(76,190,255,.30);
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-copy b {
+  background-image: linear-gradient(105deg,#ffffff 0%,#edfff7 48%,#a8ffd7 100%);
+  text-shadow: 0 0 5px rgba(139,255,202,.38),0 0 11px rgba(57,221,158,.20);
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph.pending .cv-phase-copy b {
+  background-image: linear-gradient(105deg,#ffffff 0%,#f2faff 55%,#c8eaff 100%);
+  text-shadow: 0 0 5px rgba(190,229,255,.18);
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph.on .cv-phase-copy small {
+  color: #f4fdff !important;
+}
+.case-detail-progress.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-copy small {
+  color: #effff7 !important;
+}
+@media (max-width: 700px) {
+  .case-detail-progress.cv-stage-panel .cv-learning-navigation .ph .cv-phase-copy b {
+    font-size: 17px !important;
+  }
+  .case-detail-progress.cv-stage-panel .cv-learning-navigation .ph .cv-phase-copy small {
+    font-size: 13px !important;
+  }
+  .case-detail-progress.cv-stage-panel .cv-learning-navigation .ph .cv-phase-description {
+    font-size: 12px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .case-detail-progress.cv-stage-panel .cv-learning-navigation .ph .cv-phase-copy b {
+    transition: none;
+  }
+}
