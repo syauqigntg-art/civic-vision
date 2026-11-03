@@ -1421,16 +1421,10 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 }
 
 
-/* ===== PR33 POLISH: keep the original Liquid Glass identity, refine the details ===== */
-.student-shell{
-  background:
-    radial-gradient(ellipse at 14% 8%,rgba(93,169,237,.42),transparent 34%),
-    radial-gradient(ellipse at 88% 70%,rgba(72,139,220,.34),transparent 38%),
-    linear-gradient(128deg,#092653 0%,#14539a 48%,#286db5 100%);
-}
-.student-shell:before,.student-shell:after{opacity:.22;filter:blur(72px)}
+/* ===== PR33 precision polish: preserve the approved composition ===== */
 .student-brand-mark{
   width:44px;height:44px;flex:0 0 44px;
+  display:grid;place-items:center;
   border:1px solid rgba(255,255,255,.72);
   border-radius:15px;
   background:linear-gradient(145deg,rgba(255,255,255,.2),rgba(255,255,255,.06));
@@ -1438,62 +1432,49 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   filter:none;
 }
 .student-brand-mark svg{
-  width:31px;height:31px;fill:none;stroke:#f7fbff;
-  stroke-width:2;stroke-linecap:round;stroke-linejoin:round;
+  display:block;width:30px;height:30px;
+  fill:none;stroke:#f7fbff;stroke-width:2.4;
+  stroke-linecap:round;stroke-linejoin:round;
 }
-.student-brand-mark svg circle{fill:#f7fbff;stroke:none}
+.student-brand-mark svg .logo-pupil{fill:#f7fbff;stroke:none}
 .student-brand strong{letter-spacing:.045em;font-size:14px}
 .student-brand small{font-size:10px;letter-spacing:.08em;opacity:.82}
-.student-hero-art{
-  display:grid;place-items:center;
-  background:
-    radial-gradient(ellipse at 50% 45%,rgba(231,243,255,.22),transparent 58%),
-    linear-gradient(145deg,rgba(154,204,246,.2),rgba(11,64,128,.08));
+
+/* Indonesian flag: standard horizontal 3:2 flag shape, red above white. */
+.hero-flag{
+  width:168px;height:112px;
+  transform:none;
+  border-radius:0;
+  animation:none;
+  filter:drop-shadow(0 5px 7px rgba(13,36,83,.2));
 }
-.student-hero-illustration{
-  display:block;width:min(100%,680px);height:100%;max-height:430px;
-  object-fit:contain;padding:clamp(10px,2vw,24px);
-  filter:drop-shadow(0 14px 24px rgba(4,25,62,.17));
-}
-.hero-art-caption{
-  position:absolute;left:24px;bottom:18px;
-  color:rgba(247,251,255,.76);font-size:10px;font-weight:800;
-  letter-spacing:.16em;text-shadow:0 1px 8px rgba(5,30,75,.22);
-}
-.student-hero h1{text-shadow:0 2px 14px rgba(0,20,65,.18)}
-.student-hero p{max-width:520px}
+.hero-flag span{height:50%;background:#ed1c24}
+.hero-flag span+span{background:#fff}
+
 .student-feature-card{
   border-color:rgba(235,247,255,.62);
-  box-shadow:0 12px 28px rgba(0,24,73,.15),inset 0 1px rgba(255,255,255,.72);
+  box-shadow:0 10px 24px rgba(0,24,73,.14),inset 0 1px rgba(255,255,255,.72);
 }
-.student-feature-card:before{opacity:.38}
 .student-feature-card:hover{
-  box-shadow:0 16px 32px rgba(0,24,73,.2),inset 0 1px rgba(255,255,255,.8);
+  box-shadow:0 14px 28px rgba(0,24,73,.18),inset 0 1px rgba(255,255,255,.8);
 }
-.student-feature-icon{
-  box-shadow:0 5px 14px rgba(0,30,84,.13),inset 0 1px rgba(255,255,255,.82);
+.student-feature-card:focus-visible,.student-cta:focus-visible,
+.cv-navbar .cv-nav-link:focus-visible{
+  outline:3px solid rgba(255,255,255,.98);
+  outline-offset:3px;
 }
 .student-stack-panel{
   border-color:rgba(235,247,255,.58);
-  background:linear-gradient(135deg,rgba(238,248,255,.2),rgba(255,255,255,.09));
-  box-shadow:0 14px 34px rgba(0,25,83,.14),inset 0 1px rgba(255,255,255,.62);
+  box-shadow:0 12px 28px rgba(0,25,83,.14),inset 0 1px rgba(255,255,255,.62);
 }
 .student-stack-panel .student-phase-cards .ph{
-  box-shadow:0 10px 22px rgba(0,22,70,.13),inset 0 1px rgba(255,255,255,.92);
-}
-.student-stack-panel .student-phase-cards .ph:nth-child(even){transform:translateY(8px)}
-.student-stack-panel .student-phase-cards .ph:nth-child(even):hover{transform:translateY(2px)}
-.student-stack-panel .student-phase-cards .ph:nth-child(odd):hover{transform:translateY(-3px)}
-.student-stack-panel .student-phase-cards .ph.on{
-  box-shadow:0 0 0 3px rgba(255,255,255,.72),0 13px 28px rgba(0,22,70,.18),inset 0 1px #fff;
-  filter:none;
+  box-shadow:0 8px 18px rgba(0,22,70,.12),inset 0 1px rgba(255,255,255,.92);
 }
 @media(max-width:760px){
-  .student-hero-art{min-height:230px}
-  .student-hero-illustration{max-height:280px;padding:8px}
-  .hero-art-caption{left:16px;bottom:12px;font-size:9px}
-  .student-stack-panel .student-phase-cards .ph:nth-child(even){transform:none}
+  .student-brand-mark{width:40px;height:40px;flex-basis:40px;border-radius:13px}
+  .student-brand-mark svg{width:27px;height:27px}
+  .hero-flag{width:120px;height:80px}
 }
 @media(prefers-reduced-motion:reduce){
-  .student-shell:before,.student-shell:after{animation:none}
+  .hero-flag{animation:none}
 }
