@@ -277,7 +277,8 @@ test("student case list trusts server-resolved assignments and preserves pinned 
       { id: "v1", number: 1, title: "Kasus 1", category: null },
       { id: "v2", number: 2, title: "Kasus 2", category: "Etika digital" },
     ]),
-    // The server has already filtered the list for this group, including any pinned historical video.\n    async () => ok({ id: "g1", video_ids: [] }),
+    // The server has already filtered the list for this group, including any pinned historical video.
+    async () => ok({ id: "g1", video_ids: [] }),
   );
   assert.deepEqual(assigned, {
     kind: "loaded",
