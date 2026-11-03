@@ -8,7 +8,13 @@ const P: Record<string, [string, string, string]> = {
 
 const ALL_PHASES = ["see", "think", "act", "connect", "keep"];
 const ANALYSIS_PHASES = ["think", "act", "connect", "keep"];
-const ICONS: Record<string, string> = { see: "◉", think: "⌕", act: "ϟ", connect: "↔", keep: "✿" };
+const ICONS: Record<string, string> = {
+  see: "◉",
+  think: "⌕",
+  act: "↗",
+  connect: "↔",
+  keep: "✳",
+};
 
 export function PhaseBar({
   current,
@@ -20,20 +26,34 @@ export function PhaseBar({
   completed?: string[];
 }) {
   const phases = includeSee ? ALL_PHASES : ANALYSIS_PHASES;
+
   return (
-    <ol className={"phases" + (includeSee ? " five" : " four") + " cv-learning-phases"} aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}>
-      {phases.map((phase, index) => {
+    <ol
+      className={"phases" + (includeSee ? " five" : " four") + " cv-learning-phases"}
+      aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}
+    >
+      {phases.map((phase) => {
         const isCurrent = phase === current;
         const isComplete = !isCurrent && completed.includes(phase);
+        const order = ALL_PHASES.indexOf(phase) + 1;
+        const status = isCurrent ? "Sedang dikerjakan" : isComplete ? "Selesai" : "Belum dimulai";
+
         return (
-          <li key={phase} className={"ph phase-" + phase + (isCurrent ? " on" : isComplete ? " ok" : " pending")} aria-current={isCurrent ? "step" : undefined}>
-            <span className="cv-phase-topline">
-              <span className="cv-phase-icon" aria-hidden="true">{ICONS[phase]}</span>
-              <span className="cv-phase-number">{String(index + 1).padStart(2, "0")}</span>
-              <span className="cv-phase-state">{isCurrent ? "Sedang dikerjakan" : isComplete ? "✓ Selesai" : "Belum dimulai"}</span>
+          <li
+            key={phase}
+            className={"ph phase-" + phase + (isCurrent ? " on" : isComplete ? " ok" : " pending")}
+            aria-current={isCurrent ? "step" : undefined}
+            aria-label={`${P[phase][0]} — ${P[phase][1]}: ${status}`}
+          >
+            <span className="cv-phase-number">{String(order).padStart(2, "0")}</span>
+            <span className="cv-phase-icon" aria-hidden="true">{isComplete ? "✓" : ICONS[phase]}</span>
+            <span className="cv-phase-copy">
+              <b>{P[phase][0]}</b>
+              <small>{P[phase][1]}</small>
             </span>
-            <b>{P[phase][0]}</b>
-            <small>{P[phase][1]}</small>
+            <span className="cv-phase-state" aria-hidden="true">
+              {isCurrent ? "AKTIF" : isComplete ? "✓" : "—"}
+            </span>
           </li>
         );
       })}
@@ -52,7 +72,7 @@ export function PhaseCards() {
           </div>
           <strong className="phase-card-title">{P[phase][1]}</strong>
           <p>{P[phase][2]}</p>
-          <span className="phase-card-art" aria-hidden="true">{["▣","▤","◉","◆","✿"][index]}</span>
+          <span className="phase-card-art" aria-hidden="true">{["▣", "▤", "◉", "◆", "✿"][index]}</span>
         </li>
       ))}
     </ol>
