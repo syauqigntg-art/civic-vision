@@ -1116,3 +1116,170 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
 @media(prefers-reduced-motion:reduce){
  .cv-navbar .cv-nav-link,.student-feature-card{transition:none}
 }
+
+
+/* === A-TIER 07: STACK EXPERIENCE — FIVE CONNECTED, DISTINCT PHASES === */
+.student-stack-panel .student-phase-cards{
+ position:relative;
+ isolation:isolate;
+ align-items:stretch;
+ gap:clamp(12px,1.25vw,20px);
+ padding:15px 2px 18px;
+}
+.student-stack-panel .student-phase-cards:before{
+ content:"";
+ position:absolute;
+ z-index:-1;
+ left:4%;
+ right:4%;
+ top:50%;
+ height:2px;
+ background:linear-gradient(90deg,rgba(177,224,255,.15),rgba(255,255,255,.82),rgba(177,224,255,.15));
+ box-shadow:0 0 12px rgba(196,232,255,.58);
+}
+.student-stack-panel .student-phase-cards .ph{
+ min-width:0;
+ min-height:270px;
+ padding:20px 17px 28px;
+ border-radius:25px;
+ border-width:1.5px;
+ display:flex;
+ flex-direction:column;
+ gap:0;
+ box-shadow:0 18px 34px rgba(0,17,68,.24),inset 0 2px 1px rgba(255,255,255,.98),inset 0 -10px 22px rgba(255,255,255,.2),0 0 0 1px rgba(255,255,255,.12);
+ transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .28s ease,filter .28s ease;
+}
+.student-stack-panel .student-phase-cards .ph:nth-child(even){transform:translateY(14px)}
+.student-stack-panel .student-phase-cards .ph:nth-child(even):hover{transform:translateY(6px)}
+.student-stack-panel .student-phase-cards .ph:nth-child(odd):hover{transform:translateY(-7px)}
+.student-stack-panel .student-phase-cards .phase-card-head{
+ display:flex;
+ align-items:center;
+ flex-wrap:wrap;
+ gap:9px;
+ margin:0 0 19px;
+ min-height:58px;
+}
+.student-stack-panel .phase-symbol{
+ flex:0 0 58px;
+ width:58px;
+ height:58px;
+ font-size:29px;
+ border:1px solid rgba(255,255,255,.98);
+ box-shadow:0 0 24px rgba(255,255,255,.82),inset 0 2px 2px #fff,0 8px 18px rgba(12,46,104,.2);
+}
+.student-stack-panel .phase-sequence{
+ font-size:12px;
+ font-weight:850;
+ letter-spacing:.1em;
+ color:rgba(12,42,91,.66);
+}
+.student-stack-panel .student-phase-cards .phase-card-head b{
+ font-size:clamp(15px,1.12vw,18px);
+ font-weight:900;
+ letter-spacing:-.035em;
+ color:#09295f;
+}
+.student-stack-panel .student-phase-cards .phase-card-title{
+ font-size:clamp(15px,1vw,17px);
+ line-height:1.35;
+ font-weight:850;
+ margin:0 0 8px;
+ color:#09295f;
+}
+.student-stack-panel .student-phase-cards .ph small{
+ font-size:12px;
+ line-height:1.4;
+ font-weight:800;
+ color:#234a7b;
+}
+.student-stack-panel .student-phase-cards .ph p{
+ font-size:clamp(13px,.92vw,14px);
+ line-height:1.55;
+ margin:0 0 16px;
+ color:#183e70;
+}
+.student-stack-panel .student-phase-cards .phase-see{background:linear-gradient(145deg,rgba(139,204,255,.98),rgba(224,243,255,.96) 75%)}
+.student-stack-panel .student-phase-cards .phase-think{background:linear-gradient(145deg,rgba(183,164,255,.98),rgba(239,232,255,.96) 75%)}
+.student-stack-panel .student-phase-cards .phase-act{background:linear-gradient(145deg,rgba(255,199,117,.98),rgba(255,240,215,.97) 75%)}
+.student-stack-panel .student-phase-cards .phase-connect{background:linear-gradient(145deg,rgba(255,166,211,.98),rgba(255,232,246,.97) 75%)}
+.student-stack-panel .student-phase-cards .phase-keep{background:linear-gradient(145deg,rgba(133,235,192,.98),rgba(225,255,240,.97) 75%)}
+.student-stack-panel .student-phase-cards .ph.on{
+ outline:3px solid rgba(255,255,255,.92);
+ outline-offset:3px;
+ box-shadow:0 0 0 6px rgba(160,218,255,.18),0 0 32px rgba(207,241,255,.7),0 20px 40px rgba(0,17,68,.28),inset 0 2px 2px white;
+ filter:saturate(1.12);
+}
+.student-stack-panel .student-phase-cards .ph.ok{
+ border-color:rgba(255,255,255,.98);
+ box-shadow:0 0 0 2px rgba(83,222,168,.45),0 15px 30px rgba(0,17,68,.2),inset 0 2px 2px white;
+}
+.student-stack-panel .student-phase-cards .ph.on:after{
+ content:"SEDANG DIPELAJARI";
+ position:absolute;
+ top:9px;
+ right:10px;
+ z-index:2;
+ padding:5px 8px;
+ border-radius:999px;
+ background:rgba(255,255,255,.82);
+ color:#0757ad;
+ font-size:8px;
+ font-weight:900;
+ letter-spacing:.06em;
+ text-shadow:none;
+ transform:none;
+}
+.student-stack-panel .student-phase-cards .ph.ok:after{
+ content:"✓";
+ position:absolute;
+ right:12px;
+ bottom:10px;
+ z-index:2;
+ display:grid;
+ place-items:center;
+ width:25px;
+ height:25px;
+ border-radius:50%;
+ background:rgba(255,255,255,.88);
+ color:#07875d;
+ font-size:16px;
+ font-weight:900;
+ text-shadow:none;
+ transform:none;
+}
+.student-stack-panel .student-phase-cards .phase-card-art{
+ opacity:.42;
+ font-size:76px;
+ filter:drop-shadow(0 4px 10px rgba(255,255,255,.6));
+}
+.student-stack-panel .student-phase-cards .phase-card-line{
+ left:17px;
+ right:17px;
+ bottom:13px;
+ height:4px;
+ border-radius:9px;
+ background:linear-gradient(90deg,rgba(255,255,255,.95),rgba(255,255,255,.32));
+ box-shadow:0 0 10px rgba(255,255,255,.45);
+}
+@media(max-width:1150px){
+ .student-stack-panel .student-phase-cards{gap:12px}
+ .student-stack-panel .student-phase-cards .ph{min-height:250px;padding:17px 13px 25px}
+ .student-stack-panel .student-phase-cards .phase-symbol{width:50px;height:50px;flex-basis:50px}
+}
+@media(max-width:760px){
+ .student-stack-panel .student-phase-cards{padding:4px 0 8px;gap:11px}
+ .student-stack-panel .student-phase-cards:before{display:none}
+ .student-stack-panel .student-phase-cards .ph,
+ .student-stack-panel .student-phase-cards .ph:nth-child(even){min-height:225px;transform:none}
+ .student-stack-panel .student-phase-cards .ph:nth-child(even):hover,
+ .student-stack-panel .student-phase-cards .ph:nth-child(odd):hover{transform:translateY(-3px)}
+ .student-stack-panel .student-phase-cards .phase-card-head{min-height:48px;margin-bottom:13px}
+ .student-stack-panel .student-phase-cards .phase-symbol{width:44px;height:44px;flex-basis:44px;font-size:23px}
+ .student-stack-panel .student-phase-cards .phase-card-head b{font-size:14px}
+ .student-stack-panel .student-phase-cards .phase-card-title{font-size:14px}
+ .student-stack-panel .student-phase-cards .ph p{font-size:12px;line-height:1.5}
+}
+@media(prefers-reduced-motion:reduce){
+ .student-stack-panel .student-phase-cards .ph{transition:none}
+}
