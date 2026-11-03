@@ -349,7 +349,7 @@ export default function Analisis() {
       <div className="case-analysis-step-label">TAHAP {step + 2} DARI 5</div>
       <p className="case-analysis-phase-title">
         <b style={{ color: "#fff" }}>
-          Tahap {step + 1} dari {PHASES.length}: {PHASE_INFO[activePhase].title}
+          Tahap {step + 2} dari 5: {PHASE_INFO[activePhase].title}
         </b>
         {" · "}
         {left ? `sisa ${left} tahap` : "tahap terakhir"}
