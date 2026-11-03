@@ -3847,48 +3847,41 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 }
 
  
-/* ===== STUDENT PHASE CARDS · LEFT-TO-RIGHT TEXT WIPE =====
-   700ms wipe-out + 500ms invisible pause + 700ms wipe-in = 1900ms cycle.
-   CSS-driven animation continues independently of phase completion/current status. */
-.student-phase-cards .phase-text-wipe {
+/* ===== STUDENT PHASE CARDS · TRACKING TEXT ANIMATION =====
+   700ms tracking-out + 500ms hidden pause + 700ms tracking-in.
+   The loop is independent of completion and active-phase status. */
+.student-phase-cards .phase-text-tracking {
   display: block;
-  clip-path: inset(0 0 0 0);
-  animation: cv-phase-text-wipe 1900ms ease-in-out infinite;
-  will-change: clip-path, opacity;
+  letter-spacing: 0;
+  opacity: 1;
+  animation: cv-phase-text-tracking 1900ms ease-in-out infinite;
+  will-change: letter-spacing, opacity;
 }
 
-@keyframes cv-phase-text-wipe {
+@keyframes cv-phase-text-tracking {
   0% {
-    clip-path: inset(0 0 0 0);
+    letter-spacing: 0;
     opacity: 1;
   }
   36.842% {
-    clip-path: inset(0 0 0 100%);
-    opacity: 1;
-  }
-  36.843% {
-    clip-path: inset(0 0 0 100%);
+    letter-spacing: 0.24em;
     opacity: 0;
   }
   63.157% {
-    clip-path: inset(0 100% 0 0);
-    opacity: 0;
-  }
-  63.158% {
-    clip-path: inset(0 100% 0 0);
+    letter-spacing: 0.24em;
     opacity: 0;
   }
   100% {
-    clip-path: inset(0 0 0 0);
+    letter-spacing: 0;
     opacity: 1;
   }
 }
 
 /* Keep text readable for users who request reduced motion. */
 @media (prefers-reduced-motion: reduce) {
-  .student-phase-cards .phase-text-wipe {
+  .student-phase-cards .phase-text-tracking {
     animation: none;
-    clip-path: none;
+    letter-spacing: normal;
     opacity: 1;
     will-change: auto;
   }
