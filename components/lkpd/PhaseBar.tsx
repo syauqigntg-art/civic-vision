@@ -72,10 +72,10 @@ export function PhaseCards() {
         <li key={phase} className={`ph phase-${phase}`}>
           <div className="phase-card-head">
             <span className="phase-symbol" aria-hidden="true">{ICONS[phase]}</span>
-            <b className="phase-text-wipe">{String(index + 1).padStart(2, "0")}. {P[phase][0]}</b>
+            <b className="phase-text-tracking">{String(index + 1).padStart(2, "0")}. {P[phase][0]}</b>
           </div>
-          <strong className="phase-card-title phase-text-wipe">{P[phase][1]}</strong>
-          <p className="phase-text-wipe">{P[phase][2]}</p>
+          <strong className="phase-card-title phase-text-tracking">{P[phase][1]}</strong>
+          <p className="phase-text-tracking">{P[phase][2]}</p>
           <span className="phase-card-art" aria-hidden="true">{["▣", "▤", "◉", "◆", "✿"][index]}</span>
         </li>
       ))}
