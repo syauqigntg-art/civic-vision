@@ -1,34 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" fill="none" role="img" aria-labelledby="title desc">
+  <title id="title">Monumen Nasional dan bendera Indonesia</title>
+  <desc id="desc">Ilustrasi minimalis Monas, bendera Merah Putih tanpa ornamen, dan kepulauan Indonesia.</desc>
   <defs>
-    <linearGradient id="sky" x1="110" y1="35" x2="760" y2="590" gradientUnits="userSpaceOnUse"><stop stop-color="#F7FBFF" stop-opacity=".94"/><stop offset=".48" stop-color="#B9D7F5" stop-opacity=".54"/><stop offset="1" stop-color="#426EAA" stop-opacity=".12"/></linearGradient>
-    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FF9A9F"/><stop offset="1" stop-color="#D7475B"/></linearGradient>
-    <linearGradient id="white" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFF"/><stop offset="1" stop-color="#DDEBFA"/></linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#FFE9B1"/><stop offset="1" stop-color="#C99B55"/></linearGradient>
-    <linearGradient id="land" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#DDF0E7"/><stop offset="1" stop-color="#7EAF9E"/></linearGradient>
-    <filter id="blur"><feGaussianBlur stdDeviation="24"/></filter>
-    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#092B60" flood-opacity=".25"/></filter>
+    <linearGradient id="plate" x1="110" y1="60" x2="780" y2="570" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#EAF3FC" stop-opacity=".72"/>
+      <stop offset="1" stop-color="#8EAFD2" stop-opacity=".16"/>
+    </linearGradient>
+    <linearGradient id="monas" x1="350" y1="160" x2="505" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F8FBFF"/>
+      <stop offset="1" stop-color="#A9C1DC"/>
+    </linearGradient>
+    <linearGradient id="red" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#F45B64"/>
+      <stop offset="1" stop-color="#C92F42"/>
+    </linearGradient>
+    <linearGradient id="white" x1="0" y1="0" x2="0" y2="1">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#E8EEF6"/>
+    </linearGradient>
+    <filter id="soft-shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#071A35" flood-opacity=".22"/>
+    </filter>
+    <filter id="soft-blur"><feGaussianBlur stdDeviation="26"/></filter>
   </defs>
-  <circle cx="575" cy="245" r="220" fill="#FFF" fill-opacity=".45" filter="url(#blur)"/>
-  <circle cx="592" cy="220" r="126" fill="url(#gold)" fill-opacity=".72"/>
-  <circle cx="592" cy="220" r="92" fill="#FFF8E8" fill-opacity=".7"/>
-  <path d="M0 460C132 405 221 442 332 406C450 367 548 407 660 370C760 337 835 354 900 322V620H0V460Z" fill="url(#sky)" fill-opacity=".72"/>
-  <path d="M95 390c30-20 52-16 68-2l-10 18-32 7-34-10 8-13Zm93-26 28-18 20 9-10 21-28 8-10-20Zm74 12 35-18 24 13-11 22-34 5-14-22Zm82-20 26-12 21 9-10 18-29 5-8-20Zm75 12 28-16 28 13-7 18-32 8-17-23Zm91-24 29-11 20 12-9 16-28 5-12-22Zm80 25 30-14 20 14-12 17-29 2-9-19Z" fill="url(#land)" stroke="#F6FFFB" stroke-opacity=".72" stroke-width="4"/>
-  <g filter="url(#shadow)">
-    <path d="M165 310c45-51 111-73 174-58-39 13-69 36-92 70 42-18 82-19 121-3-37 9-67 29-91 59-32 4-67-7-112-34Z" fill="url(#gold)" fill-opacity=".88"/>
-    <path d="M735 310c-45-51-111-73-174-58 39 13 69 36 92 70-42-18-82-19-121-3 37 9 67 29 91 59 32 4 67-7 112-34Z" fill="url(#gold)" fill-opacity=".88"/>
-    <path d="M450 242c-22 0-39 18-39 40 0 15 8 28 20 35l-11 36 30 26 30-26-11-36c12-7 20-20 20-35 0-22-17-40-39-40Z" fill="url(#gold)"/>
-    <path d="M450 265v75m-26-41h52" stroke="#A8793E" stroke-opacity=".72" stroke-width="5" stroke-linecap="round"/>
+
+  <circle cx="470" cy="300" r="235" fill="#DCEBFA" fill-opacity=".22" filter="url(#soft-blur)"/>
+  <circle cx="470" cy="300" r="205" fill="url(#plate)" stroke="#FFFFFF" stroke-opacity=".34"/>
+
+  <!-- Indonesian archipelago, simplified as a quiet geographic motif. -->
+  <g fill="#D7E7F4" fill-opacity=".72" stroke="#F7FBFF" stroke-opacity=".72" stroke-width="3" stroke-linejoin="round">
+    <path d="M135 411l25-15 26 5 13 15-19 13-31-3-14-15Z"/>
+    <path d="M231 389l24-10 25 7 13 16-18 12-29-4-15-21Z"/>
+    <path d="M318 401l25-13 29 8 13 18-22 12-30-7-15-18Z"/>
+    <path d="M423 393l24-11 26 7 13 16-19 13-29-5-15-20Z"/>
+    <path d="M523 403l25-13 28 8 13 17-22 12-29-7-15-17Z"/>
+    <path d="M634 392l23-10 25 8 12 16-18 12-28-5-14-21Z"/>
+    <path d="M716 414l19-9 21 7 9 13-16 10-23-4-10-17Z"/>
   </g>
-  <g filter="url(#shadow)">
-    <path d="M278 420c0-18 15-33 33-33h278c18 0 33 15 33 33v113H278V420Z" fill="#F6FAFF" fill-opacity=".28" stroke="#FFF" stroke-opacity=".72" stroke-width="2"/>
-    <path d="M294 432h312v12H294z" fill="url(#red)"/>
-    <path d="M294 444h312v72H294z" fill="url(#white)"/>
-    <path d="M294 516h312v17H294z" fill="#F5F8FC"/>
+
+  <!-- Monas: obelisk, observation deck, and flame. -->
+  <g filter="url(#soft-shadow)">
+    <path d="M428 210c0-16 10-29 22-29s22 13 22 29l-8 28h-28l-8-28Z" fill="#E6C58D"/>
+    <path d="M435 238h30l28 232H407l28-232Z" fill="url(#monas)" stroke="#FFFFFF" stroke-opacity=".85" stroke-width="3"/>
+    <path d="M423 321h54l5 28h-64l5-28Z" fill="#D5E2F0"/>
+    <path d="M414 457h72l12 31H402l12-31Z" fill="#AFC4DC" stroke="#F8FBFF" stroke-width="3"/>
+    <path d="M392 488h116v17H392z" fill="#E8F0F8" stroke="#FFFFFF" stroke-width="3"/>
+    <path d="M381 505h138v15H381z" fill="#9FB8D3" stroke="#F5F9FE" stroke-width="3"/>
   </g>
-  <g fill="#FFF" fill-opacity=".52" stroke="#FFF" stroke-opacity=".82" stroke-width="2">
-    <path d="M355 385c-17-20-13-49 8-62 22-13 48-3 54 22 5 21-8 39-29 46l-33-6Z"/>
-    <path d="M488 355c4-26 31-40 54-27 22 13 24 41 7 61l-32 6c-20-8-33-22-29-40Z"/>
+
+  <!-- Indonesian flag: red over white, plain and without symbols. -->
+  <g filter="url(#soft-shadow)">
+    <path d="M605 174v234" stroke="#F4F8FD" stroke-width="7" stroke-linecap="round"/>
+    <path d="M612 184h174v58H612z" fill="url(#red)"/>
+    <path d="M612 242h174v58H612z" fill="url(#white)"/>
+    <path d="M612 184h174v116H612" stroke="#FFFFFF" stroke-opacity=".72" stroke-width="2"/>
+    <path d="M599 408h26" stroke="#EAF2FB" stroke-width="8" stroke-linecap="round"/>
   </g>
-  <path d="M128 548c120-48 235-44 322-14 100 35 206 32 322-15" stroke="#FFF" stroke-opacity=".6" stroke-width="3" stroke-linecap="round"/>
-  <path d="M172 576c108-29 202-24 278 0 91 29 184 26 278-7" stroke="#D9EBFF" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
+
+  <path d="M118 536c135-43 245-38 350-8 102 29 206 26 318-13" stroke="#F5F9FF" stroke-opacity=".58" stroke-width="3" stroke-linecap="round"/>
+  <path d="M166 559c112-27 202-21 288 3 85 24 175 20 272-8" stroke="#C8DDF2" stroke-opacity=".62" stroke-width="2" stroke-linecap="round"/>
 </svg>
