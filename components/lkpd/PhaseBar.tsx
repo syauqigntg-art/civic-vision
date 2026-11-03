@@ -8,7 +8,7 @@ const P: Record<string, [string, string, string]> = {
 
 const ALL_PHASES = ["see", "think", "act", "connect", "keep"];
 const ANALYSIS_PHASES = ["think", "act", "connect", "keep"];
-const ICONS: Record<string, string> = { see: "◉", think: "⌕", act: "ϟ", connect: "♟", keep: "✿" };
+const ICONS: Record<string, string> = { see: "◉", think: "⌕", act: "ϟ", connect: "↔", keep: "✿" };
 
 export function PhaseBar({
   current,
@@ -21,14 +21,19 @@ export function PhaseBar({
 }) {
   const phases = includeSee ? ALL_PHASES : ANALYSIS_PHASES;
   return (
-    <ol className={"phases" + (includeSee ? " five" : " four")} aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}>
-      {phases.map((phase) => {
+    <ol className={"phases" + (includeSee ? " five" : " four") + " cv-learning-phases"} aria-label={includeSee ? "Lima tahap belajar STACK" : "Empat tahap analisis STACK"}>
+      {phases.map((phase, index) => {
         const isCurrent = phase === current;
         const isComplete = !isCurrent && completed.includes(phase);
         return (
-          <li key={phase} className={"ph" + (isCurrent ? " on" : isComplete ? " ok" : "")} aria-current={isCurrent ? "step" : undefined}>
-            <b>{P[phase][0]}</b><small>{P[phase][1]}</small>
-            {isComplete && <small aria-label="Tahap selesai">✓ Selesai</small>}
+          <li key={phase} className={"ph phase-" + phase + (isCurrent ? " on" : isComplete ? " ok" : " pending")} aria-current={isCurrent ? "step" : undefined}>
+            <span className="cv-phase-topline">
+              <span className="cv-phase-icon" aria-hidden="true">{ICONS[phase]}</span>
+              <span className="cv-phase-number">{String(index + 1).padStart(2, "0")}</span>
+              <span className="cv-phase-state">{isCurrent ? "Sedang dikerjakan" : isComplete ? "✓ Selesai" : "Belum dimulai"}</span>
+            </span>
+            <b>{P[phase][0]}</b>
+            <small>{P[phase][1]}</small>
           </li>
         );
       })}
