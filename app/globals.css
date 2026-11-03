@@ -2475,13 +2475,16 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .case-detail-workspace .bar,.case-analysis-workspace .bar { height:8px; margin:7px 0 20px; background:rgba(4,24,68,.36); }
 .case-detail-workspace .bar i,.case-analysis-workspace .bar i { border-radius:99px; background:linear-gradient(90deg,#7fe2ff,#d5f3ff); box-shadow:0 0 14px rgba(135,224,255,.32); }
 .case-question-list { display:grid; gap:14px; border:0; padding:0; margin:0; min-width:0; }
-.case-question-card { min-width:0; padding:18px; border:1px solid rgba(224,244,255,.25); border-radius:18px; background:linear-gradient(145deg,rgba(255,255,255,.105),rgba(255,255,255,.045)); box-shadow:inset 0 1px rgba(255,255,255,.18); }
+.case-question-card { min-width:0; padding:18px; border:1px solid rgba(184,226,255,.42); border-radius:18px; background:linear-gradient(145deg,rgba(15,76,139,.88),rgba(8,48,105,.86)); box-shadow:inset 0 1px rgba(255,255,255,.2),0 10px 24px rgba(0,18,58,.16); }
 .case-question-number { margin-bottom:10px; color:#bceaff; font-size:9px; font-weight:850; letter-spacing:.13em; }
 .case-question-card h3 { margin:9px 0 13px; color:#fff; font-size:16px; line-height:1.5; font-weight:800; }
 .case-question-card label { margin:10px 0 7px; color:rgba(242,249,255,.9); font-size:12px; }
-.case-question-card input,.case-question-card select,.case-question-card textarea { min-height:48px; border:1px solid rgba(224,244,255,.34); border-radius:13px; background:rgba(2,22,64,.3); color:#fff; }
+.case-question-card input,.case-question-card select,.case-question-card textarea { min-height:48px; border:1px solid rgba(194,229,255,.5); border-radius:13px; background:linear-gradient(145deg,rgba(3,34,82,.94),rgba(5,48,105,.92)); color:#fff; opacity:1; box-shadow:inset 0 1px rgba(255,255,255,.07); transition:border-color .18s ease,box-shadow .18s ease; }
 .case-question-card textarea { min-height:150px; resize:vertical; line-height:1.6; }
-.case-question-card input:focus,.case-question-card select:focus,.case-question-card textarea:focus { border-color:#b9eaff; outline:2px solid rgba(157,223,255,.2); }
+.case-question-card input:focus,.case-question-card select:focus,.case-question-card textarea:focus { background:linear-gradient(145deg,rgba(3,34,82,.94),rgba(5,48,105,.92)); border-color:#a9e7ff; outline:2px solid rgba(157,223,255,.24); outline-offset:1px; box-shadow:inset 0 1px rgba(255,255,255,.08),0 0 0 3px rgba(82,190,255,.12); }
+.case-question-card input:hover,.case-question-card select:hover,.case-question-card textarea:hover { border-color:rgba(190,231,255,.68); }
+.case-question-card input:disabled,.case-question-card select:disabled,.case-question-card textarea:disabled { background:linear-gradient(145deg,rgba(3,34,82,.94),rgba(5,48,105,.92)); color:#f3f9ff; opacity:1; cursor:not-allowed; }
+.case-question-card input::placeholder,.case-question-card textarea::placeholder { color:rgba(225,241,255,.78); opacity:1; }
 .case-question-help { margin:10px 0 0; color:rgba(228,243,255,.68); font-size:11px; line-height:1.55; }
 .case-no-questions { padding:20px; border:1px dashed rgba(223,243,255,.28); border-radius:16px; background:rgba(255,255,255,.05); }
 .case-no-questions b { color:#fff; font-size:13px; }
@@ -2573,18 +2576,19 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 
 
 /* ===== STUDENT CASE WORKSPACE · COMPACT PROGRESS & SAVE STATUS ===== */
-.case-detail-workspace .cv-progress-track {
+.case-detail-workspace .cv-progress-track,
+.cv-analysis-workspace .cv-progress-track {
   position: relative;
   display: block;
   width: 100%;
-  height: 8px;
+  height: 9px;
   margin: 7px 0 20px;
   padding: 0;
   overflow: hidden;
-  border: 0;
+  border: 1px solid rgba(198,232,255,.3);
   border-radius: 999px;
-  background: rgba(4,24,68,.36);
-  box-shadow: inset 0 1px 2px rgba(0,12,42,.18);
+  background: rgba(2,24,68,.72);
+  box-shadow: inset 0 1px 3px rgba(0,12,42,.34);
   appearance: none;
   -webkit-appearance: none;
 }
@@ -2801,11 +2805,10 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-student-workspace {
   grid-area: workspace; min-width:0; margin:0;
   padding:clamp(20px,2.4vw,32px);
-  border-color:rgba(208,237,255,.55);
-  background:
-    radial-gradient(ellipse at 88% 0%,rgba(116,203,255,.13),transparent 35%),
-    linear-gradient(145deg,rgba(225,244,255,.19),rgba(255,255,255,.085) 58%,rgba(122,190,255,.12));
-  box-shadow:0 22px 52px rgba(0,22,78,.24),inset 0 1px rgba(255,255,255,.48);
+  border:1px solid rgba(190,229,255,.58);
+  background-color:rgba(7,48,105,.9);
+  background-image:radial-gradient(ellipse at 88% 0%,rgba(116,203,255,.16),transparent 35%),linear-gradient(145deg,rgba(30,105,171,.48),rgba(9,54,113,.94) 58%,rgba(10,65,126,.9));
+  box-shadow:0 22px 52px rgba(0,22,78,.24),inset 0 1px rgba(255,255,255,.34);
 }
 .cv-workspace-heading { margin-bottom: 22px; }
 .cv-workspace-heading .case-detail-kicker { font-size:10px; }
@@ -2814,8 +2817,8 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-workspace-heading .case-workspace-progress strong { font-size:32px; }
 .cv-progress-summary {
   min-height:46px; margin-bottom:8px; padding:9px 12px;
-  border:1px solid rgba(221,242,255,.19); border-radius:13px;
-  background:rgba(2,24,68,.16);
+  border:1px solid rgba(221,242,255,.34); border-radius:13px;
+  background:rgba(2,24,68,.48);
 }
 .cv-progress-summary > div { gap:6px 12px; }
 .cv-progress-summary b { font-size:12px; }
@@ -2823,8 +2826,9 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-student-workspace .cv-progress-track { margin:8px 0 22px; }
 .cv-question-card {
   padding:clamp(17px,2vw,23px);
-  border-color:rgba(218,240,255,.3);
-  background:linear-gradient(145deg,rgba(255,255,255,.13),rgba(255,255,255,.055));
+  border-color:rgba(190,229,255,.48);
+  background:linear-gradient(145deg,rgba(15,76,139,.9),rgba(8,48,105,.88));
+  box-shadow:inset 0 1px rgba(255,255,255,.2),0 9px 22px rgba(0,18,58,.14);
 }
 .cv-question-card .case-question-number { font-size:10px; }
 .cv-question-card .tag { display:inline-flex; margin-bottom:4px; padding:5px 10px; font-size:10px; }
@@ -2841,9 +2845,9 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .cv-analysis-questions { margin-top:25px; }
 .cv-analysis-question-card {
   min-width:0; padding:clamp(17px,2vw,23px);
-  border:1px solid rgba(224,244,255,.28); border-radius:18px;
-  background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.05));
-  box-shadow:inset 0 1px rgba(255,255,255,.16);
+  border:1px solid rgba(190,229,255,.48); border-radius:18px;
+  background:linear-gradient(145deg,rgba(15,76,139,.9),rgba(8,48,105,.88));
+  box-shadow:inset 0 1px rgba(255,255,255,.2),0 9px 22px rgba(0,18,58,.14);
 }
 .cv-analysis-question-card h2 { max-width:1000px; font-size:clamp(15px,1.45vw,18px); line-height:1.55; }
 .cv-analysis-question-card textarea { min-height:190px; padding:15px 16px; font-size:14px; line-height:1.7; }
