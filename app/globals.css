@@ -3643,3 +3643,205 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 @media (prefers-reduced-motion: reduce) {
   .cv-learning-navigation .ph { transition:none; }
 }
+
+
+/* ===== DETAIL VIDEO CASE · FIVE-STEP LIQUID GLASS REFINEMENT ===== */
+/* Scoped to the learning-stage panel; analysis workspace and page chrome stay untouched. */
+.cv-stage-panel .cv-learning-navigation {
+  --step-gap: 12px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--step-gap);
+  align-items: stretch;
+  margin-top: 14px;
+}
+.cv-stage-panel .cv-learning-navigation .ph {
+  min-height: 174px;
+  padding: 14px 13px 12px;
+  gap: 10px;
+  border: 1px solid rgba(222,244,255,.56);
+  border-radius: 17px;
+  background:
+    linear-gradient(145deg,rgba(102,190,255,.25),rgba(13,75,145,.70) 58%,rgba(5,49,111,.76)),
+    rgba(16,83,151,.66);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    inset 0 0 0 1px rgba(187,228,255,.08),
+    0 8px 20px rgba(0,20,67,.20);
+  -webkit-backdrop-filter: blur(18px) saturate(155%);
+  backdrop-filter: blur(18px) saturate(155%);
+}
+.cv-stage-panel .cv-learning-navigation .cv-learning-step-top {
+  justify-content: flex-start;
+  gap: 9px;
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-icon {
+  order: 0;
+  width: 36px;
+  height: 36px;
+  flex-basis: 36px;
+  border-radius: 50%;
+  border-color: rgba(238,250,255,.74);
+  background: linear-gradient(145deg,rgba(218,244,255,.34),rgba(98,174,231,.25));
+  color: #fff;
+  font-size: 18px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.42),0 3px 10px rgba(0,25,75,.18);
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-number {
+  order: 1;
+  min-width: 29px;
+  min-height: 23px;
+  border-radius: 8px;
+  border-color: rgba(239,249,255,.52);
+  background: rgba(226,245,255,.17);
+  color: #fff;
+  font-size: 10px;
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-copy {
+  gap: 3px;
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-copy b {
+  color: #fff;
+  font-size: 13px;
+  font-weight: 850;
+  letter-spacing: .045em;
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-copy small {
+  color: rgba(250,253,255,.98);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-description {
+  color: rgba(244,250,255,.94);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-state {
+  margin-top: auto;
+  padding: 6px 9px;
+  border: 1px solid rgba(235,248,255,.54);
+  border-radius: 999px;
+  background: rgba(223,243,255,.13);
+  color: #fff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0;
+  line-height: 1.2;
+  text-align: left;
+}
+.cv-stage-panel .cv-learning-navigation .ph.pending {
+  border-color: rgba(221,242,255,.54);
+  background: linear-gradient(150deg,rgba(44,125,194,.72),rgba(7,55,119,.82));
+}
+.cv-stage-panel .cv-learning-navigation .ph.on {
+  border-color: rgba(213,249,255,.98);
+  background: linear-gradient(145deg,rgba(49,174,245,.94),rgba(13,104,184,.90));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.55),
+    inset 0 0 0 1px rgba(225,249,255,.18),
+    0 0 0 1px rgba(121,220,255,.32),
+    0 0 20px rgba(69,190,255,.28),
+    0 10px 22px rgba(0,24,77,.22);
+}
+.cv-stage-panel .cv-learning-navigation .ph.on .cv-phase-icon {
+  border-color: #fff;
+  background: rgba(222,247,255,.34);
+  box-shadow: inset 0 1px 0 #fff,0 0 12px rgba(195,239,255,.34);
+}
+.cv-stage-panel .cv-learning-navigation .ph.on .cv-phase-state {
+  border-color: rgba(245,253,255,.84);
+  background: rgba(231,249,255,.22);
+  color: #fff;
+}
+.cv-stage-panel .cv-learning-navigation .ph.ok {
+  border-color: rgba(164,255,219,.94);
+  background: linear-gradient(145deg,rgba(20,157,119,.86),rgba(5,105,91,.88));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.40),
+    inset 0 0 0 1px rgba(197,255,231,.12),
+    0 0 0 1px rgba(105,244,185,.18),
+    0 0 17px rgba(55,220,159,.19),
+    0 9px 20px rgba(0,25,67,.20);
+}
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-icon {
+  border-color: rgba(208,255,232,.98);
+  background: rgba(83,224,166,.30);
+  color: #fff;
+}
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-number,
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-copy b,
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-copy small,
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-description,
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-state {
+  color: #fff;
+}
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-state {
+  border-color: rgba(185,255,222,.82);
+  background: rgba(111,242,183,.18);
+}
+.cv-stage-panel .cv-learning-navigation .cv-phase-connector {
+  right: calc(var(--step-gap) * -1);
+  width: var(--step-gap);
+  height: 2px;
+  background: linear-gradient(90deg,rgba(224,247,255,.86),rgba(154,220,255,.64));
+  box-shadow: 0 0 6px rgba(126,205,255,.20);
+}
+.cv-stage-panel .cv-learning-navigation .ph.ok .cv-phase-connector {
+  background: linear-gradient(90deg,rgba(126,250,194,.92),rgba(207,255,232,.74));
+  box-shadow: 0 0 7px rgba(95,245,177,.28);
+}
+@media (max-width: 1050px) {
+  .cv-stage-panel .cv-learning-navigation {
+    grid-template-columns: repeat(3,minmax(0,1fr));
+    gap: 10px;
+  }
+  .cv-stage-panel .cv-learning-navigation .ph { min-height: 166px; }
+  .cv-stage-panel .cv-learning-navigation .cv-phase-connector { display: none; }
+}
+@media (max-width: 700px) {
+  .cv-stage-panel .cv-learning-navigation {
+    display: grid;
+    grid-template-columns: minmax(0,1fr);
+    gap: 9px;
+  }
+  .cv-stage-panel .cv-learning-navigation .ph {
+    display: grid;
+    grid-template-columns: 36px minmax(0,1fr);
+    grid-template-areas:
+      "icon title"
+      "icon desc"
+      "icon state";
+    align-items: center;
+    column-gap: 12px;
+    row-gap: 5px;
+    min-height: 0;
+    padding: 12px;
+  }
+  .cv-stage-panel .cv-learning-navigation .cv-learning-step-top {
+    display: contents;
+  }
+  .cv-stage-panel .cv-learning-navigation .cv-phase-icon {
+    grid-area: icon;
+    align-self: center;
+  }
+  .cv-stage-panel .cv-learning-navigation .cv-phase-number {
+    position: absolute;
+    top: 9px;
+    right: 10px;
+  }
+  .cv-stage-panel .cv-learning-navigation .cv-phase-copy {
+    grid-area: title;
+    padding-right: 42px;
+  }
+  .cv-stage-panel .cv-learning-navigation .cv-phase-description {
+    grid-area: desc;
+  }
+  .cv-stage-panel .cv-learning-navigation .cv-phase-state {
+    grid-area: state;
+    margin-top: 2px;
+    justify-self: start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cv-stage-panel .cv-learning-navigation .ph { transition: none; }
+}
