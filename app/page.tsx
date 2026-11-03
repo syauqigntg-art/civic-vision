@@ -36,7 +36,7 @@ export default function Home() {
               <path d="M0 354h800v106H0Z" fill="#1e5288" opacity=".6"/>
             </g>
             <g stroke="#d9efff" strokeWidth="3" opacity=".42"><path d="M92 238v-12m15 12v-12m71 54v-12m17 12v-12m125 28v-14m17 14v-14m143 10v-14m18 14v-14m132-6v-14m18 14v-14m75 31v-13"/></g>
-            <!-- Garuda Pancasila: spread wings, crowned head, body, and shield -->
+            {/* Garuda Pancasila: spread wings, crowned head, body, and shield */}
             <g transform="translate(205 86)" fill="url(#gold)" stroke="#805a2b" strokeWidth="3" strokeLinejoin="round">
               <path d="M0 76Q-45 24-111 10q22 38 15 65-24-27-61-31 28 43 21 78-18-15-43-14 37 45 93 50 36 4 66-13l20-34Z"/>
               <path d="M0 76Q45 24 111 10q-22 38-15 65 24-27 61-31-28 43-21 78 18-15 43-14-37 45-93 50-36 4-66-13l-20-34Z"/>
@@ -48,7 +48,7 @@ export default function Home() {
               <path d="M-12 82 0 76 12 82 9 99 0 106-9 99Z" fill="#1c4d8a"/>
               <path d="M-30 147q30 15 60 0l22 20-52-5-52 5Z"/>
             </g>
-            <!-- Indonesian flag with visible pole, finial and waving cloth -->
+            {/* Indonesian flag with visible pole, finial and waving cloth */}
             <g transform="translate(470 82)">
               <path d="M0 0V310" stroke="#eaf5ff" strokeWidth="7" strokeLinecap="round"/>
               <path d="M0 0v310" stroke="#7696b6" strokeWidth="2"/>
@@ -58,7 +58,7 @@ export default function Home() {
               <path d="M5 23q58-13 112 5M5 70q58-13 112 5" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="3"/>
               <path d="M-9 310h18l12 12h-42Z" fill="#dcecff"/>
             </g>
-            <!-- Monas silhouette at right -->
+            {/* Monas silhouette at right */}
             <g transform="translate(685 95)">
               <path d="M-10 325h64l-8-20h-48Z" fill="#d9eafa" stroke="#7b9fbd" strokeWidth="2"/>
               <path d="M-3 305 3 108h38l6 197Z" fill="#e9f5ff" stroke="#91b1cc" strokeWidth="2"/>
