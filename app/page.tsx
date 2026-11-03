@@ -19,13 +19,12 @@ export default function Home() {
           <Link className="student-cta" href="/lkpd/identitas">Mulai LKPD <span aria-hidden="true">→</span></Link>
         </div>
         <div className="student-hero-art" aria-hidden="true">
-          <img
-            className="student-hero-illustration"
-            src="/images/pancasila-hero.svg"
-            alt=""
-            width="900"
-            height="620"
-          />
+          <div className="hero-sun" />
+          <div className="hero-skyline"><i/><i/><i/><i/><i/><i/><i/><i/><i/></div>
+          <div className="hero-garuda"><span>✦</span></div>
+          <div className="hero-flag"><span/><span/></div>
+          <div className="hero-monument"><i/></div>
+          <div className="hero-cloud cloud-one"/><div className="hero-cloud cloud-two"/>
           <div className="hero-art-caption">PANCASILA · IDENTITAS KITA</div>
         </div>
       </section>
