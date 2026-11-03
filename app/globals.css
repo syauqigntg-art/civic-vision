@@ -1440,16 +1440,35 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 .student-brand strong{letter-spacing:.045em;font-size:14px}
 .student-brand small{font-size:10px;letter-spacing:.08em;opacity:.82}
 
-/* Indonesian flag: standard horizontal 3:2 flag shape, red above white. */
+/* Indonesian flag: 3:2 length-to-height ratio, clearly readable red over white. */
 .hero-flag{
   width:168px;height:112px;
-  transform:none;
   border-radius:0;
-  animation:none;
-  filter:drop-shadow(0 5px 7px rgba(13,36,83,.2));
+  overflow:visible;
+  transform:perspective(520px) rotateY(-13deg) rotateZ(-2deg);
+  transform-origin:left center;
+  animation:cv-flag-billow 4.8s ease-in-out infinite;
+  filter:drop-shadow(0 7px 8px rgba(13,36,83,.28));
+  background:transparent;
+  clip-path:polygon(0 0,100% 4%,96% 50%,100% 96%,0 100%,3% 50%);
 }
-.hero-flag span{height:50%;background:#ed1c24}
-.hero-flag span+span{background:#fff}
+.hero-flag::before{
+  content:"";position:absolute;z-index:4;left:-7px;top:-7px;bottom:-7px;width:5px;
+  border-radius:4px;background:linear-gradient(90deg,#d9e5f0,#fff 55%,#9fb4c9);
+  box-shadow:1px 1px 3px rgba(0,20,60,.22);
+}
+.hero-flag span{
+  position:relative;display:block;width:100%;height:50%;
+  background:linear-gradient(100deg,#e00018 0%,#f20b25 24%,#d90019 48%,#f20b25 72%,#d90019 100%);
+}
+.hero-flag span+span{
+  background:linear-gradient(100deg,#fff 0%,#f5f7fa 24%,#fff 48%,#f4f6f9 72%,#fff 100%);
+}
+@keyframes cv-flag-billow{
+  0%,100%{transform:perspective(520px) rotateY(-13deg) rotateZ(-2deg) skewY(0deg)}
+  50%{transform:perspective(520px) rotateY(-19deg) rotateZ(-1deg) skewY(1deg)}
+}
+@media(prefers-reduced-motion:reduce){.hero-flag{animation:none}}
 
 .student-feature-card{
   border-color:rgba(235,247,255,.62);
