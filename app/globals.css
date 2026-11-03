@@ -780,3 +780,98 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
 @media(max-width:390px){.student-stack-panel .student-phase-cards{grid-template-columns:1fr}.student-stack-panel .student-phase-cards .ph{min-height:170px}}
 @media(hover:hover){.student-feature-card:hover{transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,20,75,.36),inset 0 2px 1px white}.student-cta:hover{transform:translateY(-3px) scale(1.02)}}
 @media(prefers-reduced-motion:reduce){.student-feature-card,.student-cta,.student-stack-panel .student-phase-cards .ph{transition:none}}
+
+
+/* === S-TIER 01: DEEP BLUE LIQUID ATMOSPHERE === */
+.student-shell{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse 72% 48% at 50% -8%,rgba(103,184,255,.48),transparent 68%),
+    radial-gradient(ellipse 48% 42% at 4% 34%,rgba(30,119,255,.38),transparent 72%),
+    radial-gradient(ellipse 58% 46% at 98% 62%,rgba(94,190,255,.32),transparent 70%),
+    radial-gradient(ellipse 38% 32% at 53% 102%,rgba(91,139,255,.32),transparent 72%),
+    linear-gradient(145deg,#030d2a 0%,#061b49 22%,#0b3479 48%,#1056a6 73%,#071b49 100%);
+  background-attachment:fixed;
+}
+.student-shell:before,
+.student-shell:after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  display:block;
+  pointer-events:none;
+  width:68vw;
+  height:92vh;
+  border-radius:48% 52% 58% 42% / 42% 38% 62% 58%;
+  border:2px solid rgba(225,248,255,.66);
+  background:
+    linear-gradient(118deg,transparent 18%,rgba(255,255,255,.26) 22%,rgba(134,214,255,.12) 27%,transparent 34%,transparent 61%,rgba(255,255,255,.22) 66%,rgba(73,157,255,.08) 71%,transparent 77%),
+    linear-gradient(165deg,rgba(255,255,255,.08),rgba(58,154,255,.12) 28%,rgba(2,25,83,.06) 54%,rgba(210,245,255,.22) 78%,rgba(255,255,255,.04));
+  box-shadow:
+    inset 0 0 22px rgba(255,255,255,.56),
+    inset 0 0 70px rgba(112,202,255,.3),
+    0 0 12px rgba(218,246,255,.72),
+    0 0 38px rgba(98,181,255,.5),
+    0 0 90px rgba(51,126,255,.27);
+  filter:drop-shadow(0 0 18px rgba(156,221,255,.42));
+  opacity:.78;
+  transform:rotate(-24deg);
+}
+.student-shell:before{
+  left:-42vw;
+  top:5vh;
+  transform:rotate(-28deg) scale(1.05);
+  border-left:5px solid rgba(236,251,255,.88);
+  border-right:1px solid rgba(174,225,255,.28);
+  box-shadow:
+    inset 10px 0 35px rgba(255,255,255,.42),
+    inset -16px 0 60px rgba(95,177,255,.3),
+    0 0 15px rgba(226,249,255,.86),
+    0 0 46px rgba(93,171,255,.62),
+    0 0 120px rgba(32,104,255,.35);
+}
+.student-shell:after{
+  right:-42vw;
+  bottom:-13vh;
+  transform:rotate(22deg) scale(1.08);
+  border-right:5px solid rgba(236,251,255,.82);
+  border-left:1px solid rgba(174,225,255,.28);
+  box-shadow:
+    inset -10px 0 35px rgba(255,255,255,.42),
+    inset 16px 0 60px rgba(95,177,255,.3),
+    0 0 15px rgba(226,249,255,.86),
+    0 0 46px rgba(93,171,255,.62),
+    0 0 120px rgba(32,104,255,.35);
+}
+.student-main,.student-header{position:relative;z-index:1}
+.student-main:before,.student-main:after{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  pointer-events:none;
+  width:54vw;
+  height:26vw;
+  min-height:230px;
+  border:1px solid rgba(231,249,255,.55);
+  border-radius:50%;
+  background:linear-gradient(180deg,rgba(255,255,255,.16),rgba(104,185,255,.07) 40%,rgba(3,31,91,.02) 70%,rgba(255,255,255,.12));
+  box-shadow:inset 0 3px 10px rgba(255,255,255,.45),0 0 28px rgba(146,218,255,.35),0 0 65px rgba(54,128,255,.2);
+  filter:blur(.3px);
+}
+.student-main:before{top:17%;left:-43vw;transform:rotate(19deg)}
+.student-main:after{right:-40vw;bottom:3%;transform:rotate(-17deg)}
+@media(max-width:700px){
+ .student-shell{background-attachment:scroll}
+ .student-shell:before,.student-shell:after{width:110vw;height:65vh;opacity:.55}
+ .student-shell:before{left:-78vw;top:10vh}
+ .student-shell:after{right:-78vw;bottom:0}
+ .student-main:before,.student-main:after{width:95vw;height:55vw}
+}
+@media(prefers-reduced-motion:no-preference){
+ .student-shell:before{animation:liquid-drift-a 18s ease-in-out infinite alternate}
+ .student-shell:after{animation:liquid-drift-b 22s ease-in-out infinite alternate}
+ @keyframes liquid-drift-a{from{transform:rotate(-28deg) scale(1.02) translate3d(0,0,0)}to{transform:rotate(-22deg) scale(1.08) translate3d(2vw,2vh,0)}}
+ @keyframes liquid-drift-b{from{transform:rotate(22deg) scale(1.04) translate3d(0,0,0)}to{transform:rotate(28deg) scale(1.1) translate3d(-2vw,-2vh,0)}}
+}
