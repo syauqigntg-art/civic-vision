@@ -39,8 +39,6 @@ function CaseHero() {
         <img
           src="/images/video-kasus-hero.png"
           alt="Garuda Pancasila, bendera Merah Putih, Monumen Nasional, dan skyline Indonesia"
-          width="1536"
-          height="1024"
           loading="eager"
           fetchPriority="high"
         />
