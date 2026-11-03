@@ -2096,3 +2096,147 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   .case-hero h1{font-size:30px}
   .case-hero-copy>p{font-size:12px}
 }
+
+
+/* ===== CASE DASHBOARD · PROPORTION & STATE REFINEMENT ===== */
+/* Align the case page with the approved student home geometry, without adding a second visual language. */
+.case-dashboard{
+  display:grid;
+  gap:16px;
+  width:100%;
+  max-width:1420px;
+  margin:0 auto;
+  padding:0 0 28px;
+}
+.case-hero{
+  display:grid;
+  grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);
+  align-items:stretch;
+  min-height:320px;
+  margin:0;
+  overflow:hidden;
+  border:1px solid rgba(225,246,255,.62);
+  border-radius:32px;
+  background:linear-gradient(105deg,rgba(4,42,113,.76) 0%,rgba(23,94,181,.54) 49%,rgba(177,224,255,.28) 100%);
+  box-shadow:0 18px 48px rgba(0,22,80,.26),inset 0 1px 2px rgba(255,255,255,.7);
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+}
+.case-hero-copy{
+  z-index:2;
+  align-self:center;
+  max-width:680px;
+  padding:32px clamp(24px,3.5vw,52px);
+}
+.case-breadcrumb{margin-bottom:16px;font-size:12px}
+.case-hero-title-row{gap:15px}
+.case-hero-icon{
+  width:54px;height:54px;flex-basis:54px;
+  border-radius:17px;
+  box-shadow:0 0 22px rgba(187,230,255,.42),inset 0 1px rgba(255,255,255,.85);
+}
+.case-hero h1{
+  margin:0;
+  font-size:clamp(34px,3.2vw,46px);
+  line-height:1.08;
+  letter-spacing:-.045em;
+}
+.case-hero-copy>p{
+  max-width:510px;
+  margin:15px 0 0;
+  font-size:14px;
+  line-height:1.6;
+}
+.case-hero-eyebrow{margin-top:16px;font-size:9px;letter-spacing:.14em}
+.case-hero-art{
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  box-shadow:none;
+}
+.case-hero-art:before{display:none}
+.case-hero-art img{
+  position:relative;
+  inset:auto;
+  display:block;
+  width:100%;
+  height:100%;
+  max-height:310px;
+  object-fit:contain;
+  object-position:center;
+  mix-blend-mode:normal;
+  filter:drop-shadow(0 8px 18px rgba(0,24,78,.16));
+}
+.case-state,.case-loading-panel{
+  width:100%;
+  max-width:none;
+  margin:0;
+  padding:clamp(22px,3vw,34px);
+  border:1px solid rgba(225,246,255,.62);
+  border-radius:28px;
+  background:linear-gradient(105deg,rgba(4,42,113,.56),rgba(23,94,181,.34) 58%,rgba(177,224,255,.18));
+  box-shadow:0 18px 48px rgba(0,22,80,.2),inset 0 1px 2px rgba(255,255,255,.62);
+  backdrop-filter:blur(22px);
+  -webkit-backdrop-filter:blur(22px);
+}
+.case-state{
+  display:grid;
+  grid-template-columns:56px minmax(0,1fr);
+  grid-template-areas:"icon kicker" "icon title" "icon desc" "icon action";
+  align-items:center;
+  column-gap:18px;
+  row-gap:7px;
+}
+.case-state-icon{grid-area:icon;width:54px;height:54px;border-radius:17px}
+.case-state-kicker{grid-area:kicker;align-self:end}
+.case-state h2{grid-area:title;font-size:clamp(21px,2.1vw,27px);line-height:1.2}
+.case-state p{grid-area:desc;max-width:760px;font-size:14px;line-height:1.6}
+.case-state .case-primary-button,.case-state .case-secondary-button,.case-state-actions{grid-area:action;justify-self:start;margin-top:8px}
+.case-state-actions{display:flex;flex-wrap:wrap;gap:10px}
+.case-group-state{border-color:rgba(225,246,255,.7)}
+.case-loading-heading strong{font-size:15px}
+.case-loading-panel p{font-size:13px}
+.case-video-grid{gap:16px}
+.case-video-card{box-shadow:0 12px 30px rgba(0,23,80,.18),inset 0 1px rgba(255,255,255,.58)}
+@media(max-width:1000px){
+  .case-hero{grid-template-columns:minmax(0,1fr) minmax(0,.92fr);min-height:290px}
+  .case-hero-copy{padding:26px 24px}
+  .case-hero-art img{max-height:275px}
+}
+@media(max-width:700px){
+  .case-dashboard{gap:13px;padding:0 0 22px}
+  .case-hero{grid-template-columns:minmax(0,1fr);min-height:0;border-radius:24px}
+  .case-hero-copy{max-width:none;padding:22px 20px 8px}
+  .case-breadcrumb{margin-bottom:13px}
+  .case-hero-title-row{gap:12px}
+  .case-hero-icon{width:46px;height:46px;flex-basis:46px;border-radius:14px}
+  .case-hero h1{font-size:clamp(30px,7.5vw,36px)}
+  .case-hero-copy>p{max-width:100%;margin-top:11px;font-size:13px;line-height:1.55}
+  .case-hero-eyebrow{margin-top:12px;font-size:8px}
+  .case-hero-art{min-height:0;aspect-ratio:16/7;padding:0 12px 8px}
+  .case-hero-art img{width:100%;height:100%;max-height:none;object-fit:contain;object-position:center}
+  .case-state,.case-loading-panel{padding:20px;border-radius:22px}
+  .case-state{grid-template-columns:44px minmax(0,1fr);column-gap:12px;row-gap:7px}
+  .case-state-icon{width:42px;height:42px;border-radius:13px;font-size:19px}
+  .case-state h2{font-size:19px}
+  .case-state p{font-size:12px;line-height:1.55}
+  .case-state .case-primary-button,.case-state .case-secondary-button,.case-state-actions{margin-top:6px}
+  .case-video-grid{gap:12px}
+}
+@media(max-width:430px){
+  .case-hero-copy{padding:19px 16px 7px}
+  .case-hero h1{font-size:30px}
+  .case-hero-copy>p{font-size:12px}
+  .case-hero-art{aspect-ratio:16/7.5;padding:0 8px 7px}
+  .case-state,.case-loading-panel{padding:17px}
+  .case-state{grid-template-columns:1fr;grid-template-areas:"icon" "kicker" "title" "desc" "action"}
+  .case-state-icon{width:40px;height:40px}
+  .case-state h2{font-size:18px}
+}
