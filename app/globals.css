@@ -1436,7 +1436,7 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   fill:none;stroke:#f7fbff;stroke-width:2.4;
   stroke-linecap:round;stroke-linejoin:round;
 }
-.student-brand-mark svg .logo-pupil{fill:#f7fbff;stroke:none}
+.student-brand-mark svg .logo-pupil,.student-brand-mark svg .logo-core{fill:#f7fbff;stroke:none}
 .student-brand strong{letter-spacing:.045em;font-size:14px}
 .student-brand small{font-size:10px;letter-spacing:.08em;opacity:.82}
 
