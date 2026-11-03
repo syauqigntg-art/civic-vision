@@ -1,6 +1,7 @@
 
 "use client";
 
+import "@/app/lkpd/identitas/identitas.css";
 import { rpcS } from "@/lib/api/student";
 import { useEffect, useRef, useState } from "react";
 import { createIdentitySaveController } from "@/lib/utils/identity-save-controller";
@@ -20,6 +21,7 @@ export default function Identitas() {
   const [ok, setOk] = useState(false);
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
+  const [checking, setChecking] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
   const identitySaveRef = useRef<ReturnType<typeof createIdentitySaveController> | null>(null);
 
@@ -39,32 +41,34 @@ export default function Identitas() {
 
   const load = async (c: string) => {
     setErr("");
+    setChecking(true);
 
-    const { data, error } = await rpcS("get_group", {
-      code: c,
-    });
+    try {
+      const { data, error } = await rpcS("get_group", { code: c });
 
-    if (error) {
-      setErr(error.message);
-      return;
+      if (error) {
+        setErr(error.message);
+        return;
+      }
+
+      if (!data?.id) {
+        setErr("Kode akses tidak ditemukan. Tanyakan kode kelompok ke gurumu.");
+        return;
+      }
+
+      setCode(c);
+      setProject(data.project ?? null);
+      setOk(true);
+      setF({
+        name: data.group_name || "",
+        number: data.group_number ?? "",
+        class_name: data.class_name || "",
+        leader: data.leader_name || "",
+        members: [...(data.members || []), "", "", "", "", ""].slice(0, 5),
+      });
+    } finally {
+      setChecking(false);
     }
-
-    if (!data?.id) {
-      setErr("Kode akses tidak ditemukan. Tanyakan kode kelompok ke gurumu.");
-      return;
-    }
-
-    setCode(c);
-    setProject(data.project ?? null);
-    setOk(true);
-
-    setF({
-      name: data.group_name || "",
-      number: data.group_number ?? "",
-      class_name: data.class_name || "",
-      leader: data.leader_name || "",
-      members: [...(data.members || []), "", "", "", "", ""].slice(0, 5),
-    });
   };
 
   useEffect(() => {
@@ -95,26 +99,38 @@ export default function Identitas() {
 
   if (!ok) {
     return (
-      <section className="glass">
-        <h2>Masuk dengan kode kelompok</h2>
-        <p>Guru membagikan kode akses kelompok. Masukkan kode persis seperti yang diberikan guru.</p>
-
-        {err && <div className="warn" role="alert">{err}</div>}
-
-        <input
-          value={code}
-          onChange={(e) => setC(e.target.value)}
-          placeholder="Kode kelompok"
-          aria-label="Kode kelompok"
-          autoComplete="off"
-        />
-
-        <div className="row">
-          <button className="btn" onClick={() => load(code)}>
-            LANJUTKAN →
-          </button>
-        </div>
-      </section>
+      <div className="cv-group-access-page">
+        <section className="cv-group-access-panel" aria-labelledby="group-access-title">
+          <div className="cv-group-access-emblem" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <rect x="8" y="7" width="25" height="32" rx="5" stroke="currentColor" strokeWidth="2.2" />
+              <path d="M15 16h11M15 22h11M15 28h7" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+              <circle cx="34" cy="31" r="8" fill="#0b3970" stroke="#8cecff" strokeWidth="2" />
+              <path d="M31 31h6M34 28v6" stroke="#dffaff" strokeWidth="1.8" strokeLinecap="round" />
+            </svg>
+          </div>
+          <span className="cv-group-access-eyebrow">AKSES PEMBELAJARAN</span>
+          <h1 id="group-access-title">Masuk dengan <span>Kode Kelompok</span></h1>
+          <p className="cv-group-access-description">Guru membagikan kode akses kelompok. Masukkan kode persis seperti yang diberikan guru.</p>
+          {err && <div className="cv-group-access-error" role="alert">{err}</div>}
+          <form className="cv-group-access-form" onSubmit={(event) => {
+            event.preventDefault();
+            if (!checking && code.trim()) void load(code);
+          }}>
+            <label className="cv-group-access-label" htmlFor="group-code">KODE AKSES KELOMPOK</label>
+            <div className="cv-group-code-field">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M16 20v-1.5a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4V20M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 11a3.5 3.5 0 0 0 0-7M18 14.5a4 4 0 0 1 4 4V20" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <input id="group-code" value={code} onChange={(e) => setC(e.target.value)} placeholder="Kode kelompok" aria-label="Kode kelompok" autoComplete="off" autoCapitalize="characters" spellCheck={false} disabled={checking} />
+            </div>
+            <button className="cv-group-access-submit" type="submit" disabled={!code.trim() || checking}>
+              {checking ? <><span className="cv-group-access-spinner" aria-hidden="true" /> MEMERIKSA KODE...</> : <>LANJUTKAN <span aria-hidden="true">→</span></>}
+            </button>
+          </form>
+          <div className="cv-group-access-footnote"><span aria-hidden="true">⌁</span>Pastikan kode sesuai dengan yang dibagikan oleh guru.</div>
+        </section>
+      </div>
     );
   }
 
