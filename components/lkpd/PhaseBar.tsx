@@ -50,8 +50,8 @@ export function PhaseBar({
               <span className="cv-phase-icon" aria-hidden="true">{isComplete ? "✓" : ICONS[phase]}</span>
             </div>
             <span className="cv-phase-copy">
-              <b className="phase-text-tracking">{P[phase][0]}</b>
-              <small className="phase-text-tracking">{P[phase][1]}</small>
+              <b >{P[phase][0]}</b>
+              <small >{P[phase][1]}</small>
             </span>
             <span className="cv-phase-description">{P[phase][2]}</span>
             <span className="cv-phase-state">
@@ -72,9 +72,9 @@ export function PhaseCards() {
         <li key={phase} className={`ph phase-${phase}`}>
           <div className="phase-card-head">
             <span className="phase-symbol" aria-hidden="true">{ICONS[phase]}</span>
-            <b className="phase-text-tracking">{String(index + 1).padStart(2, "0")}. {P[phase][0]}</b>
+            <b >{String(index + 1).padStart(2, "0")}. {P[phase][0]}</b>
           </div>
-          <strong className="phase-card-title phase-text-tracking">{P[phase][1]}</strong>
+          <strong className="phase-card-title">{P[phase][1]}</strong>
           <p>{P[phase][2]}</p>
           <span className="phase-card-art" aria-hidden="true">{["▣", "▤", "◉", "◆", "✿"][index]}</span>
         </li>
