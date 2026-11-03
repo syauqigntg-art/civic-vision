@@ -3845,3 +3845,36 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 @media (prefers-reduced-motion: reduce) {
   .cv-stage-panel .cv-learning-navigation .ph { transition: none; }
 }
+
+ 
+/* ===== STUDENT PHASE CARDS · LEFT-TO-RIGHT TEXT WIPE =====
+   700ms wipe-out + 500ms pause + 700ms wipe-in = 1900ms cycle.
+   The animation is CSS-driven, so completion/current phase changes do not restart it. */
+.student-phase-cards .phase-text-wipe {
+  display: block;
+  clip-path: inset(0 0 0 0);
+  animation: cv-phase-text-wipe 1900ms ease-in-out infinite;
+  will-change: clip-path;
+}
+
+@keyframes cv-phase-text-wipe {
+  0%,
+  36.842% {
+    clip-path: inset(0 0 0 100%);
+  }
+  63.158% {
+    clip-path: inset(0 0 0 100%);
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+/* Keep text readable for users who request reduced motion. */
+@media (prefers-reduced-motion: reduce) {
+  .student-phase-cards .phase-text-wipe {
+    animation: none;
+    clip-path: none;
+    will-change: auto;
+  }
+}
