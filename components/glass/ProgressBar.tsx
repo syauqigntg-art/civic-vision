@@ -1,3 +1,19 @@
-export function ProgressBar({ pct }: { pct: number }) { const n = Math.round(pct / 10);
-  return (<div><div style={{ fontFamily: "monospace" }} aria-hidden="true">{"█".repeat(n) + "░".repeat(10 - n)} {pct}%</div>
-    <div className="bar" role="progressbar" aria-label="Progress analisis" aria-valuemin={0} aria-valuemax={100} aria-valuenow={pct}><i style={{ width: pct + "%" }} /></div></div>); }
+export function ProgressBar({ pct }: { pct: number }) {
+  const value = Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 0;
+
+  return (
+    <div
+      className="bar cv-progress-track"
+      role="progressbar"
+      aria-label="Progress jawaban wajib"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={value}
+    >
+      <i
+        className="cv-progress-fill"
+        style={{ width: `${value}%` }}
+      />
+    </div>
+  );
+}
