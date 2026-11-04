@@ -124,20 +124,7 @@
   color: #fff;
   text-decoration: none;
 }
-.cv-login-public-mark {
-  display: grid;
-  flex: 0 0 46px;
-  width: 46px;
-  height: 46px;
-  place-items: center;
-  color: #fff;
-  filter: drop-shadow(0 0 7px rgba(255,255,255,.22));
-}
-.cv-login-public-mark svg { display: block; width: 100%; height: 100%; }
-.cv-login-public-brand strong,
-.cv-login-public-brand small { display: block; }
-.cv-login-public-brand strong { font-size: 17px; line-height: 1.1; font-weight: 850; letter-spacing: -.02em; }
-.cv-login-public-brand small { margin-top: 4px; color: rgba(235,247,255,.86); font-size: 12px; }
+.cv-login-public-brand img { display: block; width: auto; max-width: 100%; height: 46px; object-fit: contain; filter: drop-shadow(0 3px 8px rgba(0,16,54,.16)); }
 .cv-login-public-navigation {
   display: flex;
   align-items: center;
@@ -492,10 +479,7 @@
 
   .cv-login-page { gap: 24px; padding: 9px 10px 28px; }
   .cv-login-public-header { min-height: 64px; padding: 7px 10px; border-radius: 19px; }
-  .cv-login-public-mark { width: 39px; height: 39px; flex-basis: 39px; }
-  .cv-login-public-brand { gap: 8px; }
-  .cv-login-public-brand strong { font-size: 13px; }
-  .cv-login-public-brand small { margin-top: 2px; font-size: 10px; }
+  .cv-login-public-brand img { height: 39px; }
   .cv-login-menu-toggle { width: 37px; height: 37px; }
   .cv-login-main-panel { gap: 12px; padding: 18px 15px 20px; border-radius: 23px; }
   .cv-login-intro-copy h1 { font-size: 34px; }
