@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { sb } from "@/lib/supabase";
 import { ProjectPageScope, ProjectProvider, ProjectSwitcher } from "@/components/admin/ProjectProvider";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 const NAV = [
   { href: "/admin", label: "Ringkasan", hint: "Aktivitas belajar", icon: "⌂" },
@@ -76,7 +77,7 @@ export default function AdminLayout({
   if (!ok) {
     return (
       <div className="admin-loading">
-        <div className="admin-loading-mark">CV</div>
+        <BrandLogo variant="mark" className="admin-loading-mark-logo" />
         <strong>{authError || "Memeriksa akses guru..."}</strong>
         <span>Ruang kerja CIVIC VISION</span>
       </div>
@@ -105,11 +106,7 @@ export default function AdminLayout({
     <div className="admin-workspace">
       <aside className="admin-sidebar">
         <Link href="/admin" className="admin-brand">
-          <span className="admin-brand-mark">CV</span>
-          <span>
-            <strong>CIVIC VISION</strong>
-            <small>RUANG KERJA GURU</small>
-          </span>
+          <BrandLogo variant="horizontal" className="admin-brand-logo" />
         </Link>
 
         <div className="admin-nav-label">RUANG KERJA</div>
