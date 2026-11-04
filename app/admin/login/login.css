@@ -289,3 +289,16 @@
 @media (prefers-reduced-motion: reduce) {
   .cv-login-page *, .cv-login-page *::before, .cv-login-page *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Login occupies the complete viewport inside the existing admin route shell. */
+.admin-outer:has(.cv-login-page) {
+  min-height: 100vh;
+  padding: 0;
+  background: transparent;
+  color: #fff;
+}
+.admin-outer:has(.cv-login-page) > .admin-login-frame {
+  min-height: 100vh;
+  width: 100%;
+  margin: 0;
+}
