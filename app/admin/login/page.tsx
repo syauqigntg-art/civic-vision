@@ -58,7 +58,7 @@ export default function Login() {
       <div className="cv-login-atmosphere" aria-hidden="true" />
       <header className="cv-login-public-header">
         <Link href="/" className="cv-login-public-brand" aria-label="CIVIC VISION Beranda">
-          <BrandLogo variant="horizontal-light" height={46} alt="CIVIC VISION — LKPD Digital" />
+          <BrandLogo variant="horizontal-light" height={46} className="cv-login-public-logo" alt="CIVIC VISION — LKPD Digital" />
         </Link>
 
         <button className="cv-login-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Tutup navigasi" : "Buka navigasi"} aria-expanded={mobileMenuOpen} aria-controls="cv-login-public-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>
