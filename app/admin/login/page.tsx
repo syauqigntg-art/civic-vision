@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { sb } from "@/lib/supabase";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 export default function Login() {
   const [em, setEm] = useState("");
@@ -37,7 +38,7 @@ export default function Login() {
 
   return (
     <section className="glass" style={{ maxWidth: 440, margin: "40px auto" }}>
-      <h2>Login guru</h2>
+      <div className="admin-login-brand"><BrandLogo variant="horizontal" /></div>\n      <h2>Login guru</h2>
       {err && <div className="warn" role="alert">{err}</div>}
       <label htmlFor="em">Email</label>
       <input id="em" type="email" value={em} onChange={e => setEm(e.target.value)} />
