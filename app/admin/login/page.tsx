@@ -2,19 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import NavBar from "@/components/NavBar";
 import "@/app/admin/login/login.css";
 import { sb } from "@/lib/supabase";
-
-function BrandMark() {
-  return (
-    <svg viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-      <path d="M36.5 10.5A19 19 0 1 0 36.5 37.5" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="butt" />
-      <path d="M34 15.5 42 10v11Z" fill="#83d8ff" />
-      <path d="M34 32.5 42 38v-11Z" fill="#83d8ff" />
-      <path d="M11 24h15" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".9" />
-    </svg>
-  );
-}
 
 function MailIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2" /><path d="m4 7 8 6 8-6" /></svg>;
@@ -63,51 +53,51 @@ export default function Login() {
   };
 
   return (
-    <main className="cv-login-page">
+    <main className="cv-login-page" id="konten">
       <div className="cv-login-atmosphere" aria-hidden="true" />
-      <header className="cv-login-navbar">
-        <Link href="/" className="cv-login-nav-brand" aria-label="CIVIC VISION Beranda">
-          <span className="cv-login-nav-mark"><BrandMark /></span>
+      <header className="cv-login-public-header">
+        <Link href="/" className="cv-login-public-brand" aria-label="CIVIC VISION Beranda">
+          <span className="cv-login-public-mark" aria-hidden="true">
+            <svg viewBox="0 0 48 48" focusable="false">
+              <path d="M36.5 10.5A19 19 0 1 0 36.5 37.5" fill="none" stroke="currentColor" strokeWidth="8" strokeLinecap="butt" />
+              <path d="M34 15.5 42 10v11Z" fill="#83d8ff" />
+              <path d="M34 32.5 42 38v-11Z" fill="#83d8ff" />
+              <path d="M11 24h15" stroke="#fff" strokeWidth="3" strokeLinecap="round" opacity=".9" />
+            </svg>
+          </span>
           <span><strong>CIVIC VISION</strong><small>LKPD Digital</small></span>
         </Link>
 
-        <button className="cv-login-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Tutup menu navigasi" : "Buka menu navigasi"} aria-expanded={mobileMenuOpen} aria-controls="cv-login-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>
+        <button className="cv-login-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Tutup navigasi" : "Buka navigasi"} aria-expanded={mobileMenuOpen} aria-controls="cv-login-public-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>
           <span /><span /><span />
         </button>
 
-        <nav id="cv-login-navigation" className={"cv-login-navigation" + (mobileMenuOpen ? " is-open" : "")} aria-label="Navigasi utama">
-          <Link href="/" onClick={() => setMobileMenuOpen(false)}>Beranda</Link>
-          <Link href="/lkpd/kasus" onClick={() => setMobileMenuOpen(false)}>Video Kasus</Link>
-          <Link href="/lkpd/identitas" onClick={() => setMobileMenuOpen(false)}>LKPD</Link>
-        </nav>
-
-        <div className="cv-login-nav-actions">
-          <Link className="cv-login-nav-teacher" href="/admin/login" aria-current="page">Login Guru</Link>
-          <Link className="cv-login-nav-student" href="/lkpd/identitas">Login Siswa</Link>
+        <div id="cv-login-public-navigation" className={"cv-login-public-navigation" + (mobileMenuOpen ? " is-open" : "")}>
+          <NavBar />
+          <div className="cv-login-public-actions">
+            <span className="cv-login-active-teacher" aria-current="page">Login Guru</span>
+            <Link href="/lkpd/identitas" className="cv-login-student-link" onClick={() => setMobileMenuOpen(false)}>Login Siswa</Link>
+          </div>
         </div>
       </header>
 
-      <section className="cv-login-layout" aria-label="Login guru CIVIC VISION">
-        <div className="cv-login-visual">
-          <div className="cv-login-visual-copy">
+      <section className="cv-login-main-panel" aria-label="Login guru CIVIC VISION">
+        <div className="cv-login-intro">
+          <div className="cv-login-intro-copy">
             <span className="cv-login-eyebrow">CIVIC VISION · UNTUK GURU</span>
-            <h1>Ruang belajar,<br /><span>aksi bermakna.</span></h1>
+            <h1>Login Guru</h1>
+            <span className="cv-login-title-accent" aria-hidden="true" />
             <p>Kelola proyek pembelajaran berbasis PBL, kelas, kelompok, dan hasil belajar siswa dalam satu platform.</p>
           </div>
-
           <div className="cv-login-illustration">
-            <img src="/images/civic-vision-hero.png" alt="Ilustrasi pembelajaran dan identitas kebangsaan CIVIC VISION" />
-            <div className="cv-login-float-card cv-login-float-video"><span>▶</span><div><strong>Video kasus</strong><small>Stimulus pembelajaran</small></div></div>
-            <div className="cv-login-float-card cv-login-float-group"><span>◎</span><div><strong>Kolaborasi</strong><small>Aktivitas kelompok</small></div></div>
+            <img src="/images/civic-vision-hero.png" alt="Ilustrasi pembelajaran digital CIVIC VISION" />
           </div>
-
-          <div className="cv-login-visual-foot"><span>LIHAT AKSINYA</span><i /><span>TEMUKAN NILAINYA</span><i /><span>HIDUPKAN PANCASILANYA</span></div>
         </div>
 
-        <section className="cv-login-card" aria-labelledby="cv-login-title">
+        <section className="cv-login-form-panel" aria-labelledby="cv-login-title">
           <div className="cv-login-heading">
             <span className="cv-login-heading-icon"><CapIcon /></span>
-            <div><span className="cv-login-form-eyebrow">RUANG KERJA PENDIDIK</span><h2 id="cv-login-title">Login Guru</h2><p>Masuk untuk mengelola proyek LKPD, kelas, dan hasil belajar.</p></div>
+            <div><span className="cv-login-form-eyebrow">RUANG KERJA PENDIDIK</span><h2 id="cv-login-title">Login Guru</h2><p>Masuk untuk mengelola proyek LKPD, kelas, dan hasil belajar siswa.</p></div>
           </div>
 
           {err && <div className="cv-login-error" role="alert" aria-live="polite">{err}</div>}
@@ -133,7 +123,6 @@ export default function Login() {
             </button>
           </form>
           <p className="cv-login-login-note">Gunakan akun guru yang telah terdaftar untuk mengakses ruang kerja.</p>
-          <div className="cv-login-card-bottom"><span>Secure teacher access</span><span>© CIVIC VISION</span></div>
         </section>
       </section>
     </main>
