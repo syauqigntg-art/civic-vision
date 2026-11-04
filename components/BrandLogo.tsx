@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import Image from "next/image";
 
 type BrandLogoProps = {
   variant?: "horizontal-light" | "horizontal-dark" | "symbol";
@@ -20,22 +20,26 @@ export default function BrandLogo({
   height = variant === "symbol" ? 40 : 48,
   alt = "CIVIC VISION — LKPD Digital",
 }: BrandLogoProps) {
-  const style: CSSProperties = {
-    display: "block",
-    width: "auto",
-    height,
-    maxWidth: "100%",
-    objectFit: "contain",
-    flex: "0 0 auto",
-  };
+  const width = variant === "symbol" ? height : Math.round((height * 330) / 64);
 
   return (
-    <img
+    <Image
       src={sources[variant]}
       className={className}
-      style={style}
+      width={width}
+      height={height}
+      sizes={variant === "symbol" ? `${height}px` : `(max-width: 700px) 205px, ${width}px`}
       alt={alt}
+      unoptimized
       draggable={false}
+      style={{
+        display: "block",
+        width: "auto",
+        height,
+        maxWidth: "100%",
+        objectFit: "contain",
+        flex: "0 0 auto",
+      }}
     />
   );
 }
