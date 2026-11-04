@@ -493,7 +493,9 @@ p{color:rgba(255,255,255,.85)}.top a{color:rgba(255,255,255,.88)}
   box-shadow:0 12px 36px rgba(0,18,68,.24),inset 0 1px rgba(255,255,255,.35);
 }
 .student-brand{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;min-width:0}
-.student-brand-mark{width:42px;height:42px;display:grid;place-items:center;border:5px solid rgba(255,255,255,.94);border-right-color:transparent;border-radius:50%;font-size:0;filter:drop-shadow(0 0 8px rgba(255,255,255,.45))}
+.student-brand img{display:block;width:auto;height:46px;max-width:100%;object-fit:contain;filter:drop-shadow(0 3px 8px rgba(0,16,54,.16))}
+.public-brand{display:inline-flex;align-items:center;min-width:0;text-decoration:none}
+.public-brand img{display:block;width:auto;height:44px;max-width:100%;object-fit:contain}
 .student-brand strong,.student-brand small,.student-profile strong,.student-profile small{display:block}
 .student-brand strong{font-size:16px;letter-spacing:.02em}.student-brand small{font-size:12px;margin-top:2px}
 .cv-navbar{width:auto;max-width:100%;gap:4px;padding:6px;background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.35)}
