@@ -106,7 +106,7 @@ export default function AdminLayout({
     <div className="admin-workspace">
       <aside className="admin-sidebar">
         <Link href="/admin" className="admin-brand">
-          <BrandLogo variant="horizontal-light" height={42} alt="CIVIC VISION — Ruang Kerja Guru" />
+          <BrandLogo variant="horizontal-dark" height={42} alt="CIVIC VISION — Ruang Kerja Guru" />
         </Link>
 
         <div className="admin-nav-label">RUANG KERJA</div>
