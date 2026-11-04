@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./design-tokens.css";
 import AppShell from "@/components/AppShell";
 
 // Public Supabase values are compiled into browser code, so missing values at
