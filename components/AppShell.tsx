@@ -9,13 +9,14 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const inAdmin = path === "/admin" || path.startsWith("/admin/");
   const onStudentHome = path === "/";
   const onStudentCase = path === "/lkpd/kasus" || path.startsWith("/lkpd/kasus/");
+  const onStudentAccess = path === "/lkpd/identitas";
 
   return (
     <>
       <a className="skip" href="#konten">Lewati ke konten</a>
       {inAdmin ? (
         <div className="admin-outer">{children}</div>
-      ) : onStudentHome || onStudentCase ? (
+      ) : onStudentHome || onStudentCase || onStudentAccess ? (
         <div className="student-shell">
           <header className="student-header">
             <Link href="/" className="student-brand" aria-label="CIVIC VISION Beranda">
