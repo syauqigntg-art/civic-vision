@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap');
+@import "./brand-tokens.css";\n@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;800&display=swap');
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
@@ -3844,4 +3844,16 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
 }
 @media (prefers-reduced-motion: reduce) {
   .cv-stage-panel .cv-learning-navigation .ph { transition: none; }
+}
+
+/* Centralized CIVIC VISION brand component sizing */
+.student-brand-logo { width: 196px; max-width: min(34vw, 196px); }
+.admin-brand-logo { width: 188px; max-width: 100%; }
+.admin-loading-mark-logo { width: 48px; height: 48px; }
+.admin-login-brand { display:flex; justify-content:center; margin: 0 auto 22px; }
+.admin-login-brand .cv-brand-logo { width: min(260px, 72vw); }
+.legacy-shell-brand { width: 188px; }
+@media (max-width: 760px) {
+  .student-brand-logo { width: 154px; }
+  .admin-brand-logo { width: 158px; }
 }
