@@ -1,0 +1,25 @@
+:root {
+  /* CIVIC VISION brand palette */
+  --cv-color-navy-950: #061a42;
+  --cv-color-navy-900: #082b59;
+  --cv-color-navy-800: #0b3d78;
+  --cv-color-blue-700: #0757c8;
+  --cv-color-blue-600: #1677f2;
+  --cv-color-blue-500: #2399f5;
+  --cv-color-cyan-400: #16bfea;
+  --cv-color-cyan-300: #63f0ff;
+  --cv-color-text-inverse: #ffffff;
+  --cv-color-text-muted: #d5eafb;
+  --cv-color-text-dark: #082b59;
+
+  /* Shared surfaces and geometry */
+  --cv-surface-glass: rgba(7, 48, 104, 0.48);
+  --cv-surface-glass-strong: rgba(5, 39, 88, 0.78);
+  --cv-border-subtle: rgba(99, 220, 255, 0.28);
+  --cv-border-strong: rgba(99, 220, 255, 0.52);
+  --cv-shadow-glass: 0 16px 42px rgba(0, 15, 55, 0.22);
+  --cv-radius-sm: 12px;
+  --cv-radius-md: 18px;
+  --cv-radius-lg: 26px;
+  --cv-radius-xl: 34px;
+}
