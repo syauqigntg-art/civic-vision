@@ -135,97 +135,90 @@ export default function Identitas() {
   }
 
   return (
-    <section className="glass">
-      <button
-  type="button"
-  className="btn g"
-  onClick={() => {
-    localStorage.removeItem("cv_code");
-    setC("");
-    setOk(false);
-    setErr("");
-    setProject(null);
-    setF({
-      name: "",
-      number: "",
-      class_name: "",
-      leader: "",
-      members: ["", "", "", "", ""],
-    });
-  }}
->
-  Ganti Kelompok
-</button>
-
-      {project ? (
-        <div className="glass" style={{ padding: 20, marginBottom: 24 }}>
-          <h2>{project.title}</h2>
-
-          {project.tagline && (
-            <p style={{ fontWeight: 600 }}>{project.tagline}</p>
-          )}
-
-          {project.description && <p>{project.description}</p>}
+    <div className="cv-identity-page">
+      <section className="cv-identity-project" aria-labelledby="cv-project-title">
+        <div className="cv-identity-project-topline">
+          <span className="cv-identity-kicker">PROYEK PEMBELAJARAN</span>
+          <button type="button" className="cv-identity-change-group" onClick={() => {
+            localStorage.removeItem("cv_code");
+            setC("");
+            setOk(false);
+            setErr("");
+            setProject(null);
+            setF({ name: "", number: "", class_name: "", leader: "", members: ["", "", "", "", ""] });
+          }}>
+            <span aria-hidden="true">↶</span> Ganti Kelompok
+          </button>
         </div>
-      ) : (
-        <div className="warn" role="alert">
-          Project belum ditemukan untuk kelompok ini. Hubungi gurumu.
+        {project ? (
+          <div className="cv-identity-project-copy">
+            <h1 id="cv-project-title">{project.title}</h1>
+            {project.tagline && <p className="cv-identity-tagline">{project.tagline}</p>}
+            {project.description && <p className="cv-identity-project-description">{project.description}</p>}
+          </div>
+        ) : (
+          <div className="cv-group-access-error" role="alert">Project belum ditemukan untuk kelompok ini. Hubungi gurumu.</div>
+        )}
+      </section>
+
+      <section className="cv-identity-form-panel" aria-labelledby="cv-identity-title">
+        <div className="cv-identity-form-heading">
+          <span className="cv-identity-kicker">DATA KELOMPOK</span>
+          <h2 id="cv-identity-title">Identitas <span>Kelompok</span></h2>
+          <p>Lengkapi informasi kelompok sebelum memulai aktivitas pembelajaran.</p>
         </div>
-      )}
 
-      <h2>Identitas kelompok</h2>
+        {err && <div className="cv-group-access-error" role="alert">{err}</div>}
 
-      {err && <div className="warn" role="alert">{err}</div>}
-
-      <label htmlFor="f-name">Nama kelompok</label>
-      <input
-        id="f-name"
-        value={f.name}
-        onChange={(e) => set("name", e.target.value)}
-      />
-
-      
-<label>Nomor kelompok</label>
-<p className="hint">
-  {f.number || "Belum ditetapkan"} — ditetapkan oleh guru
-</p>
-
-<label htmlFor="f-class">Kelas</label>
-<input
-  id="f-class"
-  value={f.class_name}
-  onChange={(e) => set("class_name", e.target.value)}
-  placeholder="mis. XII-2"
-/>
-
-<label htmlFor="f-leader">Nama Ketua Kelompok</label>
-<input
-  id="f-leader"
-  value={f.leader}
-  onChange={(e) => set("leader", e.target.value)}
-  placeholder="Masukkan nama ketua kelompok"
-/>
-
-      {f.members.map((m: string, i: number) => (
-        <div key={i}>
-          <label htmlFor={`f-m${i}`}>Anggota {i + 1}</label>
-          <input
-            id={`f-m${i}`}
-            value={m}
-            onChange={(e) => {
-              const a = [...f.members];
-              a[i] = e.target.value;
-              set("members", a);
-            }}
-          />
+        <div className="cv-identity-fields">
+          <div className="cv-identity-field">
+            <label htmlFor="f-name">Nama kelompok</label>
+            <input id="f-name" value={f.name} onChange={(e) => set("name", e.target.value)} placeholder="Masukkan nama kelompok" />
+          </div>
+          <div className="cv-identity-field">
+            <label>Nomor kelompok</label>
+            <div className="cv-identity-readonly" aria-label="Nomor kelompok ditetapkan oleh guru">
+              <span className="cv-identity-readonly-value">{f.number || "Belum ditetapkan"}</span>
+              <span className="cv-identity-readonly-note"><span aria-hidden="true">◈</span> Ditetapkan oleh guru</span>
+            </div>
+          </div>
+          <div className="cv-identity-field">
+            <label htmlFor="f-class">Kelas</label>
+            <input id="f-class" value={f.class_name} onChange={(e) => set("class_name", e.target.value)} placeholder="mis. XII-2" />
+          </div>
+          <div className="cv-identity-field">
+            <label htmlFor="f-leader">Nama Ketua Kelompok</label>
+            <input id="f-leader" value={f.leader} onChange={(e) => set("leader", e.target.value)} placeholder="Masukkan nama ketua kelompok" />
+          </div>
         </div>
-      ))}
 
-      <div className="row">
-        <button className="btn" type="button" onClick={save} disabled={saving}>
-          {saving ? "Menyimpan identitas..." : "LANJUTKAN →"}
-        </button>
-      </div>
-    </section>
+        <div className="cv-identity-members-heading">
+          <div>
+            <span className="cv-identity-kicker">KOMPOSISI TIM</span>
+            <h3>Anggota Kelompok</h3>
+          </div>
+          <span className="cv-identity-members-count">{f.members.length} kolom anggota</span>
+        </div>
+
+        <div className="cv-identity-members-grid">
+          {f.members.map((m: string, i: number) => (
+            <div className="cv-identity-field" key={i}>
+              <label htmlFor={`f-m${i}`}>Anggota {i + 1}</label>
+              <input id={`f-m${i}`} value={m} onChange={(e) => {
+                const a = [...f.members];
+                a[i] = e.target.value;
+                set("members", a);
+              }} placeholder={`Nama anggota ${i + 1}`} />
+            </div>
+          ))}
+        </div>
+
+        <div className="cv-identity-form-footer">
+          <p>Periksa kembali data kelompok sebelum melanjutkan.</p>
+          <button className="cv-group-access-submit cv-identity-save" type="button" onClick={save} disabled={saving}>
+            {saving ? "Menyimpan identitas..." : <>SIMPAN &amp; LANJUTKAN <span aria-hidden="true">→</span></>}
+          </button>
+        </div>
+      </section>
+    </div>
   );
-}
