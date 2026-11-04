@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import NavBar from "@/components/NavBar";
-import BrandLogo from "@/components/BrandLogo";
+import CivicVisionLogo from "@/components/branding/CivicVisionLogo";
 import "@/app/admin/login/login.css";
 import { sb } from "@/lib/supabase";
 
@@ -58,7 +58,7 @@ export default function Login() {
       <div className="cv-login-atmosphere" aria-hidden="true" />
       <header className="cv-login-public-header">
         <Link href="/" className="cv-login-public-brand" aria-label="CIVIC VISION Beranda">
-          <BrandLogo variant="horizontal-light" height={46} className="cv-login-public-logo" alt="CIVIC VISION — LKPD Digital" />
+          <CivicVisionLogo variant="horizontal" tone="light" height={46} className="cv-login-public-logo" alt="CIVIC VISION — LKPD Digital" />
         </Link>
 
         <button className="cv-login-menu-toggle" type="button" aria-label={mobileMenuOpen ? "Tutup navigasi" : "Buka navigasi"} aria-expanded={mobileMenuOpen} aria-controls="cv-login-public-navigation" onClick={() => setMobileMenuOpen((open) => !open)}>
