@@ -1,4 +1,43 @@
 /* CIVIC VISION — Login Guru: scoped page styles */
+/* Root-cause correction: the admin layout's legacy .admin-login-frame is capped at 440px.
+   Scope the reset to this page only; leave the shared admin shell untouched. */
+.admin-outer:has(> .admin-login-frame > .cv-login-page) {
+  width: 100%;
+  min-width: 0;
+  min-height: 100svh;
+  margin: 0;
+  padding: 0;
+  overflow-x: clip;
+}
+.admin-login-frame:has(> .cv-login-page) {
+  display: block;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  min-height: 100svh;
+  margin: 0;
+  align-items: stretch;
+  justify-content: stretch;
+}
+.cv-login-page {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.cv-login-page *,
+.cv-login-page *::before,
+.cv-login-page *::after {
+  box-sizing: border-box;
+}
+.cv-login-public-header,
+.cv-login-main-panel {
+  min-width: 0;
+}
+.cv-login-public-navigation > .cv-navbar a[href="/admin"] {
+  display: none;
+}
+
 .admin-outer:has(.cv-login-page) {
   min-height: 100svh;
   width: 100%;
@@ -386,6 +425,11 @@
 @keyframes cv-login-spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 1100px) {
+  .cv-login-public-header { grid-template-columns: minmax(185px, .7fr) minmax(0, 1.3fr); }
+  .cv-login-public-navigation { flex-wrap: nowrap; }
+  .cv-login-public-navigation > .cv-navbar { min-width: 0; }
+  .cv-login-public-navigation > .cv-navbar .cv-nav-link { white-space: nowrap; }
+
   .cv-login-public-header { grid-template-columns: 190px minmax(0,1fr); gap: 12px; padding-inline: 15px; }
   .cv-login-public-navigation { gap: 8px; }
   .cv-login-public-navigation > .cv-navbar .cv-nav-link { padding-inline: 9px; font-size: 11px; }
@@ -395,6 +439,8 @@
   .cv-login-form-panel { padding-left: 24px; }
 }
 @media (max-width: 820px) {
+  .cv-login-page { gap: 30px; }
+
   .cv-login-public-header { grid-template-columns: minmax(0,1fr) auto; min-height: 70px; }
   .cv-login-menu-toggle {
     display: flex;
@@ -442,6 +488,8 @@
   .cv-login-heading { margin-bottom: 22px; }
 }
 @media (max-width: 430px) {
+  .cv-login-page { min-height: 100svh; }
+
   .cv-login-page { gap: 24px; padding: 9px 10px 28px; }
   .cv-login-public-header { min-height: 64px; padding: 7px 10px; border-radius: 19px; }
   .cv-login-public-mark { width: 39px; height: 39px; flex-basis: 39px; }
