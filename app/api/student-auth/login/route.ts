@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "ID atau PIN tidak sesuai." }, { status: 400 });
   }
   const { data: credential, error } = await admin.from("student_credentials")
-    .select("id,pin_hash,is_active").ilike("login_id", loginId).maybeSingle();
+    .select("id,pin_hash,is_active").eq("login_id", loginId).maybeSingle();
   if (error) return NextResponse.json({ error: "Layanan login belum tersedia. Hubungi guru." }, { status: 503 });
   const valid = !!credential && credential.is_active && await verifyPin(pin, credential.pin_hash);
   if (!valid) { await admin.rpc("student_rate_limit", { p_bucket: "bad-code", p_key_hash: ipHash, p_max: 30, p_window_seconds: 60, p_increment: true }); return NextResponse.json({ error: "ID atau PIN tidak sesuai." }, { status: 401 }); }
