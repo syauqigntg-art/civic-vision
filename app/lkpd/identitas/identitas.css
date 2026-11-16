@@ -290,8 +290,3 @@
   .cv-identity-change-group, .cv-identity-form-panel .cv-identity-field input { transition: none; }
 }
 
-/* Student login success confirmation and clickable profile. */
-.cv-student-success{max-width:680px;margin:42px auto;padding:clamp(28px,5vw,52px);text-align:center;border:1px solid rgba(190,235,255,.55);border-radius:28px;background:linear-gradient(145deg,rgba(16,105,190,.48),rgba(4,49,119,.58));box-shadow:inset 0 1px 0 rgba(255,255,255,.24),0 22px 55px rgba(0,25,75,.24);backdrop-filter:blur(22px)}
-.cv-student-success-icon{display:grid;place-items:center;width:66px;height:66px;margin:0 auto 22px;border:1px solid rgba(174,255,221,.78);border-radius:50%;background:rgba(34,190,139,.20);color:#c5ffe8;font-size:34px;font-weight:800;box-shadow:0 0 28px rgba(70,240,180,.18),inset 0 1px rgba(255,255,255,.28)}
-.cv-student-success h2{margin:12px 0;color:#fff;font-size:clamp(28px,4vw,40px)}.cv-student-success h2 span{color:#9df3d0}.cv-student-success p{max-width:480px;margin:0 auto 24px;color:rgba(239,249,255,.88);line-height:1.7}.cv-student-success .cv-group-access-submit{width:min(100%,420px)}
-.student-profile{text-decoration:none;cursor:pointer}.student-profile:hover{border-color:rgba(190,239,255,.9);filter:brightness(1.08)}.student-profile:focus-visible{outline:3px solid #9ceaff;outline-offset:3px}
