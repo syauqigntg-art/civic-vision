@@ -22,5 +22,7 @@ export async function POST(req: Request) {
   const pinHash = await hashPin(pin);
   const { error } = await admin.from("student_credentials").upsert({ group_member_id: memberId, login_id: loginId, pin_hash: pinHash, is_active: true, updated_at: new Date().toISOString() }, { onConflict: "group_member_id" });
   if (error) return NextResponse.json({ error: error.code === "23505" ? "ID siswa sudah digunakan." : "Kredensial gagal disimpan." }, { status: error.code === "23505" ? 409 : 500 });
+  const { data: saved } = await admin.from("student_credentials").select("id").eq("group_member_id", memberId).maybeSingle();
+  if (saved?.id) await admin.from("student_sessions").delete().eq("credential_id", saved.id);
   return NextResponse.json({ ok: true });
 }
