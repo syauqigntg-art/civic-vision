@@ -8,10 +8,10 @@ import BrandLogo from "@/components/brand/BrandLogo";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const [studentName, setStudentName] = useState("Siswa");
+  const [student, setStudent] = useState<{ name: string } | null>(null);
   useEffect(() => {
     let active = true;
-    fetch("/api/student-auth/me", { cache: "no-store" }).then(async (response) => response.ok ? response.json() : null).then((data) => { if (active && data?.authenticated) setStudentName(data.studentName || data.loginId || "Siswa"); }).catch(() => undefined);
+    fetch("/api/student-auth/me", { cache: "no-store" }).then(async (response) => response.ok ? response.json() : null).then((data) => { if (active && data?.authenticated) setStudent({ name: data.studentName || data.loginId || "Siswa" }); }).catch(() => undefined);
     return () => { active = false; };
   }, []);
   const inAdmin = path === "/admin" || path.startsWith("/admin/");
@@ -31,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <BrandLogo variant="horizontal" className="student-brand-logo" />
             </Link>
             <NavBar />
-            <Link href="/lkpd/kasus" className="student-profile" aria-label="Kembali ke dashboard LKPD siswa"><span className="student-profile-avatar" aria-hidden="true">{studentName.slice(0, 1).toUpperCase()}</span><span><strong>{studentName}</strong><small>Dashboard Siswa</small></span><span aria-hidden="true">⌄</span></Link>
+            {student ? <Link href="/lkpd/kasus" className="student-profile" aria-label="Kembali ke dashboard LKPD siswa"><span className="student-profile-avatar" aria-hidden="true">{student.name.slice(0, 1).toUpperCase()}</span><span><strong>{student.name}</strong><small>Dashboard Siswa</small></span><span aria-hidden="true">⌄</span></Link> : <Link href="/lkpd/login" className="student-profile" aria-label="Login siswa"><span><strong>Login Siswa</strong><small>ID Siswa · PIN</small></span><span aria-hidden="true">→</span></Link>}
           </header>
           <main id="konten" className="student-main" tabIndex={-1}>{children}</main>
         </div>
