@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
 import { safeSupabaseDiagnostic } from "@/lib/supabase/diagnostics";
 import { studentContentReq } from "@/lib/validation/schemas";
+import { getStudentSession } from "@/lib/student-auth";
 
 export const runtime = "nodejs";
 
@@ -161,7 +162,9 @@ export async function POST(req: Request) {
   const parsed = studentContentReq.safeParse(body);
   if (!parsed.success) return fail(400, "Permintaan tidak valid.");
 
-  const { code } = parsed.data.args;
+  const session = await getStudentSession();
+  if (!session) return fail(401, "Sesi siswa tidak ditemukan. Silakan login kembali.");
+  const code = session.code;
   const attemptLimit = await limit("bad-code", keyHash, 30, false);
   if (attemptLimit.error) {
     console.error("Student content code limit failed:", attemptLimit.error.message);
