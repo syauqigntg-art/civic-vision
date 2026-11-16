@@ -111,12 +111,25 @@ export default function Identitas() {
   if (identitySaved) {
     return (
       <div className="cv-identity-page">
-        <section className="cv-identity-form-panel cv-student-success" role="status" aria-live="polite">
-          <div className="cv-student-success-icon" aria-hidden="true">✓</div>
-          <span className="cv-identity-kicker">AKSES PEMBELAJARAN TERVERIFIKASI</span>
-          <h2>Login <span>Berhasil!</span></h2>
-          <p>Identitas siswa dan kelompok berhasil diverifikasi. Kamu siap melanjutkan aktivitas pembelajaran bersama kelompok.</p>
-          <button className="cv-group-access-submit cv-identity-save" type="button" onClick={() => r.push("/lkpd/kasus")}>BUKA DASHBOARD LKPD <span aria-hidden="true">→</span></button>
+        {project && (
+          <section className="cv-identity-project" aria-labelledby="cv-project-title">
+            <div className="cv-identity-project-topline"><span className="cv-identity-kicker">PROYEK PEMBELAJARAN</span></div>
+            <div className="cv-identity-project-copy">
+              <h1 id="cv-project-title">{project.title}</h1>
+              {project.tagline && <p className="cv-identity-tagline">{project.tagline}</p>}
+              {project.description && <p className="cv-identity-project-description">{project.description}</p>}
+            </div>
+          </section>
+        )}
+        <section className="cv-identity-form-panel" aria-labelledby="cv-identity-title">
+          <div className="cv-identity-form-heading">
+            <span className="cv-identity-kicker">AKSES PEMBELAJARAN</span>
+            <h2 id="cv-identity-title">Login <span>Berhasil!</span></h2>
+            <p>Identitas siswa dan kelompok berhasil disimpan.</p>
+          </div>
+          <button className="cv-group-access-submit cv-identity-save" type="button" onClick={() => r.push("/lkpd/kasus")}>
+            BUKA DASHBOARD LKPD <span aria-hidden="true">→</span>
+          </button>
         </section>
       </div>
     );
