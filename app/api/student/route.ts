@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
 import { studentOp } from "@/lib/validation/schemas";
+import { getStudentSession } from "@/lib/student/session";
 
 export const runtime = "nodejs";
 
@@ -82,6 +83,11 @@ export async function POST(req: Request) {
       400
     );
   }
+
+  const session = await getStudentSession();
+  if (!session) return fail("Sesi siswa tidak ditemukan. Silakan login kembali.", 401);
+  // Kode kelompok tidak lagi dipercaya dari browser; identitas kelompok berasal dari sesi.
+  parsed.data.args.code = session.access_code;
 
   // Arsip menghentikan perubahan/pekerjaan baru, tetapi tidak menghapus
   // draft maupun submission dan tetap mengizinkan operasi baca.
