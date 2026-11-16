@@ -3858,3 +3858,34 @@ button,.student-cta,.cv-navbar .cv-nav-link{min-height:44px}
   .student-brand-logo { width: 154px; }
   .admin-brand-logo { width: 158px; }
 }
+
+/* Student login — visual language aligned with the existing Civic Vision teacher login. */
+.cv-auth-page{width:min(100%,1120px);margin:48px auto 64px;padding:0 18px}
+.cv-auth-card{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:stretch;padding:38px 42px;border:1px solid rgba(190,235,255,.62);border-radius:30px;background:linear-gradient(135deg,rgba(9,73,160,.48),rgba(13,83,190,.34));box-shadow:inset 0 1px 0 rgba(255,255,255,.22),0 24px 60px rgba(0,20,70,.24);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+.cv-auth-intro{display:flex;flex-direction:column;justify-content:center;padding:12px 32px 12px 4px;border-right:1px solid rgba(204,237,255,.28)}
+.cv-auth-eyebrow{display:block;color:#c8efff;font-size:11px;font-weight:850;letter-spacing:.12em}
+.cv-auth-intro h1{margin:18px 0 10px;color:#fff;font-size:clamp(38px,5vw,54px);letter-spacing:-.055em;line-height:1.05}
+.cv-auth-accent{width:48px;height:4px;border-radius:8px;background:#55e5f4}
+.cv-auth-intro>p{max-width:420px;margin:20px 0;color:rgba(244,251,255,.92);font-size:15px;line-height:1.75}
+.cv-auth-art{position:relative;display:grid;place-items:center;min-height:220px;margin-top:18px;overflow:hidden;border:1px solid rgba(207,240,255,.28);border-radius:4px;background:radial-gradient(ellipse at 50% 45%,rgba(58,191,255,.42),transparent 56%),linear-gradient(135deg,rgba(5,37,112,.28),rgba(31,151,239,.22))}
+.cv-auth-art-orbit{position:absolute;width:290px;height:100px;border:2px solid rgba(158,230,255,.48);border-radius:50%;transform:rotate(-22deg);box-shadow:0 0 22px rgba(89,206,255,.18)}
+.cv-auth-art-orbit-two{width:330px;height:145px;transform:rotate(22deg);border-color:rgba(126,211,255,.3)}
+.cv-auth-art-symbol{display:grid;place-items:center;width:92px;height:92px;border:1px solid rgba(223,247,255,.72);border-radius:25px;background:linear-gradient(145deg,rgba(255,255,255,.22),rgba(66,164,245,.18));box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 12px 35px rgba(0,24,75,.2);color:#fff;font-size:30px;font-weight:900;letter-spacing:-.08em}
+.cv-auth-art-caption{position:absolute;bottom:17px;color:rgba(231,247,255,.78);font-size:9px;font-weight:800;letter-spacing:.18em}
+.cv-auth-form-side{display:flex;flex-direction:column;justify-content:center;padding:8px 4px 8px 0}
+.cv-auth-form-heading{display:flex;align-items:center;gap:16px;margin-bottom:26px}
+.cv-auth-icon{display:grid;place-items:center;flex:0 0 60px;width:60px;height:60px;border:1px solid rgba(184,235,255,.58);border-radius:18px;background:rgba(60,166,242,.2);color:#fff;font-size:28px}
+.cv-auth-form-heading h2{margin:7px 0 4px;color:#fff;font-size:30px;letter-spacing:-.04em}
+.cv-auth-form-heading p{margin:0;color:rgba(240,249,255,.84);font-size:13px;line-height:1.55}
+.cv-auth-form{display:grid;gap:10px}
+.cv-auth-form>label{margin:4px 0 0;color:#effaff;font-size:13px;font-weight:750}
+.cv-auth-input-wrap{display:flex;align-items:center;gap:12px;min-height:58px;padding:0 16px;border:1px solid rgba(190,234,255,.55);border-radius:16px;background:rgba(5,52,124,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.cv-auth-input-wrap>span{color:#dff6ff;font-size:20px}
+.cv-auth-input-wrap input{min-width:0;min-height:54px;padding:12px 0;border:0;border-radius:0;background:transparent;color:#fff;outline:none;box-shadow:none}
+.cv-auth-input-wrap input::placeholder{color:rgba(232,246,255,.62)}
+.cv-auth-input-wrap:focus-within{border-color:#8beaff;box-shadow:0 0 0 3px rgba(90,208,255,.16)}
+.cv-auth-error{margin:5px 0;color:#ffe1e1!important;font-size:13px}
+.cv-auth-submit{min-height:58px;margin-top:8px;border:1px solid rgba(207,244,255,.46);border-radius:999px;background:linear-gradient(100deg,#22d5ee,#0878e8);box-shadow:0 8px 24px rgba(0,126,225,.28),inset 0 1px 0 rgba(255,255,255,.34);color:white;font:inherit;font-size:16px;font-weight:850;cursor:pointer}
+.cv-auth-submit:disabled{opacity:.58;cursor:not-allowed}
+.cv-auth-help{margin:4px 0 0;text-align:center;color:rgba(228,243,255,.65)!important;font-size:11px;line-height:1.5}
+@media(max-width:760px){.cv-auth-page{margin:24px auto 42px;padding:0 12px}.cv-auth-card{grid-template-columns:1fr;gap:26px;padding:26px 22px;border-radius:24px}.cv-auth-intro{padding:0 0 22px;border-right:0;border-bottom:1px solid rgba(204,237,255,.28)}.cv-auth-art{min-height:145px;margin-top:10px}.cv-auth-form-side{padding:0}.cv-auth-form-heading h2{font-size:24px}}
