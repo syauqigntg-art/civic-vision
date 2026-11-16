@@ -72,13 +72,23 @@ export default function Identitas() {
   };
 
   useEffect(() => {
-    const c = getCode();
-
-    if (c) {
-      setC(c);
-      load(c);
-    }
-  }, []);
+    let active = true;
+    fetch("/api/student-auth/me", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          r.replace("/lkpd/login");
+          return;
+        }
+        const sentinel = "CV-SESSION-0001";
+        localStorage.setItem("cv_code", sentinel);
+        if (active) {
+          setC(sentinel);
+          await load(sentinel);
+        }
+      })
+      .catch(() => r.replace("/lkpd/login"));
+    return () => { active = false; };
+  }, [r]);
 
   const save = async () => {
     setErr("");
