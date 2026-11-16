@@ -289,3 +289,4 @@
 @media (prefers-reduced-motion: reduce) {
   .cv-identity-change-group, .cv-identity-form-panel .cv-identity-field input { transition: none; }
 }
+

@@ -3,8 +3,8 @@ import Link from "next/link";
 
 const features = [
   { icon: "▶", title: "Video Kasus", description: "Simak dan pahami kasus nyata yang ditugaskan guru.", href: "/lkpd/kasus", tone: "blue" },
-  { icon: "♧", title: "Analisis Kelompok", description: "Diskusikan, susun gagasan, dan rumuskan solusi bersama.", href: "/lkpd/identitas", tone: "violet" },
-  { icon: "✿", title: "Aksi Nyata", description: "Wujudkan solusi yang sesuai dengan nilai-nilai Pancasila.", href: "/lkpd/identitas", tone: "mint" },
+  { icon: "♧", title: "Analisis Kelompok", description: "Diskusikan, susun gagasan, dan rumuskan solusi bersama.", href: "/lkpd/login", tone: "violet" },
+  { icon: "✿", title: "Aksi Nyata", description: "Wujudkan solusi yang sesuai dengan nilai-nilai Pancasila.", href: "/lkpd/login", tone: "mint" },
 ];
 
 export default function Home() {
@@ -16,7 +16,7 @@ export default function Home() {
           <h1>Menganalisis Pancasila<br />dalam Kehidupan Sehari-hari</h1>
           <p>Ruang belajar digital untuk mengamati kasus, menganalisis masalah, melaksanakan solusi, mengevaluasi proses pemecahan masalah, dan menjaga keberlanjutan aksi.</p>
           <div className="student-hero-motto"><span>◎</span> Amati. <i/> <span>⌕</span> Analisis. <i/> <span>♧</span> Refleksikan. <i/> <span>⚑</span> Terapkan.</div>
-          <Link className="student-cta" href="/lkpd/identitas">Mulai LKPD <span aria-hidden="true">→</span></Link>
+          <Link className="student-cta" href="/lkpd/login">Mulai LKPD <span aria-hidden="true">→</span></Link>
         </div>
         <div className="student-hero-art" aria-hidden="true">
           <img

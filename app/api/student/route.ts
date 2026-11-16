@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
 import { studentOp } from "@/lib/validation/schemas";
+import { getStudentSession } from "@/lib/student-auth";
 
 export const runtime = "nodejs";
 
@@ -82,6 +83,12 @@ export async function POST(req: Request) {
       400
     );
   }
+
+  // Every student operation is bound to the server-validated individual session.
+  // The browser-supplied group code is deliberately ignored.
+  const session = await getStudentSession();
+  if (!session) return fail("Sesi siswa tidak ditemukan. Silakan login kembali.", 401);
+  (parsed.data.args as any).code = session.code;
 
   // Arsip menghentikan perubahan/pekerjaan baru, tetapi tidak menghapus
   // draft maupun submission dan tetap mengizinkan operasi baca.

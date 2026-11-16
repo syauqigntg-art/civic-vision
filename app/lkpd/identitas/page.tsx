@@ -19,6 +19,7 @@ export default function Identitas() {
 
   const [code, setC] = useState("");
   const [ok, setOk] = useState(false);
+  const [identitySaved, setIdentitySaved] = useState(false);
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -72,13 +73,23 @@ export default function Identitas() {
   };
 
   useEffect(() => {
-    const c = getCode();
-
-    if (c) {
-      setC(c);
-      load(c);
-    }
-  }, []);
+    let active = true;
+    fetch("/api/student-auth/me", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          r.replace("/lkpd/login");
+          return;
+        }
+        const sentinel = "CV-SESSION-0001";
+        localStorage.setItem("cv_code", sentinel);
+        if (active) {
+          setC(sentinel);
+          await load(sentinel);
+        }
+      })
+      .catch(() => r.replace("/lkpd/login"));
+    return () => { active = false; };
+  }, [r]);
 
   const save = async () => {
     setErr("");
@@ -90,12 +101,39 @@ export default function Identitas() {
       return;
     }
 
-    r.push("/lkpd/kasus");
+    setIdentitySaved(true);
   };
 
   const set = (k: string, v: any) => {
     setF({ ...f, [k]: v });
   };
+
+  if (identitySaved) {
+    return (
+      <div className="cv-identity-page">
+        {project && (
+          <section className="cv-identity-project" aria-labelledby="cv-project-title">
+            <div className="cv-identity-project-topline"><span className="cv-identity-kicker">PROYEK PEMBELAJARAN</span></div>
+            <div className="cv-identity-project-copy">
+              <h1 id="cv-project-title">{project.title}</h1>
+              {project.tagline && <p className="cv-identity-tagline">{project.tagline}</p>}
+              {project.description && <p className="cv-identity-project-description">{project.description}</p>}
+            </div>
+          </section>
+        )}
+        <section className="cv-identity-form-panel" aria-labelledby="cv-identity-title">
+          <div className="cv-identity-form-heading">
+            <span className="cv-identity-kicker">AKSES PEMBELAJARAN</span>
+            <h2 id="cv-identity-title">Login <span>Berhasil!</span></h2>
+            <p>Identitas siswa dan kelompok berhasil disimpan.</p>
+          </div>
+          <button className="cv-group-access-submit cv-identity-save" type="button" onClick={() => r.push("/lkpd/kasus")}>
+            BUKA DASHBOARD LKPD <span aria-hidden="true">→</span>
+          </button>
+        </section>
+      </div>
+    );
+  }
 
   if (!ok) {
     return (

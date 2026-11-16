@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
 import { isAdminRequest } from "@/lib/auth/server";
 import { mediaReq } from "@/lib/validation/schemas";
+import { getStudentSession } from "@/lib/student-auth";
 
 export const runtime = "nodejs";
 
@@ -49,12 +50,15 @@ export async function POST(req: Request) {
   const parsed = mediaReq.safeParse(body);
   if (!parsed.success) return fail(400);
 
-  const { path, code } = parsed.data;
+  const { path } = parsed.data;
 
   // Guru terverifikasi dapat membaca materi untuk pengelolaan.
   let allowed = await isAdminRequest();
+  const studentSession = allowed ? null : await getStudentSession();
+  const code = studentSession?.code;
 
-  // Permintaan siswa harus dibuktikan dengan kode valid dan penugasan aktual.
+  // Student media access is bound to the individual server-side session.
+  // Any legacy group code supplied by the browser is ignored.
   if (!allowed && code) {
     const { data: group, error: groupError } = await admin
       .from("groups")
