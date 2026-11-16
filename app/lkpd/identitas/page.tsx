@@ -19,6 +19,7 @@ export default function Identitas() {
 
   const [code, setC] = useState("");
   const [ok, setOk] = useState(false);
+  const [identitySaved, setIdentitySaved] = useState(false);
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -100,12 +101,26 @@ export default function Identitas() {
       return;
     }
 
-    r.push("/lkpd/kasus");
+    setIdentitySaved(true);
   };
 
   const set = (k: string, v: any) => {
     setF({ ...f, [k]: v });
   };
+
+  if (identitySaved) {
+    return (
+      <div className="cv-identity-page">
+        <section className="cv-identity-form-panel cv-student-success" role="status" aria-live="polite">
+          <div className="cv-student-success-icon" aria-hidden="true">✓</div>
+          <span className="cv-identity-kicker">AKSES PEMBELAJARAN TERVERIFIKASI</span>
+          <h2>Login <span>Berhasil!</span></h2>
+          <p>Identitas siswa dan kelompok berhasil diverifikasi. Kamu siap melanjutkan aktivitas pembelajaran bersama kelompok.</p>
+          <button className="cv-group-access-submit cv-identity-save" type="button" onClick={() => r.push("/lkpd/kasus")}>BUKA DASHBOARD LKPD <span aria-hidden="true">→</span></button>
+        </section>
+      </div>
+    );
+  }
 
   if (!ok) {
     return (
