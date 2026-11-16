@@ -24,11 +24,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <BrandLogo variant="horizontal-light" height={46} />
             </Link>
             <NavBar />
-            <div className="student-profile" aria-label="Area siswa">
+            <Link href="/lkpd/kasus" className="student-profile" aria-label="Kembali ke dashboard LKPD siswa" title="Dashboard LKPD">
               <span className="student-profile-avatar" aria-hidden="true">S</span>
               <span><strong>Syauqi Alif</strong><small>Siswa · XI</small></span>
               <span aria-hidden="true">⌄</span>
-            </div>
+            </Link>
           </header>
           <main id="konten" className="student-main" tabIndex={-1}>{children}</main>
         </div>
