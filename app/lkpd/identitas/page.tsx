@@ -19,6 +19,7 @@ export default function Identitas() {
 
   const [code, setC] = useState("");
   const [ok, setOk] = useState(false);
+  const [completed, setCompleted] = useState(false);
   const [err, setErr] = useState("");
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(false);
@@ -90,12 +91,34 @@ export default function Identitas() {
       return;
     }
 
-    r.push("/lkpd/kasus");
+    setCompleted(true);
   };
 
   const set = (k: string, v: any) => {
     setF({ ...f, [k]: v });
   };
+
+  if (completed) {
+    return (
+      <div className="cv-group-access-page">
+        <section className="cv-group-access-panel" aria-labelledby="student-login-success-title">
+          <div className="cv-group-access-emblem" aria-hidden="true">
+            <svg viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="18" stroke="currentColor" strokeWidth="2.2" />
+              <path d="m15 24 6 6 12-13" stroke="#8cecff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </div>
+          <span className="cv-group-access-eyebrow">AKSES SISWA BERHASIL</span>
+          <h1 id="student-login-success-title">Login <span>Berhasil!</span></h1>
+          <p className="cv-group-access-description">Identitas kelompok berhasil disimpan. Kamu sekarang dapat melanjutkan aktivitas pembelajaran di dashboard LKPD.</p>
+          <button className="cv-group-access-submit" type="button" onClick={() => r.push("/lkpd/kasus")}>
+            BUKA DASHBOARD LKPD <span aria-hidden="true">→</span>
+          </button>
+          <div className="cv-group-access-footnote">Ruang kerja kelompokmu siap digunakan.</div>
+        </section>
+      </div>
+    );
+  }
 
   if (!ok) {
     return (
