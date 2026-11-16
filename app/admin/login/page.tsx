@@ -69,7 +69,7 @@ export default function Login() {
           <NavBar />
           <div className="cv-login-public-actions">
             <span className="cv-login-active-teacher" aria-current="page">Login Guru</span>
-            <Link href="/lkpd/identitas" className="cv-login-student-link" onClick={() => setMobileMenuOpen(false)}>Login Siswa</Link>
+            <Link href="/preview-login" className="cv-login-student-link" onClick={() => setMobileMenuOpen(false)}>Login Siswa</Link>
           </div>
         </div>
       </header>
