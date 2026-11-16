@@ -13,6 +13,7 @@ const NAV = [
   { href: "/admin/videos", label: "Video Kasus", hint: "Materi media", icon: "▷" },
   { href: "/admin/questions", label: "Pertanyaan LKPD", hint: "Susun instrumen", icon: "?" },
   { href: "/admin/groups", label: "Kelompok", hint: "Daftar dan penugasan", icon: "◎" },
+  { href: "/admin/student-accounts", label: "Akun Siswa", hint: "ID login dan PIN", icon: "♙" },
   { href: "/admin/submissions", label: "Jawaban Siswa", hint: "Hasil analisis", icon: "✓" },
   { href: "/admin/settings", label: "Pengaturan", hint: "Akun guru", icon: "⚙" },
 ];
@@ -23,6 +24,7 @@ const PAGE_INFO = [
   { href: "/admin/videos", title: "Video Kasus", desc: "Kelola video pembelajaran dan materi kasus." },
   { href: "/admin/questions", title: "Pertanyaan LKPD", desc: "Susun pertanyaan berdasarkan tahap SEE, THINK, CONNECT, dan ACT." },
   { href: "/admin/groups", title: "Kelola Kelompok", desc: "Atur identitas kelompok dan distribusi video." },
+  { href: "/admin/student-accounts", title: "Akun Login Siswa", desc: "Buat dan reset ID login serta PIN siswa." },
   { href: "/admin/submissions", title: "Jawaban Siswa", desc: "Pantau status pengerjaan, tinjau jawaban, dan ekspor hasil." },
   { href: "/admin/settings", title: "Pengaturan Akun", desc: "Informasi akun guru dan akses keluar." },
 ];
