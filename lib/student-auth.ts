@@ -29,7 +29,7 @@ export async function getStudentSession() {
   if (!token) return null;
   const { data, error } = await admin
     .from("student_sessions")
-    .select("credential_id,expires_at,student_credentials!inner(id,group_member_id,is_active,login_id,group_members!inner(id,group_id,groups!inner(id,access_code,project_id)))")
+    .select("credential_id,expires_at,student_credentials!inner(id,group_member_id,is_active,login_id,group_members!inner(id,name,group_id,groups!inner(id,access_code,project_id)))")
     .eq("token_hash", hashSessionToken(token))
     .gt("expires_at", new Date().toISOString())
     .maybeSingle();
@@ -39,7 +39,7 @@ export async function getStudentSession() {
   const member = credential.group_members;
   const group = member?.groups;
   if (!group?.access_code) return null;
-  return { credentialId: credential.id as string, memberId: member.id as string, loginId: credential.login_id as string, groupId: group.id as string, projectId: group.project_id as string, code: group.access_code as string };
+  return { credentialId: credential.id as string, memberId: member.id as string, studentName: member.name as string, loginId: credential.login_id as string, groupId: group.id as string, projectId: group.project_id as string, code: group.access_code as string };
 }
 export async function createStudentSession(credentialId: string) {
   const token = randomBytes(32).toString("base64url");
