@@ -13,6 +13,7 @@ export default function StudentLoginPage() {
       const response = await fetch("/api/student-auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ loginId, pin }) });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Login gagal.");
+      localStorage.setItem("cv_code", "CV-SESSION-0001");
       router.replace("/lkpd/identitas");
     } catch (e) { setError(e instanceof Error ? e.message : "Tidak dapat masuk."); }
     finally { setBusy(false); }
