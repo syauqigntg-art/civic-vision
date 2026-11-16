@@ -8,6 +8,7 @@ import BrandLogo from "@/components/brand/BrandLogo";
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const inAdmin = path === "/admin" || path.startsWith("/admin/");
+  const onAuthPage = path === "/admin/login" || path === "/lkpd/login";
   const onStudentHome = path === "/";
   const onStudentCase = path === "/lkpd/kasus" || path.startsWith("/lkpd/kasus/");
   const onStudentAccess = path === "/lkpd/identitas";
@@ -15,7 +16,19 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <>
       <a className="skip" href="#konten">Lewati ke konten</a>
-      {inAdmin ? (
+      {onAuthPage ? (
+        <div className="cv-auth-shell">
+          <header className="cv-auth-header">
+            <Link href="/" className="cv-auth-brand" aria-label="Civic Vision Beranda"><BrandLogo variant="horizontal" /></Link>
+            <NavBar />
+            <div className="cv-auth-actions">
+              <Link href="/admin/login" className={path === "/admin/login" ? "active" : ""}>Login Guru</Link>
+              <Link href="/lkpd/login" className={path === "/lkpd/login" ? "active" : ""}>Login Siswa</Link>
+            </div>
+          </header>
+          {children}
+        </div>
+      ) : inAdmin ? (
         <div className="admin-outer">{children}</div>
       ) : onStudentHome || onStudentCase || onStudentAccess ? (
         <div className="student-shell">
