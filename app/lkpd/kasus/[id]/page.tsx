@@ -242,7 +242,7 @@ export default function Video() {
 
       <section className="case-detail-instruction cv-instruction-panel">
         <div className="case-instruction-mark" aria-hidden="true">◎</div>
-        <div><span className="case-detail-kicker">PANDUAN AKTIVITAS · SEE</span><h2>Mengamati permasalahan</h2><p>Perhatikan video dengan saksama. Catat fakta yang benar-benar terlihat, siapa yang terdampak, dan masalah awal yang perlu diselidiki. Bedakan fakta dari dugaan.</p><div className="case-learning-outcome"><b>Hasil yang diharapkan</b><span>Catatan fakta pengamatan dan rumusan awal masalah.</span></div></div>
+        <div><span className="case-detail-kicker">PANDUAN AKTIVITAS · SEE</span><h2>Orientasi terhadap masalah</h2><p>Amati video, berita, fenomena, atau kasus sebagai titik awal pembelajaran. Bedakan fakta dari dugaan, kenali pihak yang terdampak, lalu rumuskan masalah utama yang perlu diselidiki.</p><ul><li>Amati stimulus dan catat fakta serta informasi awal.</li><li>Identifikasi pihak yang terdampak.</li><li>Rumuskan masalah utama berdasarkan hasil pengamatan.</li></ul><div className="case-learning-outcome"><b>Output · Problem Identification Sheet</b><span>Lembar identifikasi yang memuat fakta awal, pihak terdampak, dan rumusan masalah utama.</span></div></div>
       </section>
 
       <section className="case-detail-workspace cv-student-workspace" aria-labelledby="case-workspace-title">

@@ -20,26 +20,52 @@ import { Button } from "@/components/ui/Button";
 const PHASES = ["think", "act", "connect", "keep"] as const;
 type WorkPhase = (typeof PHASES)[number];
 
-const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string; output: string }> = {
+const PHASE_INFO: Record<WorkPhase, { title: string; instruction: string; activities: string[]; output: string }> = {
   think: {
-    title: "THINK — Menganalisis masalah",
-    instruction: "Identifikasi masalah utama, telusuri penyebab, gunakan bukti, dan perhatikan sudut pandang pihak yang terdampak.",
-    output: "Analisis masalah yang didukung fakta dan bukti.",
+    title: "THINK — Organisasi dan investigasi masalah",
+    instruction: "Bangun penyelidikan yang terarah. Kelompok harus mengetahui pertanyaan apa yang perlu dijawab, informasi apa yang dibutuhkan, dan bukti apa yang dapat mendukung kesimpulan.",
+    activities: [
+      "Rumuskan pertanyaan investigasi dan tentukan informasi yang dibutuhkan.",
+      "Bagi peran serta tanggung jawab setiap anggota kelompok.",
+      "Kumpulkan sumber informasi dan bukti yang relevan.",
+      "Analisis penyebab, dampak, dan perspektif pihak yang terlibat.",
+      "Hubungkan setiap klaim dengan bukti yang mendukungnya."
+    ],
+    output: "Problem Investigation Report — laporan investigasi masalah yang memuat pertanyaan, pembagian peran, sumber, bukti, analisis penyebab dan dampak, serta hubungan klaim dengan bukti.",
   },
   act: {
-    title: "ACT — Melaksanakan tindakan",
-    instruction: "Laksanakan solusi yang telah dirancang, bagi tanggung jawab, dokumentasikan proses, dan catat hasil tindakan kelompok.",
-    output: "Dokumentasi pelaksanaan solusi dan hasil tindakan kelompok.",
+    title: "ACT — Pengembangan solusi",
+    instruction: "Gunakan hasil investigasi untuk menyusun solusi yang masuk akal, dapat dipertanggungjawabkan, dan sesuai nilai Pancasila serta prinsip kewarganegaraan.",
+    activities: [
+      "Kembangkan beberapa alternatif solusi berdasarkan hasil investigasi.",
+      "Analisis kelebihan dan keterbatasan setiap alternatif.",
+      "Pertimbangkan nilai Pancasila dan prinsip kewarganegaraan.",
+      "Pilih solusi berdasarkan kekuatan bukti dan alasan yang jelas.",
+      "Susun langkah rekomendasi serta alasan pemilihannya."
+    ],
+    output: "Evidence-Based Solution Proposal — proposal solusi berbasis bukti yang memuat alternatif, pertimbangan, solusi terpilih, rekomendasi, dan alasan pemilihan.",
   },
   connect: {
-    title: "CONNECT — Evaluasi dan refleksi",
-    instruction: "Evaluasi apakah solusi menjawab masalah, telaah kelebihan dan keterbatasannya, refleksikan proses kerja kelompok, lalu hubungkan pembelajaran dengan nilai Pancasila.",
-    output: "Evaluasi hasil pemecahan masalah, refleksi proses, dan hubungan tindakan dengan nilai Pancasila.",
+    title: "CONNECT — Presentasi dan evaluasi solusi",
+    instruction: "Komunikasikan hasil investigasi dan solusi secara terbuka. Gunakan pertanyaan, kritik, dan masukan untuk menguji kualitas argumentasi serta memperbaiki solusi.",
+    activities: [
+      "Sampaikan hasil investigasi dan presentasikan solusi beserta argumentasinya.",
+      "Tanggapi pertanyaan, kritik, dan perspektif kelompok lain.",
+      "Evaluasi dan perbaiki solusi berdasarkan masukan yang relevan.",
+      "Hubungkan hasil pembelajaran dengan nilai-nilai Pancasila."
+    ],
+    output: "Solution Presentation and Evaluation — presentasi solusi, argumentasi berbasis bukti, tanggapan atas kritik, dan evaluasi solusi berdasarkan masukan.",
   },
   keep: {
-    title: "KEEP — Keberlanjutan aksi",
-    instruction: "Susun komitmen individu dan rencana tindak lanjut kelompok agar perubahan positif dapat dipertahankan dalam kehidupan sehari-hari.",
-    output: "Komitmen pribadi dan rencana keberlanjutan aksi kelompok.",
+    title: "KEEP — Refleksi dan keberlanjutan pembelajaran",
+    instruction: "Tinjau kembali proses belajar dan kualitas solusi. Tarik pembelajaran yang dapat digunakan ketika kelompok menghadapi masalah serupa di masa mendatang.",
+    activities: [
+      "Refleksikan proses pemecahan masalah dan kontribusi kelompok.",
+      "Evaluasi kualitas bukti serta kekuatan argumentasi.",
+      "Identifikasi kekurangan solusi dan hal yang masih perlu diperbaiki.",
+      "Tentukan bagaimana pembelajaran diterapkan pada masalah serupa."
+    ],
+    output: "Reflection and Learning Continuity Report — laporan refleksi, evaluasi bukti dan argumentasi, keterbatasan solusi, serta rencana penerapan pembelajaran pada masalah serupa.",
   },
 };
 
@@ -363,7 +389,11 @@ export default function Analisis() {
       </p>
       <p>{PHASE_INFO[activePhase].instruction}</p>
       <div className="case-analysis-guidance">
-        <b>Hasil yang diharapkan:</b> {PHASE_INFO[activePhase].output}
+        <b>Aktivitas utama</b>
+        <ul>{PHASE_INFO[activePhase].activities.map((activity) => <li key={activity}>{activity}</li>)}</ul>
+      </div>
+      <div className="case-analysis-guidance">
+        <b>Output tahap:</b> {PHASE_INFO[activePhase].output}
       </div>
 
       </section>

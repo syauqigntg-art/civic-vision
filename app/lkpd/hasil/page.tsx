@@ -81,11 +81,11 @@ export default function Hasil() {
     <>
       <section className="glass center">
         <h1 style={{ fontSize: 40, letterSpacing: 0 }}>
-          {sent ? "ANALISIS SELESAI!" : "DRAFT TERSIMPAN"}
+          {sent ? "STACK SELESAI!" : "DRAFT TERSIMPAN"}
         </h1>
         <p>
           {sent
-            ? "Pengiriman berhasil. Jawaban kelompok telah tersimpan di server dan terkunci. Guru dapat membuka kembali pengerjaan jika diperlukan."
+            ? "Pengiriman berhasil. Seluruh hasil kerja kelompok pada alur SEE, THINK, ACT, CONNECT, dan KEEP telah tersimpan di server dan terkunci. Guru dapat membuka kembali pengerjaan jika diperlukan."
             : "Hasil saat ini masih berupa draft dan belum dikirim. Pastikan semua jawaban tersimpan sebelum melakukan pengiriman akhir."}
         </p>
         {g.submission?.project_version_number && (

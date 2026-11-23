@@ -1,9 +1,9 @@
 const P: Record<string, [string, string, string]> = {
-  see: ["SEE", "Mengamati Masalah", "Amati video/stimulus, catat fakta, dan rumuskan masalah awal."],
-  think: ["THINK", "Menganalisis Masalah", "Telusuri penyebab, bukti, dampak, dan sudut pandang pihak terkait."],
-  act: ["ACT", "Melaksanakan Tindakan", "Rancang dan laksanakan solusi, serta dokumentasikan hasil tindakan kelompok."],
-  connect: ["CONNECT", "Evaluasi dan Refleksi", "Evaluasi hasil solusi, proses kerja kelompok, serta hubungkan pembelajaran dengan nilai Pancasila."],
-  keep: ["KEEP", "Keberlanjutan Aksi", "Susun komitmen dan rencana tindak lanjut agar perubahan positif terus dijaga."],
+  see: ["SEE", "Orientasi terhadap masalah", "Amati video, berita, fenomena, atau kasus; identifikasi fakta, pihak terdampak, dan rumuskan masalah utama."],
+  think: ["THINK", "Organisasi dan investigasi masalah", "Rumuskan pertanyaan investigasi, bagi peran, kumpulkan sumber dan bukti, lalu analisis penyebab, dampak, perspektif, serta hubungan klaim dengan bukti."],
+  act: ["ACT", "Pengembangan solusi", "Kembangkan alternatif solusi, analisis kelebihan dan keterbatasan, pertimbangkan nilai Pancasila dan prinsip kewarganegaraan, lalu pilih solusi berbasis bukti."],
+  connect: ["CONNECT", "Presentasi dan evaluasi solusi", "Presentasikan investigasi dan argumentasi, tanggapi kritik, evaluasi solusi berdasarkan masukan, dan hubungkan hasil dengan nilai Pancasila."],
+  keep: ["KEEP", "Refleksi dan keberlanjutan", "Refleksikan proses pemecahan masalah, evaluasi kualitas bukti dan argumentasi, identifikasi kekurangan solusi, dan tentukan penerapan pada masalah serupa."],
 };
 
 const ALL_PHASES = ["see", "think", "act", "connect", "keep"];
