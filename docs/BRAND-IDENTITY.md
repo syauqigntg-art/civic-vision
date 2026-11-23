@@ -9,7 +9,7 @@ The canonical identity assets live in `public/brand/`:
 All in-app logo rendering should use `components/brand/BrandLogo.tsx`. Do not redraw the C mark in individual pages.
 
 ## Design tokens
-Shared color, glass, radius, blur and shadow tokens are defined in `app/brand-tokens.css`. The stylesheet is loaded through the global stylesheet import in `app/layout.tsx` (`app/globals.css` imports `app/brand-tokens.css`).
+Shared color, glass, radius, blur and shadow tokens are defined in `app/brand-tokens.css`, imported directly by `app/layout.tsx` after `app/globals.css`.
 
 ## Guardrails
 This brand-only change must not modify authentication, Supabase, database schema, API behavior, RLS, or learning/PBL flow. Keep approved page layouts and interaction behavior intact.
