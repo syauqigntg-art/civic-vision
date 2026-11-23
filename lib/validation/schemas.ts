@@ -3,7 +3,6 @@ export const code = z.string().trim().min(6).max(24).regex(/^[A-Za-z0-9-]+$/);
 const uuid = z.string().uuid();
 export const studentOp = z.discriminatedUnion("op", [
   z.object({ op: z.literal("get_group"), args: z.object({ code }) }),
-  z.object({ op: z.literal("save_identity"), args: z.object({ code, p_name: z.string().trim().min(1).max(80), p_number: z.number().int().min(1).max(99), p_class: z.string().trim().min(1).max(20), p_leader: z.string().trim().min(1).max(80), p_members: z.array(z.string().trim().max(80)).max(10) }) }),
   z.object({ op: z.literal("begin_submission"), args: z.object({ code, vid: uuid }) }),
   z.object({ op: z.literal("get_answers"), args: z.object({ code }) }),
   z.object({ op: z.literal("save_answer"), args: z.object({ code, qid: uuid, val: z.string().max(5000) }) }),

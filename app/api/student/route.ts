@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
 import { studentOp } from "@/lib/validation/schemas";
+import { readGroupSession } from "@/lib/auth/group-session";
 
 export const runtime = "nodejs";
 
@@ -83,10 +84,18 @@ export async function POST(req: Request) {
     );
   }
 
+  const sessionCode = readGroupSession(req);
+  if (!sessionCode) return fail("Sesi kelompok tidak ditemukan atau sudah berakhir. Masuk kembali dengan kode kelompok.", 401);
+  const submittedCode = parsed.data.args.code?.trim().toUpperCase();
+  if (submittedCode && submittedCode !== sessionCode) {
+    return fail("Kode kelompok tidak sesuai dengan sesi aktif.", 403);
+  }
+  const rpcArgs = { ...parsed.data.args, code: sessionCode };
+
   // Arsip menghentikan perubahan/pekerjaan baru, tetapi tidak menghapus
   // draft maupun submission dan tetap mengizinkan operasi baca.
-  if (["save_identity", "begin_submission", "save_answer", "submit_group"].includes(parsed.data.op)) {
-    const code = parsed.data.args.code;
+  if (["begin_submission", "save_answer", "submit_group"].includes(parsed.data.op)) {
+    const code = rpcArgs.code;
     const { data: group, error: groupError } = await admin
       .from("groups")
       .select("project_id")
@@ -128,7 +137,7 @@ export async function POST(req: Request) {
 
   const { data, error } = await admin.rpc(
     parsed.data.op,
-    parsed.data.args as any
+    rpcArgs as any
   );
 
   if (error) {
@@ -181,7 +190,7 @@ export async function POST(req: Request) {
   // fields here so the student identity page can display its project.
   let responseData = data;
   if (parsed.data.op === "get_group" && data && typeof data === "object") {
-    const code = parsed.data.args.code;
+    const code = rpcArgs.code;
     const { data: group, error: groupError } = await admin
       .from("groups")
       .select("project_id")

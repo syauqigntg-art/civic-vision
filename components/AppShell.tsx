@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import NavBar from "@/components/NavBar";
-import BrandLogo from "@/components/brand/BrandLogo";
+import BrandLogo from "@/components/BrandLogo";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -11,6 +11,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const onStudentHome = path === "/";
   const onStudentCase = path === "/lkpd/kasus" || path.startsWith("/lkpd/kasus/");
   const onStudentAccess = path === "/lkpd/identitas";
+  const onStudentLoginPreview = path === "/preview-login";
 
   return (
     <>
@@ -21,21 +22,25 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="student-shell">
           <header className="student-header">
             <Link href="/" className="student-brand" aria-label="CIVIC VISION Beranda">
-              <BrandLogo variant="horizontal" className="student-brand-logo" />
+              <BrandLogo variant="horizontal-light" height={46} />
             </Link>
             <NavBar />
-            <div className="student-profile" aria-label="Area siswa">
-              <span className="student-profile-avatar" aria-hidden="true">S</span>
-              <span><strong>Syauqi Alif</strong><small>Siswa · XI</small></span>
+            <Link href="/lkpd/identitas" className="student-profile" aria-label="Masuk ke ruang kelompok dengan kode kelompok" title="Akses kelompok">
+              <span className="student-profile-avatar" aria-hidden="true">K</span>
+              <span><strong>Akses Kelompok</strong><small>Masuk dengan kode</small></span>
               <span aria-hidden="true">⌄</span>
-            </div>
+            </Link>
           </header>
           <main id="konten" className="student-main" tabIndex={-1}>{children}</main>
         </div>
+      ) : onStudentLoginPreview ? (
+        <>{children}</>
       ) : (
         <div className="page">
           <header className="glass top">
-            <BrandLogo variant="horizontal" className="legacy-shell-brand" />
+            <Link href="/" aria-label="CIVIC VISION Beranda" className="public-brand">
+              <BrandLogo variant="horizontal-light" height={44} />
+            </Link>
             <NavBar />
           </header>
           <main id="konten" tabIndex={-1}>{children}</main>
