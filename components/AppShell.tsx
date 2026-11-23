@@ -11,6 +11,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const onStudentHome = path === "/";
   const onStudentCase = path === "/lkpd/kasus" || path.startsWith("/lkpd/kasus/");
   const onStudentAccess = path === "/lkpd/identitas";
+  const onStudentLoginPreview = path === "/preview-login";
 
   return (
     <>
@@ -32,6 +33,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </header>
           <main id="konten" className="student-main" tabIndex={-1}>{children}</main>
         </div>
+      ) : onStudentLoginPreview ? (
+        <>{children}</>
       ) : (
         <div className="page">
           <header className="glass top">
