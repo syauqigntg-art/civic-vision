@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import NavBar from "@/components/NavBar";
-import BrandLogo from "@/components/BrandLogo";
+import BrandLogo from "@/components/brand/BrandLogo";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
@@ -22,7 +22,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="student-shell">
           <header className="student-header">
             <Link href="/" className="student-brand" aria-label="CIVIC VISION Beranda">
-              <BrandLogo variant="horizontal-light" height={46} />
+              <BrandLogo variant="horizontal" tone="light" className="student-brand-logo" />
             </Link>
             <NavBar />
             <Link href="/lkpd/kasus" className="student-profile" aria-label="Kembali ke dashboard LKPD siswa" title="Dashboard LKPD">
@@ -39,7 +39,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <div className="page">
           <header className="glass top">
             <Link href="/" aria-label="CIVIC VISION Beranda" className="public-brand">
-              <BrandLogo variant="horizontal-light" height={44} />
+              <BrandLogo variant="horizontal" tone="light" className="legacy-shell-brand" />
             </Link>
             <NavBar />
           </header>
