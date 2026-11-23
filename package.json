@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "check:env": "node scripts/check-env.mjs",
-    "test:unit": "node --experimental-strip-types --test scripts/pbl-ux-validation.test.mjs scripts/admin-copy-accessibility.test.mjs scripts/supabase-config.test.mjs"
+    "test:unit": "node --experimental-strip-types --test scripts/pbl-ux-validation.test.mjs scripts/admin-copy-accessibility.test.mjs scripts/supabase-config.test.mjs scripts/group-session.test.mjs"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.7",
