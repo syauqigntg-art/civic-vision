@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { admin } from "@/lib/supabase/admin";
 import { isAdminRequest } from "@/lib/auth/server";
 import { mediaReq } from "@/lib/validation/schemas";
+import { readGroupSession } from "@/lib/auth/group-session";
 
 export const runtime = "nodejs";
 
@@ -54,12 +55,17 @@ export async function POST(req: Request) {
   // Guru terverifikasi dapat membaca materi untuk pengelolaan.
   let allowed = await isAdminRequest();
 
-  // Permintaan siswa harus dibuktikan dengan kode valid dan penugasan aktual.
-  if (!allowed && code) {
+  // Siswa wajib memiliki sesi kelompok HttpOnly yang valid.
+  const sessionCode = readGroupSession(req);
+  if (!allowed && !sessionCode) return fail(401);
+  if (!allowed && code && code.trim().toUpperCase() !== sessionCode) return fail(403);
+
+  // Permintaan siswa dibatasi ke kelompok dan proyek yang terikat pada sesi.
+  if (!allowed && sessionCode) {
     const { data: group, error: groupError } = await admin
       .from("groups")
       .select("id,project_id")
-      .eq("access_code", code.trim().toUpperCase())
+      .eq("access_code", sessionCode)
       .maybeSingle();
 
     if (!groupError && group) {
