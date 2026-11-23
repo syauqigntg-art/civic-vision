@@ -1,13 +1,31 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import NavBar from "@/components/NavBar";
+import CivicVisionLogo from "@/components/branding/CivicVisionLogo";
+import "./student-login.css";
 
 type View = "login" | "home" | "task";
+
+function StudentIdIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="11" r="2"/><path d="M6 16c.8-1.5 1.8-2.2 3-2.2s2.2.7 3 2.2M14 10h4M14 14h4"/></svg>;
+}
+function LockIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg>;
+}
+function EyeIcon({ visible }: { visible: boolean }) {
+  return <svg viewBox="0 0 24 24" aria-hidden="true">{visible ? <><path d="m3 3 18 18"/><path d="M10.6 10.6a2 2 0 0 0 2.8 2.8"/><path d="M9.9 5.2A11.7 11.7 0 0 1 12 5c5.2 0 9 4.6 10 7-.4 1-1.4 2.4-2.8 3.6M6.2 6.2C3.9 7.7 2.5 10 2 12c1 2.4 4.8 7 10 7 1.2 0 2.3-.2 3.3-.7"/></> : <><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></>}</svg>;
+}
+function CapIcon() {
+  return <svg viewBox="0 0 48 48" aria-hidden="true"><path d="m4 17 20-10 20 10-20 10L4 17Z"/><path d="M12 21v11c7 6 17 6 24 0V21M44 18v13"/></svg>;
+}
 
 export default function StudentLoginPreview() {
   const [view, setView] = useState<View>("login");
   const [studentId, setStudentId] = useState("");
   const [pin, setPin] = useState("");
+  const [showPin, setShowPin] = useState(false);
   const [error, setError] = useState("");
   const [answer, setAnswer] = useState("");
   const [saved, setSaved] = useState(false);
@@ -20,6 +38,84 @@ export default function StudentLoginPreview() {
     } else {
       setError("ID Siswa atau PIN tidak sesuai. Gunakan akun demo di bawah.");
     }
+  }
+
+  if (view === "login") {
+    return (
+      <main className="cv-student-page" id="konten">
+        <div className="cv-student-atmosphere" aria-hidden="true" />
+        <header className="cv-student-header">
+          <Link href="/" className="cv-student-brand" aria-label="CIVIC VISION Beranda">
+            <CivicVisionLogo variant="horizontal" tone="light" height={44} alt="CIVIC VISION — LKPD Digital" />
+          </Link>
+          <div className="cv-student-navigation">
+            <NavBar />
+            <div className="cv-student-role-actions">
+              <Link href="/admin/login" className="cv-student-role-link">Login Guru</Link>
+              <span className="cv-student-role-active" aria-current="page">Login Siswa</span>
+            </div>
+          </div>
+        </header>
+
+        <section className="cv-student-main" aria-label="Login siswa Civic Vision">
+          <div className="cv-student-intro">
+            <div className="cv-student-intro-copy">
+              <span className="cv-student-eyebrow">CIVIC VISION · UNTUK SISWA</span>
+              <h1>Login Siswa</h1>
+              <span className="cv-student-accent" aria-hidden="true" />
+              <p>Masuk ke ruang belajar Civic Vision untuk mengikuti proyek, mengerjakan LKPD, dan berkolaborasi dalam pembelajaran Pancasila.</p>
+            </div>
+            <div className="cv-student-illustration">
+              <img src="/images/civic-vision-hero.png" alt="Ilustrasi pembelajaran Pancasila dengan Garuda dan bendera Merah Putih" />
+            </div>
+            <div className="cv-student-brand-caption"><span className="cv-student-caption-mark">✦</span><span>Belajar bersama, tumbuh sebagai warga negara.</span></div>
+          </div>
+
+          <section className="cv-student-form-panel" aria-labelledby="cv-student-title">
+            <div className="cv-student-heading">
+              <span className="cv-student-heading-icon"><CapIcon /></span>
+              <div>
+                <span className="cv-student-form-eyebrow">RUANG BELAJAR SISWA</span>
+                <h2 id="cv-student-title">Selamat Datang!</h2>
+                <p>Masuk ke ruang belajar Civic Vision.</p>
+              </div>
+            </div>
+
+            {error && <div className="cv-student-error" role="alert" aria-live="polite">{error}</div>}
+
+            <form className="cv-student-form" onSubmit={login}>
+              <label className="cv-student-field">
+                <span className="cv-student-field-label">ID Siswa</span>
+                <span className="cv-student-input-wrap">
+                  <span className="cv-student-field-icon"><StudentIdIcon /></span>
+                  <input value={studentId} onChange={event => setStudentId(event.target.value)} placeholder="Contoh: CV-2026-001" autoComplete="username" required />
+                </span>
+              </label>
+              <label className="cv-student-field">
+                <span className="cv-student-field-label">PIN</span>
+                <span className="cv-student-input-wrap">
+                  <span className="cv-student-field-icon"><LockIcon /></span>
+                  <input value={pin} onChange={event => setPin(event.target.value)} placeholder="Masukkan PIN" type={showPin ? "text" : "password"} inputMode="numeric" autoComplete="current-password" required />
+                  <button className="cv-student-password-toggle" type="button" onClick={() => setShowPin(value => !value)} aria-label={showPin ? "Sembunyikan PIN" : "Tampilkan PIN"} aria-pressed={showPin}><EyeIcon visible={showPin}/></button>
+                </span>
+              </label>
+              <button className="cv-student-submit" type="submit">MASUK KE PEMBELAJARAN <span aria-hidden="true">→</span></button>
+            </form>
+
+            <div className="cv-student-demo">
+              <span className="cv-student-demo-icon" aria-hidden="true">i</span>
+              <div><strong>AKUN SIMULASI</strong><span>ID: <b>CV-2026-001</b></span><span>PIN: <b>123456</b></span></div>
+            </div>
+            <p className="cv-student-login-note">Mode preview: login siswa masih menggunakan verifikasi simulasi, bukan autentikasi Production.</p>
+          </section>
+        </section>
+
+        <footer className="cv-student-footer">
+          <span>CIVIC VISION</span><span>SEE · THINK · ACT · CONNECT · KEEP</span>
+          <p>Akun siswa bersifat individual. Aktivitas dan jawaban PBL tetap tersimpan sebagai pekerjaan kelompok.</p>
+        </footer>
+      </main>
+    );
   }
 
   return (
@@ -47,21 +143,6 @@ export default function StudentLoginPreview() {
           <div className="brand"><div className="logo">CV</div><div>Civic Vision<div className="sub">DIGITAL PANCASILA LEARNING</div></div></div>
           <span className="tag">PREVIEW MODE</span>
         </header>
-
-        {view === "login" && <section className="login">
-          <div className="intro"><div className="spark">✦</div><h1>Selamat datang!</h1><p>Masuk ke ruang belajar Civic Vision</p></div>
-          <div className="glass panel">
-            <h2>Login Siswa</h2><p className="muted">Gunakan identitas akun yang diberikan oleh guru.</p>
-            <form onSubmit={login}>
-              <label className="field">ID Siswa<input value={studentId} onChange={e=>setStudentId(e.target.value)} placeholder="Contoh: CV-2026-001" autoComplete="off" required /></label>
-              <label className="field">PIN<input value={pin} onChange={e=>setPin(e.target.value)} placeholder="Masukkan PIN" type="password" inputMode="numeric" required /></label>
-              {error && <div className="error" role="alert">{error}</div>}
-              <button className="primary full" type="submit">Masuk ke pembelajaran&nbsp; →</button>
-            </form>
-            <div className="demo"><strong>AKUN SIMULASI</strong><br/>ID: <b>CV-2026-001</b><br/>PIN: <b>123456</b></div>
-          </div>
-          <p className="foot">Akun siswa bersifat individual. Aktivitas dan jawaban PBL tetap tersimpan sebagai pekerjaan kelompok.</p>
-        </section>}
 
         {view === "home" && <section>
           <div className="heading"><div><div className="eyebrow">RUANG BELAJAR / BERANDA</div><h1>Halo, Aulia! 👋</h1><div className="muted">Siap melanjutkan pembelajaran hari ini?</div></div><button className="secondary" onClick={()=>{setView("login");setPin("");}}>Keluar ↗</button></div>
