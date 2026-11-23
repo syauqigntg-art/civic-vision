@@ -80,7 +80,7 @@ export default function StudentGroupLogin() {
             <span aria-hidden="true">→</span>
           </button>
         </form>
-        <div className="cv-group-access-footnote">Tidak perlu nama siswa, ID, atau PIN.</div>
+        <div className="cv-group-access-footnote">Cukup satu kode kelompok untuk masuk.</div>
       </section>
     </main>
   );
