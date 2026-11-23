@@ -1,0 +1,22 @@
+:root {
+  --cv-navy-950: #07152f;
+  --cv-navy-900: #0b1d3d;
+  --cv-navy-800: #102b56;
+  --cv-blue-700: #1557a6;
+  --cv-blue-600: #1676cf;
+  --cv-cyan-500: #42d8f5;
+  --cv-cyan-400: #72e7fa;
+  --cv-electric-500: #08a9ef;
+  --cv-text-primary: #f8fbff;
+  --cv-text-muted: #d5e3f2;
+  --cv-glass-fill: rgba(255,255,255,.08);
+  --cv-glass-border: rgba(196,231,255,.22);
+  --cv-glass-radius: 22px;
+  --cv-glass-blur: 18px;
+  --cv-shadow-panel: 0 18px 48px rgba(2,12,35,.28);
+}
+.cv-brand-logo { display:block; height:auto; max-width:100%; object-fit:contain; }
+.cv-brand-logo--horizontal { width:clamp(150px, 19vw, 236px); }
+.cv-brand-logo--mark { width:44px; }
+.cv-brand-logo--dark { filter:none; }
+@media (max-width: 640px) { .cv-brand-logo--horizontal { width:clamp(132px, 42vw, 190px); } }
