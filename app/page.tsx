@@ -13,9 +13,9 @@ export default function Home() {
       <section className="student-hero">
         <div className="student-hero-copy">
           <span className="student-eyebrow">CIVIC VISION</span>
-          <h1>Menganalisis Pancasila<br />dalam Kehidupan Sehari-hari</h1>
-          <p>Ruang belajar digital untuk mengamati kasus, menganalisis masalah, melaksanakan solusi, mengevaluasi proses pemecahan masalah, dan menjaga keberlanjutan aksi.</p>
-          <div className="student-hero-motto"><span>◎</span> Amati. <i/> <span>⌕</span> Analisis. <i/> <span>♧</span> Refleksikan. <i/> <span>⚑</span> Terapkan.</div>
+          <h1>Belajar Memahami Persoalan,<br />Berpikir Kritis, dan Bertindak</h1>
+          <p>Civic Vision adalah platform pembelajaran digital Pendidikan Pancasila yang mengintegrasikan pendekatan Problem-Based Learning melalui kerangka STACK (SEE, THINK, ACT, CONNECT, KEEP). Peserta didik diajak mengamati persoalan kewarganegaraan, menginvestigasi dan menganalisis masalah, merancang solusi, mengomunikasikan gagasan, serta merefleksikan pembelajaran dalam kehidupan nyata.</p>
+          <div className="student-hero-motto"><span>◎</span> SEE <i/> <span>⌕</span> THINK <i/> <span>✦</span> ACT <i/> <span>↗</span> CONNECT <i/> <span>⟳</span> KEEP</div>
           <Link className="student-cta" href="/lkpd/identitas">Mulai LKPD <span aria-hidden="true">→</span></Link>
         </div>
         <div className="student-hero-art" aria-hidden="true">
