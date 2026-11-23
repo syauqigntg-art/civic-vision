@@ -25,9 +25,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <BrandLogo variant="horizontal-light" height={46} />
             </Link>
             <NavBar />
-            <Link href="/lkpd/kasus" className="student-profile" aria-label="Kembali ke dashboard LKPD siswa" title="Dashboard LKPD">
-              <span className="student-profile-avatar" aria-hidden="true">S</span>
-              <span><strong>Syauqi Alif</strong><small>Siswa · XI</small></span>
+            <Link href="/lkpd/identitas" className="student-profile" aria-label="Masuk ke ruang kelompok dengan kode kelompok" title="Akses kelompok">
+              <span className="student-profile-avatar" aria-hidden="true">K</span>
+              <span><strong>Akses Kelompok</strong><small>Masuk dengan kode</small></span>
               <span aria-hidden="true">⌄</span>
             </Link>
           </header>
