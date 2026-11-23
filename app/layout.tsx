@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./brand-tokens.css";
 import "./design-tokens.css";
 import AppShell from "@/components/AppShell";
 
